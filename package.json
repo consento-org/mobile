@@ -1,0 +1,62 @@
+{
+  "name": "consento-mobile",
+  "description": "Consento Mobile App",
+  "scripts": {
+    "postinstall": "jetify",
+    "android": "expo android",
+    "ios": "expo ios",
+    "web": "expo start --web",
+    "start": "expo start",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@consento/api": "0.0.7",
+    "@consento/crypto": "0.0.6",
+    "@consento/notification-server": "0.0.4",
+    "expo": "^35.0.0",
+    "fbemitter": "^2.1.1",
+    "react": "16.8.3",
+    "react-dom": "16.8.3",
+    "react-native": "^0.59.10",
+    "react-native-gesture-handler": "~1.3.0",
+    "react-native-randombytes": "^3.5.3",
+    "react-native-reanimated": "~1.2.0",
+    "react-native-screens": "1.0.0-alpha.23",
+    "react-native-unimodules": "~0.5.4",
+    "react-native-web": "^0.11.7",
+    "react-redux": "^7.1.1",
+    "redux-thunk": "^2.3.0",
+    "url": "^0.11.0",
+    "url-parse": "^1.4.7"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.6.0",
+    "@types/fbemitter": "^2.0.32",
+    "@types/react": "^16.8.23",
+    "@types/react-native": "^0.57.65",
+    "@types/redux": "^3.6.0",
+    "@types/redux-thunk": "^2.1.0",
+    "babel-preset-expo": "^7.0.0",
+    "expo-cli": "^3.2.2",
+    "jest-expo": "^35.0.0",
+    "jetifier": "^1.6.4",
+    "typescript": "^3.4.5"
+  },
+  "jest": {
+    "preset": "react-native"
+  },
+  "private": true,
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/consento-org/mobile.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/consento-org/mobile/issues"
+  },
+  "homepage": "https://github.com/consento-org/mobile#readme"
+}

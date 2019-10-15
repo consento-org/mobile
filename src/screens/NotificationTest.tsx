@@ -1,7 +1,7 @@
 import React from 'react'
 import { connect } from 'react-redux'
 import { View, Text, Switch, TextInput, Button, ScrollView, FlatList } from 'react-native'
-import { styles } from './styles'
+import { styles } from '../styles'
 import { changeUser, setServer, setMessage, submit } from '../actions'
 
 const mapStateToProps = state => {
@@ -17,7 +17,7 @@ const mapDispatchToProps = dispatch => ({
 
 const defaultServer = 'http://192.168.11.11:3000'
 
-function Comp ({ user, message, changeUser, server, setServer, setMessage, submit, active, messages }) {
+function NotificationTest ({ user, message, changeUser, server, setServer, setMessage, submit, active, messages }) {
   let _server = server || defaultServer
   return <View style={ styles.container }>
     <Text style={ styles.label }>Server</Text>
@@ -57,7 +57,7 @@ function Comp ({ user, message, changeUser, server, setServer, setMessage, submi
   </View>
 }
 
-export const NotificationTest = connect(
+export const NotificationTestScreen = connect(
   mapStateToProps,
   mapDispatchToProps
-)(Comp)
+)(NotificationTest)

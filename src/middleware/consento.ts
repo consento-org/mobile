@@ -5,6 +5,8 @@ import { ExpoTransport } from '@consento/notification-server'
 import { getExpoToken as getToken } from '../util/getExpoToken'
 import { Notifications } from 'expo'
 import { EventSubscription } from 'fbemitter'
+import { Store } from 'redux'
+import { IState } from '../reducers'
 
 const PEOPLE = {
   alice: {
@@ -15,7 +17,7 @@ const PEOPLE = {
   }
 }
 
-export function consentoMiddleware (store) {
+export function consentoMiddleware (store: Store) {
   let api: IAPI
   let transport: ExpoTransport
   let address
@@ -77,12 +79,14 @@ export function consentoMiddleware (store) {
   updateApi(store.getState())
   
   return next => action => {
-    if (api && isSubmit(action)) {
-      const sender: ISender = senders[action.target]
-      if (sender) {
-        api.notifications.send(sender, action.message)
+    if (api) {
+      if (isSubmit(action)) {
+        const sender: ISender = senders[action.target]
+        if (sender) {
+          api.notifications.send(sender, action.message)
+        }
+        return store.getState()
       }
-      return store.getState()
     }
     const result = next(action)
     updateApi(store.getState())

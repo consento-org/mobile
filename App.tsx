@@ -1,8 +1,9 @@
 import React from 'react'
 import { Provider } from 'react-redux'
 import { Loading } from './src/screens/Loading'
+import { loadFonts } from './src/fonts'
 
-export default class App extends React.Component<{}, { store, NotificationTestScreen }> {
+export default class App extends React.Component<{}, { store, Screens }> {
 
   componentDidMount() {
     this.initProject().catch(err => {
@@ -10,19 +11,17 @@ export default class App extends React.Component<{}, { store, NotificationTestSc
     })
   }
   async initProject () {
-    const [ store, NotificationTestScreen ] = await Promise.all([
+    const [ { store }, { Screens }, _ ] = await Promise.all([
       import('./src/store'),
-      import('./src/screens/NotificationTest')
+      import('./src/screens'),
+      loadFonts()
     ])
-    this.setState({
-      store: store.store,
-      NotificationTestScreen: NotificationTestScreen.NotificationTestScreen
-    })
+    this.setState({ store, Screens })
   }
   render () {
     if (!this.state) return <Loading/>
     return <Provider store={this.state.store}>
-      <this.state.NotificationTestScreen />
+      <this.state.Screens />
     </Provider>
 
   }

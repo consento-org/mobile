@@ -1,8 +1,9 @@
 import React from 'react'
-import { View, Text } from 'react-native'
+import { View, Image, Text } from 'react-native'
+import { Fonts } from '../fonts'
 
 export function Loading () {
-  return <View style={{ justifyContent: 'center', flex: 1 }}>
-    <Text style={{ textAlign: 'center' }}>{"Loading ..."}</Text>
+  return <View style={{ justifyContent: 'center', alignContent: 'center', flex: 1 }}>
+    <Image source={ require('../../assets/images/logo.png')} />
   </View>
 }

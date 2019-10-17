@@ -1,11 +1,11 @@
-import { isSubmit, message, changeUser, setActive } from '../actions'
+import { isSubmit, message, setActive, IAction } from '../actions'
 import { setup, IAPI, ISender, IReceiver } from '@consento/api'
 import { sodium as cryptoCore } from '@consento/crypto/core/sodium'
 import { ExpoTransport } from '@consento/notification-server'
 import { getExpoToken as getToken } from '../util/getExpoToken'
 import { Notifications } from 'expo'
 import { EventSubscription } from 'fbemitter'
-import { Store } from 'redux'
+import { Middleware, Store, Dispatch } from 'redux'
 import { IState } from '../reducers'
 
 const PEOPLE = {
@@ -17,7 +17,7 @@ const PEOPLE = {
   }
 }
 
-export function consentoMiddleware (store: Store) {
+export function consentoMiddleware (store: Store): Middleware<{}, any, Dispatch<IAction>> {
   let api: IAPI
   let transport: ExpoTransport
   let address
@@ -26,19 +26,19 @@ export function consentoMiddleware (store: Store) {
   let receiver: IReceiver
   const senders: { [name: string]: ISender } = {}
 
-  function handleMessage () {
+  function handleMessage (): void {
     store.dispatch(message(store.getState().message))
   }
 
-  function updateApi (state) {
+  function updateApi (state: IState): IState {
     if (address !== state.server) {
       address = state.server
-      if (transport) {
+      if (transport !== undefined) {
         transport.removeListener('message', api.notifications.handle)
         subscription.remove()
         api.notifications.removeListener('message', handleMessage)
-        if (receiver) {
-          api.notifications.unsubscribe([receiver])
+        if (receiver !== undefined) {
+          api.notifications.unsubscribe([receiver]).then(() => {}, error => { console.log(error) })
           receiver = undefined
         }
       }
@@ -63,27 +63,27 @@ export function consentoMiddleware (store: Store) {
       })
       api.notifications.addListener('message', handleMessage)
     }
-    if (api && (user !== state.user || !receiver)) {
-      if (receiver) {
-        api.notifications.unsubscribe([receiver])
+    if (api !== undefined && (user !== state.user || receiver !== undefined)) {
+      if (receiver !== undefined) {
+        api.notifications.unsubscribe([receiver]).then(() => {}, error => { console.log(error) })
       }
       user = state.user
       receiver = senders[user]
-      if (receiver) {
-        api.notifications.subscribe([receiver])
+      if (receiver !== undefined) {
+        api.notifications.subscribe([receiver]).then(() => {}, error => { console.log(error) })
       }
     }
     return state
   }
 
   updateApi(store.getState())
-  
-  return next => action => {
-    if (api) {
+
+  return next => (action: any): any => {
+    if (api !== undefined) {
       if (isSubmit(action)) {
         const sender: ISender = senders[action.target]
-        if (sender) {
-          api.notifications.send(sender, action.message)
+        if (sender !== undefined) {
+          api.notifications.send(sender, action.message).then(() => {}, error => { console.log(error) })
         }
         return store.getState()
       }

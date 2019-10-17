@@ -1,7 +1,7 @@
 import * as Permissions from 'expo-permissions'
 import { Notifications } from 'expo'
 
-export async function getExpoToken(): Promise<string> {
+export async function getExpoToken (): Promise<string> {
   // Adopted from https://docs.expo.io/versions/v34.0.0/guides/push-notifications/
   const result = await Permissions.getAsync(Permissions.NOTIFICATIONS)
 
@@ -16,12 +16,12 @@ export async function getExpoToken(): Promise<string> {
 
     // Stop here if the user did not grant permissions
     if (finalStatus !== 'granted') {
-      throw Object.assign(new Error(`Permission to receive Notifications not granted!`), {
+      throw Object.assign(new Error('Permission to receive Notifications not granted!'), {
         status: finalStatus
       })
     }
   }
 
   // Get the token that uniquely identifies this device
-  return await Notifications.getExpoPushTokenAsync()
+  return Notifications.getExpoPushTokenAsync()
 }

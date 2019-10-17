@@ -16,31 +16,35 @@ const initialState = {
 }
 
 export function reduce (state: IState = initialState, action: IAction): IState {
-  if (isChangeUser(action))
+  if (isChangeUser(action)) {
     return {
       ...state,
       user: action.user
     }
-  if (isSetMessage (action))
+  }
+  if (isSetMessage(action)) {
     return {
       ...state,
       message: action.message
     }
-  if (isSetServer (action))
+  }
+  if (isSetServer(action)) {
     return {
       ...state,
       server: action.server
     }
-  if (isActive (action))
+  }
+  if (isActive(action)) {
     return {
       ...state,
       active: action.active
+    }
   }
-  if (isMessage (action)) {
+  if (isMessage(action)) {
     return {
       ...state,
       messages: [
-        ... state.messages,
+        ...state.messages,
         action.message
       ]
     }

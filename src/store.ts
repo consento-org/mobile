@@ -1,6 +1,8 @@
 import { createStore, applyMiddleware } from 'redux'
-import { reduce } from './reducers'
 import thunk from 'redux-thunk'
-import { consentoMiddleware } from './middleware'
+import { reduce } from './reducers'
+import { consentoMiddleware } from './middleware/consento'
+import { backButtonMiddleware } from './middleware/navigation'
 
-export const store = createStore(reduce, applyMiddleware(thunk, consentoMiddleware))
+export const store = createStore(reduce, applyMiddleware(thunk, consentoMiddleware, backButtonMiddleware))
+export default store

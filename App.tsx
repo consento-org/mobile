@@ -1,13 +1,15 @@
 import React from 'react'
+import { Text } from 'react-native'
 import { Provider } from 'react-redux'
 import { Loading } from './src/screens/Loading'
 import { loadFonts } from './src/fonts'
 
-export default class App extends React.Component<{}, { store, Screens }> {
+export default class App extends React.Component<{}, { store, Screens, error: Error }> {
 
   componentDidMount() {
-    this.initProject().catch(err => {
-      console.log(err)
+    this.initProject().catch(error => {
+      console.log(error)
+      this.setState({ error })
     })
   }
   async initProject () {
@@ -20,6 +22,9 @@ export default class App extends React.Component<{}, { store, Screens }> {
   }
   render () {
     if (!this.state) return <Loading/>
+    if (this.state.error !== undefined) {
+      return <Text>{ `Error while initing:\n${this.state.error}` }</Text>
+    }
     return <Provider store={this.state.store}>
       <this.state.Screens />
     </Provider>

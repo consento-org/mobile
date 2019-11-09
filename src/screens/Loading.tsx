@@ -1,9 +1,17 @@
 import React from 'react'
-import { View, Image, Text } from 'react-native'
-import { Fonts } from '../fonts'
+import { View, ViewStyle } from 'react-native'
+import { screen01Welcome } from '../styles/component/screen01Welcome'
+
+const style: ViewStyle = {
+  justifyContent: 'center',
+  alignContent: 'center',
+  alignItems: 'center',
+  flex: 1,
+  backgroundColor: screen01Welcome.backgroundColor
+}
 
 export function Loading () {
-  return <View style={{ justifyContent: 'center', alignContent: 'center', flex: 1 }}>
-    <Image source={ require('../../assets/images/logo.png')} />
+  return <View style={style}>
+    { screen01Welcome.elementWelcome.img() }
   </View>
 }

@@ -1,32 +1,5 @@
 import { StyleSheet, StatusBar, Platform } from 'react-native'
-import { BottomTabBarOptions } from 'react-navigation-tabs/src/types'
-import { Colors } from './colors'
-import { Fonts } from './fonts'
-
-// https://reactnavigation.org/docs/en/bottom-tab-navigator.html#bottomtabnavigatorconfig
-// → "tabBarOptions"
-export const tabBarOptions: BottomTabBarOptions = {
-  showLabel: true,
-  activeBackgroundColor: Colors.consentoBlue,
-  inactiveBackgroundColor: Colors.consentoGrey,
-  style: {
-    backfaceVisibility: 'visible',
-    borderTopColor: '#00F',
-    borderTopWidth: 5,
-    height: 100
-  },
-  tabStyle: StyleSheet.create({
-    tab: {
-      padding: 20
-    }
-  }).tab,
-  labelStyle: StyleSheet.create({
-    label: {
-      color: '#f00',
-      fontFamily: Fonts.RobotoBold
-    }
-  }).label
-}
+import { Color } from './styles/Color'
 
 export const styles = StyleSheet.create({
   label: {
@@ -36,6 +9,12 @@ export const styles = StyleSheet.create({
   },
   firstButton: {
     margin: 10
+  },
+  screen: {
+    // justifyContent: 'center',
+    flex: 1,
+    paddingTop: Platform.OS === 'ios' ? 0 : StatusBar.currentHeight,
+    backgroundColor: Color.grey
   },
   input: {
     borderBottomColor: '#999',
@@ -50,7 +29,6 @@ export const styles = StyleSheet.create({
     flex: 1,
     padding: 10,
     backgroundColor: '#fff',
-    paddingTop: Platform.OS === 'ios' ? 0 : StatusBar.currentHeight,
     // alignContent: 'flex-start',
     flexDirection: 'column',
     alignItems: 'flex-start'

@@ -1,13 +1,14 @@
 import React from 'react'
 import { Text } from 'react-native'
 import { context } from './util/context'
+import { Asset } from './Asset'
 
 export const resources = context({
   icons: {
     navigation: {
-      vaults: <Text>{'V'}</Text>,
-      consentos: <Text>{'C'}</Text>,
-      relations: <Text>{'R'}</Text>
+      vaults: ({ focused }) => focused ? Asset.iconVaultActive().img() : Asset.iconVaultIdle().img(),
+      consentos: ({ focused }) => focused ? Asset.iconConsentoActive().img() : Asset.iconConsentoIdle().img(),
+      relations: ({ focused }) => focused ? Asset.iconRelationsActive().img() : Asset.iconRelationsIdle().img()
     }
   },
   strings: {

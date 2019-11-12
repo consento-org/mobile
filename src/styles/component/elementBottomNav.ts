@@ -9,11 +9,11 @@ export class elementBottomNavClass extends Component {
   relations = new Link(elementBottomNavRelationsResting, { x: 206, y: 0, w: 78, h: 56 })
   consento = new Link(elementBottomNavConsentosResting, { x: 108, y: 0, w: 78, h: 56 })
   vault = new Link(elementBottomNavVaultResting, { x: 10, y: 1, w: 78, h: 56 })
-  borderTop = new Polygon({ x: 0, y: 0, w: 294, h: 1 }, null, { 
-  fill: Color.darkGrey,
-  thickness: 1,
-  lineEnd: 'Butt'
-})
+  borderTop = new Polygon({ x: 0, y: 0, w: 294, h: 1 }, null, 0, { 
+    fill: Color.darkGrey,
+    thickness: 1,
+    lineEnd: 'Butt'
+  }, [])
   constructor () {
     super('elementBottomNav', 294, 60, Color.grey)
   }

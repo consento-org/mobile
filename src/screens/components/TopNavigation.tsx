@@ -9,40 +9,25 @@ const topNav = Object.freeze<ViewStyle>({
   backgroundColor: elementTopNavEmpty.backgroundColor,
   borderBottomColor: elementTopNavEmpty.borderTop.border.fill.color,
   borderBottomWidth: elementTopNavEmpty.borderTop.border.thickness,
-  height: elementTopNavEmpty.height,
-  display: 'flex',
-  flexDirection: 'row'
+  height: elementTopNavEmpty.height
 })
 
 const topNavLogo = Object.freeze<ImageStyle>({
-  marginLeft: elementTopNavEmpty.logo.place.left,
-  marginTop: elementTopNavEmpty.logo.place.top,
-  marginRight: elementTopNavEmpty.title.place.left - elementTopNavEmpty.logo.place.right,
+  left: elementTopNavEmpty.logo.place.left,
+  top: elementTopNavEmpty.logo.place.top,
   width: elementTopNavEmpty.logo.place.width,
-  height: elementTopNavEmpty.logo.place.height
+  height: elementTopNavEmpty.logo.place.height,
+  position: 'absolute'
 } as ImageStyle)
 
-const topNavTitle = Object.freeze<TextStyle>({
-  ... elementTopNavEmpty.title.style,
-  marginTop: elementTopNavEmpty.title.place.top,
-  height: elementTopNavEmpty.title.place.height,
-  textAlignVertical: 'center',
-  flexGrow: 1,
-  maxWidth: "100%"
-})
-
-const space = Object.freeze<TextStyle>({
-  width: elementTopNavEmpty.width - elementTopNavEmpty.title.place.right
-})
-
-const backIcon = Object.freeze<ImageStyle>(elementTopNavItem.back.place.style())
-
-class TopNavigationClass extends React.Component<{ title: string, back?: boolean, navigation: TNavigation }, { }> {
+class TopNavigationClass extends React.Component<{ title: string, back?: boolean, navigation: TNavigation, editDelete?: boolean }, { }> {
   render () {
     return <View style={ topNav }>
-      { this.props.back ? <TouchableOpacity onPress={ () => this.props.navigation.goBack() }>{ elementTopNavItem.back.img(backIcon) }</TouchableOpacity> : elementTopNavEmpty.logo.img(topNavLogo) }
-      <Text style={ topNavTitle }>{ this.props.title }</Text>
-      <View style={ space } />
+      { this.props.back ? elementTopNavItem.renderImage(elementTopNavItem.back, { onPress: () => this.props.navigation.goBack() }) : elementTopNavEmpty.logo.img(topNavLogo) }
+      { this.props.editDelete
+        ? elementTopNavItem.renderText(elementTopNavItem.title, { horz: 'stretch' }, this.props.title)
+        : elementTopNavEmpty.renderText(elementTopNavEmpty.title, { horz: 'stretch' }, this.props.title)
+      }
     </View>
   }
 }

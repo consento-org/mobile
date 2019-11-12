@@ -47,8 +47,8 @@ class VaultCardClass extends React.Component<{ item: any, navigation: TNavigatio
     return <TouchableOpacity style={ cardStyle } onPress={ this.onPress.bind(this) } activeOpacity={ 0.55 }>
       { elementCardVaultClose.background.img(bgStyle) }
       { elementCardVaultClose.icon.img(iconStyle) }
-      <Text style={ elementCardVaultClose.title.styleAbsolute }>{ this.props.item.key }</Text>
-      <Text style={ elementCardVaultClose.lastAccess.styleAbsolute }>{ elementCardVaultClose.lastAccess.text }</Text>
+      { elementCardVaultClose.title.renderAbsolute(this.props.item.key) }
+      { elementCardVaultClose.lastAccess.renderAbsolute(elementCardVaultClose.lastAccess.text) }
       { this.state.state === 'open' ? opened() : closed() } 
     </TouchableOpacity>
   }

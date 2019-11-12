@@ -30,7 +30,8 @@ const list = [
   {key: 'Martin'},
   {key: 'Maz'},
   {key: 'Very Very Very Very Very Long Text Interrupted'},
-  {key: 'VeryVeryVeryVeryVeryVeryLongTextUninterrupted'}
+  {key: 'VeryVeryVeryVeryVeryVeryLongTextUninterrupted'},
+  {key: '日本語のテキスト、試すために'}
 ]
 
 function Open ({}) {

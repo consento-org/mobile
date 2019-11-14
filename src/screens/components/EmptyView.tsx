@@ -13,7 +13,7 @@ export class EmptyView extends React.Component<{prototype: IEmptyViewProto}> {
   render () {
     const proto = this.props.prototype
     return <ScrollView centerContent={ true } style={{ backgroundColor: proto.backgroundColor }} contentContainerStyle={{ flexDirection: 'row', display: 'flex', flexGrow: 1 }}>
-      <View style={{ padding: proto.description.place.x, display: 'flex', alignItems: 'center', alignSelf: 'center',  }}>
+      <View style={{ padding: proto.description.place.x, display: 'flex', alignItems: 'center', alignSelf: 'center', width: '100%' }}>
         {
           proto.illustration.img({ 
             marginBottom: proto.title.place.top - proto.illustration.place.bottom

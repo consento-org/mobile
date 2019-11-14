@@ -178,8 +178,17 @@ export const Asset = {
   iconBackGrey () {
     return images.fetch('iconBackGrey', () => require('../assets/icon/back/grey.png'))
   },
-  x2aColorCoral () {
-    return images.fetch('x2aColorCoral', () => require('../assets/x2a-color/coral.png'))
+  illustrationVault () {
+    return images.fetch('illustrationVault', () => require('../assets/illustration/vault.png'))
+  },
+  illustrationFriends () {
+    return images.fetch('illustrationFriends', () => require('../assets/illustration/friends.png'))
+  },
+  illustrationLock () {
+    return images.fetch('illustrationLock', () => require('../assets/illustration/lock.png'))
+  },
+  illustrationSun () {
+    return images.fetch('illustrationSun', () => require('../assets/illustration/sun.png'))
   },
   elementCardVaultBackground () {
     return images.fetch('elementCardVaultBackground', () => require('../assets/element/card/vault/background.png'))

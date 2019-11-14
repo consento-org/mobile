@@ -84,6 +84,42 @@ export const BUTTONRobotoSmallCapRegular18BlackCenter = Object.freeze({
   textAlignVertical: 'center'
 } as TextStyle)
 
+export const H2PalanquinDarkMedium36BlackCenter = Object.freeze({
+  color: Color.black,
+  fontFamily: Font.PalanquinDarkMedium,
+  fontSize: 36,
+  textAlign: 'center',
+  textTransform: 'none',
+  textAlignVertical: 'center'
+} as TextStyle)
+
+export const BodyRobotoRegular18BlueCenter = Object.freeze({
+  color: Color.blue,
+  fontFamily: Font.RobotoRegular,
+  fontSize: 18,
+  textAlign: 'center',
+  textTransform: 'none',
+  textAlignVertical: 'top'
+} as TextStyle)
+
+export const BodyRobotoRegular18BlackLeft = Object.freeze({
+  color: Color.black,
+  fontFamily: Font.RobotoRegular,
+  fontSize: 18,
+  textAlign: 'left',
+  textTransform: 'none',
+  textAlignVertical: 'top'
+} as TextStyle)
+
+export const time = Object.freeze({
+  color: Color.black,
+  fontFamily: Font.RobotoRegular,
+  fontSize: 13,
+  textAlign: 'left',
+  textTransform: 'none',
+  textAlignVertical: 'center'
+} as TextStyle)
+
 export const TextStyles = {
   TimestampRobotoSmallCapRegular10BlackLeft,
   H6RobotoMedium18BlackCenter,
@@ -93,5 +129,9 @@ export const TextStyles = {
   SubtitleRobotoBold13BlackCenter,
   H5RobotoRegular24BlackCenter,
   BUTTONRobotoSmallCapRegular18WhiteCenter,
-  BUTTONRobotoSmallCapRegular18BlackCenter
+  BUTTONRobotoSmallCapRegular18BlackCenter,
+  H2PalanquinDarkMedium36BlackCenter,
+  BodyRobotoRegular18BlueCenter,
+  BodyRobotoRegular18BlackLeft,
+  time
 }

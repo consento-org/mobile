@@ -1,9 +1,10 @@
 import React from 'react'
 import { connect } from 'react-redux'
-import { View, FlatList, Text, ViewStyle, ScrollView } from 'react-native'
+import { View, ViewStyle, ScrollView } from 'react-native'
 import { VaultCard } from './components/VaultCard'
 import { styles } from '../styles'
 import { TopNavigation } from './components/TopNavigation'
+import { Asset } from '../Asset'
 
 const mapStateToProps = state => state
 const mapDispatchToProps = dispatch => ({})
@@ -34,6 +35,8 @@ const list = [
   {key: '日本語のテキスト、試すために'}
 ]
 
+const AddButton = Asset.buttonAddHexagonal().component
+
 function Open ({}) {
   return <View style={ styles.screen }>
     <TopNavigation title="Vaults"/>
@@ -44,6 +47,7 @@ function Open ({}) {
       }
       </View>
     </ScrollView>
+    <AddButton style={{ position: 'absolute', right: 10, bottom: 10 }} onPress={ () => {} }/>
   </View>
 }
 

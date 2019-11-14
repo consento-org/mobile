@@ -1,5 +1,3 @@
-import React from 'react'
-import { Text } from 'react-native'
 import { context } from './util/context'
 import { Asset } from './Asset'
 
@@ -15,7 +13,10 @@ export const resources = context({
     navigation: {
       vaults: 'Vaults',
       consentos: 'Consentos',
-      relations: 'Relations'
+      relations: 'Relations',
+      vaultData: 'Data',
+      vaultLocks: 'Locks',
+      vaultLog: 'Log'
     }
   }
 })

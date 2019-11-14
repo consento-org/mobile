@@ -21,17 +21,25 @@ function isIcon (val: any): val is IIcon {
   return false
 }
 
-export interface IContext {
+export interface TContextData {
   icons: Hierarchy<IIcon>,
   strings: Hierarchy<string>
 }
 
-export function context ({ icons: iconsHierarchy, strings: stringsHierarchy }: IContext) {
+export interface IContext {
+  t (key: string, ...params: string[]): string
+  hasT (key: string): boolean
+  icon (key: string, props?: IIconProps): ReactNode
+  hasIcon (key: string, props?: IIconProps): boolean
+  ctx (subPrefix: string): IContext
+}
+
+export function context ({ icons: iconsHierarchy, strings: stringsHierarchy }: TContextData) {
   const icons = flatten(isIcon, iconsHierarchy)
   const strings = flatten(isString, stringsHierarchy)
   return ctx('')
 
-  function ctx (prefix) {
+  function ctx (prefix): IContext {
     return {
       t (key, ...params) {
         return strings[`${prefix}${key}`] || `<${prefix}${key}>`

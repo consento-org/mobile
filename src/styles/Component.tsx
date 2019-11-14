@@ -7,7 +7,7 @@ export type TRenderGravity = 'start' | 'end' | 'center' | 'stretch'
 export interface IRenderOptions {
   vert?: TRenderGravity,
   horz?: TRenderGravity,
-  onPress?: () => {}
+  onPress?: () => any
 }
 
 function applyRenderOptions<T extends FlexStyle> ({ horz, vert }: IRenderOptions = {}, place: Placement, style?: T): T {
@@ -42,6 +42,9 @@ export class Component {
 
   renderImage (asset: ImagePlacement, opts?: IRenderOptions, style?: ImageStyle) {
     style = applyRenderOptions(opts, asset.place, style)
+    if (opts.horz === 'stretch' || opts.vert === 'stretch') {
+      style.resizeMode = 'stretch'
+    }
     return this._renderItem(asset.img(style), asset.place, opts)
   }
 
@@ -51,28 +54,37 @@ export class Component {
   }
 
   _renderItem (item: React.ReactNode, place: Placement, { horz, vert, onPress }: IRenderOptions = {}) {
-    const horzKey = `horz:${horz || 'start'}:${this.width}:${this.height}:${place.top}:${place.left}:${place.right}:${place.bottom}`
+    const horzKey = `horz:${horz || 'start'}:${vert || 'start'}:${this.width}:${this.height}:${place.top}:${place.left}:${place.right}:${place.bottom}`
     let horzStyle = renderCache[horzKey]
     if (horzStyle === undefined) {
       horzStyle = {
         display: 'flex',
         position: 'absolute',
-        paddingRight: this.width - place.right,
-        paddingTop: place.top,
-        paddingBottom: this.height - place.bottom,
-        paddingLeft: place.left,
         width: '100%',
         height: '100%',
-        justifyContent: horz === 'end' ? 'flex-end' : horz === 'center' ? 'center': 'flex-start'
+        flexDirection: 'row',
+        justifyContent: horz === 'end' ? 'flex-end' : horz === 'center' ? 'center' : 'flex-start'
+      }
+      if (horz !== 'start') {
+        horzStyle.paddingRight = this.width - place.right
+      }
+      if (horz !== 'end') {
+        horzStyle.paddingLeft = place.left
+      }
+      if (vert !== 'start') {
+        horzStyle.paddingBottom = this.height - place.bottom
+      }
+      if (vert !== 'end') {
+        horzStyle.paddingTop = place.top
       }
       renderCache[horzKey] = horzStyle
     }
-    const vertKey = `vert:${vert || 'start'}`
+    const vertKey = `vert:${vert || 'start'}:${horz || 'start'}`
     let vertStyle = renderCache[vertKey]
     if (vertStyle === undefined) {
       vertStyle = {
         display: 'flex',
-        width: '100%',
+        width: horz === 'stretch' ? '100%' : 'auto',
         flexDirection: 'column',
         height: '100%',
         justifyContent: vert === 'end' ? 'flex-end' : vert === 'center' ? 'center': 'flex-start'
@@ -82,9 +94,7 @@ export class Component {
     if (onPress !== null && onPress !== undefined) {
       item = <TouchableOpacity onPress={ onPress }>{ item }</TouchableOpacity>
     }
-    return <View style={ horzStyle }>
-      <View style={ vertStyle }>{ item }</View>
-    </View>
+    return <View style={ horzStyle }><View style={ vertStyle }>{ item }</View></View>
   }
 }
 

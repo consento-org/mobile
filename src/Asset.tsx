@@ -1,6 +1,6 @@
 // This file has been generated with expo-export, a Sketch plugin.
 import React from 'react'
-import { Image, ImageStyle, View, ViewStyle, ImageSourcePropType } from 'react-native'
+import { Image, ImageStyle, View, ViewStyle, ImageSourcePropType, TouchableOpacity, FlexStyle } from 'react-native'
 
 class Cache<Type, Args> {
   cache: { [key: string]: Type } = {}
@@ -22,13 +22,24 @@ class Cache<Type, Args> {
 
 export class ImageAsset {
   source: ImageSourcePropType
+  component: (props: { style?: FlexStyle, onPress?: () => void }) => JSX.Element
 
   constructor (source: ImageSourcePropType) {
     this.source = source
+    this.component = ({ style, onPress }) =>  {
+      if (onPress !== undefined) {
+        return <TouchableOpacity onPress={ onPress } style={ style }>{ this.img() }</TouchableOpacity>
+      }
+      return this.img(style)
+    }
   }
 
-  img (style?: ImageStyle) {
-    return <Image source={ this.source } style={ style } />
+  img (style?: FlexStyle) {
+    const imgStyle = style as ImageStyle
+    if (style && imgStyle.resizeMode === 'stretch') {
+      return <Image source={ this.source } style={ imgStyle } fadeDuration={ 0 } />
+    }
+    return <Image source={ this.source } style={ imgStyle } />
   }
 }
 
@@ -163,9 +174,6 @@ export const Asset = {
   iconRelationsActive () {
     return images.fetch('iconRelationsActive', () => require('../assets/icon/relations/active.png'))
   },
-  elementIconLockWhiteClose () {
-    return images.fetch('elementIconLockWhiteClose', () => require('../assets/element/icon/lock-white/close.png'))
-  },
   iconLogo () {
     return images.fetch('iconLogo', () => require('../assets/icon/logo.png'))
   },
@@ -192,5 +200,11 @@ export const Asset = {
   },
   elementCardVaultBackground () {
     return images.fetch('elementCardVaultBackground', () => require('../assets/element/card/vault/background.png'))
+  },
+  buttonAddRound () {
+    return images.fetch('buttonAddRound', () => require('../assets/button/add/round.png'))
+  },
+  buttonAddHexagonal () {
+    return images.fetch('buttonAddHexagonal', () => require('../assets/button/add/hexagonal.png'))
   }
 }

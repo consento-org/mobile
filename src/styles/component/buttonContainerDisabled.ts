@@ -9,6 +9,11 @@ export class buttonContainerDisabledClass extends Component {
     thickness: 1,
     lineEnd: 'Butt'
   }, [])
+  Container = new Polygon({ x: 0, y: 0, w: 96, h: 36 }, null, 16, { 
+    fill: Color.borderDark,
+    thickness: 1,
+    lineEnd: 'Butt'
+  }, [])
   label = new Text('Button', TextStyles.BUTTONRobotoSmallCapRegular18BlackCenter, { x: 13, y: 0, w: 70, h: 36 })
   constructor () {
     super('buttonContainerDisabled', 96, 36)

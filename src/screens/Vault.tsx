@@ -1,10 +1,11 @@
 import React from 'react'
-import { View, Text, ViewStyle } from 'react-native'
+import { View, ViewStyle } from 'react-native'
 import { TopNavigation } from './components/TopNavigation'
 import { styles } from '../styles'
 import { withNavigation, TNavigation } from './navigation'
 import { elementSealVaultActive } from '../styles/component/elementSealVaultActive'
-import { Slice9Button } from '../Slice9Button'
+import { elementSealVaultIdle } from '../styles/component/elementSealVaultIdle'
+import { ConsentoButton } from './components/ConsentoButton'
 
 const lockStyle: ViewStyle = {
   height: elementSealVaultActive.height,
@@ -15,10 +16,6 @@ const lockStyle: ViewStyle = {
   alignItems: 'center'
 }
 
-const shadow: ViewStyle = {
-  width: elementSealVaultActive.enabled.component.width,
-  height: elementSealVaultActive.enabled.component.height
-}
 
 class VaultClass extends React.Component<{ navigation: TNavigation }, {}> {
   render () {
@@ -26,7 +23,10 @@ class VaultClass extends React.Component<{ navigation: TNavigation }, {}> {
     return <View style={ styles.screen }>
       <TopNavigation title={ vault } back={ true }/>
       <View style={ lockStyle }>
-        <Slice9Button label={ 'lock' } prototype={ elementSealVaultActive.enabled.component } style={{ width: elementSealVaultActive.enabled.place.width }} />
+        <ConsentoButton style={ elementSealVaultIdle.disabled.place } title={ 'lock' } />
+      </View>
+      <View style={ lockStyle }>
+        <ConsentoButton onPress={ () => {} } style={ elementSealVaultActive.enabled.place } title={ 'lock' } />
       </View>
     </View>
   }

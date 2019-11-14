@@ -1,5 +1,25 @@
-import { StyleSheet, StatusBar, Platform } from 'react-native'
+import { StyleSheet, StatusBar, Platform, ViewStyle } from 'react-native'
 import { Color } from './styles/Color'
+
+const shadows: { [elevation: number]: ViewStyle } = {}
+export function shadow (elevation: number = 4) {
+  let shadow = shadows[elevation]
+  if (shadow === undefined) {
+    shadow = Object.freeze(Platform.select({
+      android: {
+        elevation
+      },
+      default: {
+        shadowColor: 'black',
+        shadowOffset: { width: 0, height: 0.5 * elevation },
+        shadowOpacity: 0.3,
+        shadowRadius: 0.8 * elevation
+      }
+    }))
+    shadows[elevation] = shadow
+  }
+  return shadow
+}
 
 export const styles = StyleSheet.create({
   label: {

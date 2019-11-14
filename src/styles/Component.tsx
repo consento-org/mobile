@@ -353,6 +353,14 @@ export class Polygon {
     this.border = new Border(border)
     this.shadows = shadows.map(data => new Shadow(data))
   }
+
+  borderStyle (): ViewStyle {
+    return {
+      borderRadius: this.borderRadius,
+      borderColor: this.border.fill.color,
+      borderWidth: this.border.thickness
+    }
+  }
 }
 
 export class Text {

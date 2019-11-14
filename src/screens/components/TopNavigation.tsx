@@ -20,14 +20,16 @@ const topNavLogo = Object.freeze<ImageStyle>({
   position: 'absolute'
 } as ImageStyle)
 
-class TopNavigationClass extends React.Component<{ title: string, back?: boolean, navigation: TNavigation, editDelete?: boolean }, { }> {
+class TopNavigationClass extends React.Component<{ title: string, back?: boolean, navigation: TNavigation, edit?: () => void, delete?: () => void }, { }> {
   render () {
     return <View style={ topNav }>
       { this.props.back ? elementTopNavItem.renderImage(elementTopNavItem.back, { onPress: () => this.props.navigation.goBack() }) : elementTopNavEmpty.logo.img(topNavLogo) }
-      { this.props.editDelete
+      { (this.props.edit || this.props.delete)
         ? elementTopNavItem.renderText(elementTopNavItem.title, { horz: 'stretch' }, this.props.title)
         : elementTopNavEmpty.renderText(elementTopNavEmpty.title, { horz: 'stretch' }, this.props.title)
       }
+      { this.props.edit !== undefined ? elementTopNavItem.renderImage(elementTopNavItem.edit, { horz: 'end', onPress: this.props.edit }) : null }
+      { this.props.delete !== undefined ? elementTopNavItem.renderImage(elementTopNavItem.delete, { horz: 'end', onPress: this.props.delete }) : null }
     </View>
   }
 }

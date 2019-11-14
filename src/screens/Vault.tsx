@@ -34,7 +34,7 @@ class VaultClass extends React.Component<{ navigation: TNavigation }, {}> {
     const { navigation } = this.props
     const vault = navigation.state.params.vault
     return <View style={ styles.screen }>
-      <TopNavigation title={ vault } back={ true }/>
+      <TopNavigation title={ vault } back={ true } edit={ () => {} } delete={ () => {} }/>
       <View style={ lockStyle }>
         <ConsentoButton style={ elementSealVaultIdle.disabled.place } title={ 'lock' } />
       </View>

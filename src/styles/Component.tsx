@@ -170,10 +170,14 @@ export class Placement {
 export class ImagePlacement {
   place: Placement
   asset: () => ImageAsset
+  parent: Component
 
-  constructor (asset: () => ImageAsset, frame: IFrameData) {
+  constructor (asset: () => ImageAsset, frame: IFrameData, parent: Component) {
     this.asset = asset
     this.place = new Placement(frame)
+    this.parent = parent
+    this.Render = this.Render.bind(this)
+  }
   }
 
   img (style?: ImageStyle) {
@@ -184,10 +188,12 @@ export class ImagePlacement {
 export class Slice9Placement {
   place: Placement
   asset: () => Slice9
+  parent: Component
 
-  constructor (asset: () => Slice9, frame: IFrameData) {
+  constructor (asset: () => Slice9, frame: IFrameData, parent: Component) {
     this.asset = asset
     this.place = new Placement(frame)
+    this.parent = parent
   }
 
   render (style?: ViewStyle) {
@@ -378,10 +384,12 @@ export class Text {
   style: TextStyle
   styleAbsolute: TextStyle
   place: Placement
+  parent: Component
 
-  constructor (text: string, style: TextStyle, frame: IFrameData) {
+  constructor (text: string, style: TextStyle, frame: IFrameData, parent: Component) {
     this.text = text
     this.style = style
+    this.parent = parent
     this.place = new Placement(frame)
     this.styleAbsolute = Object.freeze({
       ... style,

@@ -3,13 +3,13 @@ import { Color } from './Color'
 import { Font } from './Font'
 import { TextStyle } from 'react-native'
 
-export const TimestampRobotoSmallCapRegular10BlackLeft = Object.freeze({
-  color: Color.veryDarkGrey,
-  fontFamily: Font.RobotoRegular,
-  fontSize: 10,
+export const H6BlackHighEmphasisCenter = Object.freeze({
+  color: '#000000de',
+  fontFamily: Font.RobotoMedium,
+  fontSize: 20,
   textAlign: 'center',
-  textTransform: 'uppercase',
-  textAlignVertical: 'center'
+  textTransform: 'none',
+  textAlignVertical: 'top'
 } as TextStyle)
 
 export const H6RobotoMedium18BlackCenter = Object.freeze({
@@ -18,6 +18,15 @@ export const H6RobotoMedium18BlackCenter = Object.freeze({
   fontSize: 18,
   textAlign: 'center',
   textTransform: 'none',
+  textAlignVertical: 'center'
+} as TextStyle)
+
+export const TimestampRobotoSmallCapRegular10BlackLeft = Object.freeze({
+  color: Color.veryDarkGrey,
+  fontFamily: Font.RobotoRegular,
+  fontSize: 10,
+  textAlign: 'center',
+  textTransform: 'uppercase',
   textAlignVertical: 'center'
 } as TextStyle)
 
@@ -121,8 +130,9 @@ export const time = Object.freeze({
 } as TextStyle)
 
 export const TextStyles = {
-  TimestampRobotoSmallCapRegular10BlackLeft,
+  H6BlackHighEmphasisCenter,
   H6RobotoMedium18BlackCenter,
+  TimestampRobotoSmallCapRegular10BlackLeft,
   TITLERobotoSmallCapRegular12BlueCenter,
   TITLERobotoSmallCapRegular12RedCenter,
   SubtitleRobotoRegular13BlackCenter,

@@ -4,13 +4,18 @@ import { Asset } from '../../Asset'
 import { TextStyles } from '../TextStyles'
 
 export class elementCardVaultCloseClass extends Component {
-  background = new ImagePlacement(Asset.elementCardVaultBackground, { x: 0, y: 31, w: 160, h: 130 })
-  title = new Text('Name', TextStyles.H6RobotoMedium18BlackCenter, { x: 5, y: 86, w: 150, h: 56 })
-  lastAccess = new Text('Last access: 02.10.2019', TextStyles.TimestampRobotoSmallCapRegular10BlackLeft, { x: 5, y: 141, w: 150, h: 16 })
-  status = new Text('sealed', TextStyles.TITLERobotoSmallCapRegular12RedCenter, { x: 5, y: 61, w: 150, h: 26 })
-  icon = new ImagePlacement(Asset.iconVaultBigClosed, { x: 52.5, y: 0, w: 55, h: 62 })
+  background: ImagePlacement
+  title: Text
+  lastAccess: Text
+  status: Text
+  icon: ImagePlacement
   constructor () {
     super('elementCardVaultClose', 160, 161)
+    this.background = new ImagePlacement(Asset.elementCardVaultBackground, { x: 0, y: 31, w: 160, h: 130 }, this)
+    this.title = new Text('Name', TextStyles.H6RobotoMedium18BlackCenter, { x: 5, y: 86, w: 150, h: 56 }, this)
+    this.lastAccess = new Text('Last access: 02.10.2019', TextStyles.TimestampRobotoSmallCapRegular10BlackLeft, { x: 5, y: 141, w: 150, h: 16 }, this)
+    this.status = new Text('sealed', TextStyles.TITLERobotoSmallCapRegular12RedCenter, { x: 5, y: 61, w: 150, h: 26 }, this)
+    this.icon = new ImagePlacement(Asset.iconVaultBigClosed, { x: 52.5, y: 0, w: 55, h: 62 }, this)
   }
 }
 

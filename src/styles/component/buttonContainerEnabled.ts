@@ -14,9 +14,10 @@ export class buttonContainerEnabledClass extends Component {
     { x:0, y:2, blur:1, spread:-1, color: Color.borderDark },
     { x:0, y:1, blur:1, spread:0, color: '#00000024' }
   ])
-  label = new Text('Button', TextStyles.BUTTONRobotoSmallCapRegular18WhiteCenter, { x: 13, y: 0, w: 70, h: 36 })
+  label: Text
   constructor () {
     super('buttonContainerEnabled', 96, 36)
+    this.label = new Text('Button', TextStyles.BUTTONRobotoSmallCapRegular18WhiteCenter, { x: 13, y: 0, w: 70, h: 36 }, this)
   }
 }
 

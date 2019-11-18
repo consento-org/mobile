@@ -14,9 +14,10 @@ export class buttonContainerDisabledClass extends Component {
     thickness: 1,
     lineEnd: 'Butt'
   }, [])
-  label = new Text('Button', TextStyles.BUTTONRobotoSmallCapRegular18BlackCenter, { x: 13, y: 0, w: 70, h: 36 })
+  label: Text
   constructor () {
     super('buttonContainerDisabled', 96, 36)
+    this.label = new Text('Button', TextStyles.BUTTONRobotoSmallCapRegular18BlackCenter, { x: 13, y: 0, w: 70, h: 36 }, this)
   }
 }
 

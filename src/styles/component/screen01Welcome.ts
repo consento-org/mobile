@@ -11,9 +11,10 @@ export class screen01WelcomeClass extends Component {
   Path = new Polygon({ x: 173.19, y: 48.67, w: 6.26, h: 7.81 }, null, 0, null, [])
   OvalCopy = new Polygon({ x: 35.49, y: 14.65, w: 4, h: 4 }, '#e23e06ff', 0, null, [])
   OvalCopy2 = new Polygon({ x: 36.49, y: 20.65, w: 4, h: 4 }, '#e23e06ff', 0, null, [])
-  elementWelcome = new ImagePlacement(Asset.elementWelcome, { x: 77, y: 274.5, w: 217, h: 224.5 })
+  elementWelcome: ImagePlacement
   constructor () {
     super('screen01Welcome', 375, 812, Color.coral)
+    this.elementWelcome = new ImagePlacement(Asset.elementWelcome, { x: 77, y: 274.5, w: 217, h: 224.5 }, this)
   }
 }
 

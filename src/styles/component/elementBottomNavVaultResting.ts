@@ -4,10 +4,12 @@ import { Asset } from '../../Asset'
 import { TextStyles } from '../TextStyles'
 
 export class elementBottomNavVaultRestingClass extends Component {
-  icon = new ImagePlacement(Asset.iconVaultIdle, { x: 37, y: 8, w: 23, h: 24 })
-  title = new Text('Vaults', TextStyles.SubtitleRobotoRegular13BlackCenter, { x: 0, y: 37, w: 98, h: 16 })
+  icon: ImagePlacement
+  title: Text
   constructor () {
     super('elementBottomNavVaultResting', 98, 56)
+    this.icon = new ImagePlacement(Asset.iconVaultIdle, { x: 37, y: 8, w: 23, h: 24 }, this)
+    this.title = new Text('Vaults', TextStyles.SubtitleRobotoRegular13BlackCenter, { x: 0, y: 37, w: 98, h: 16 }, this)
   }
 }
 

@@ -1,7 +1,8 @@
-import React from 'react'
-import { Text, View, StyleSheet, ViewStyle, TextStyle, ImageStyle, TouchableOpacity } from 'react-native'
+import React, { useState, createRef } from 'react'
+import { TextInput, View, ViewStyle } from 'react-native'
 import { elementTopNavEmpty } from '../../styles/component/elementTopNavEmpty'
 import { elementTopNavItem } from '../../styles/component/elementTopNavItem'
+import { elementTopNavEdit } from '../../styles/component/elementTopNavEdit'
 import { withNavigation, TNavigation } from '../navigation'
 
 const topNav = Object.freeze<ViewStyle>({
@@ -12,26 +13,42 @@ const topNav = Object.freeze<ViewStyle>({
   height: elementTopNavEmpty.height
 })
 
-const topNavLogo = Object.freeze<ImageStyle>({
-  left: elementTopNavEmpty.logo.place.left,
-  top: elementTopNavEmpty.logo.place.top,
-  width: elementTopNavEmpty.logo.place.width,
-  height: elementTopNavEmpty.logo.place.height,
-  position: 'absolute'
-} as ImageStyle)
-
-class TopNavigationClass extends React.Component<{ title: string, back?: boolean, navigation: TNavigation, edit?: () => void, delete?: () => void }, { }> {
-  render () {
-    return <View style={ topNav }>
-      { this.props.back ? elementTopNavItem.renderImage(elementTopNavItem.back, { onPress: () => this.props.navigation.goBack() }) : elementTopNavEmpty.logo.img(topNavLogo) }
-      { (this.props.edit || this.props.delete)
-        ? elementTopNavItem.renderText(elementTopNavItem.title, { horz: 'stretch' }, this.props.title)
-        : elementTopNavEmpty.renderText(elementTopNavEmpty.title, { horz: 'stretch' }, this.props.title)
-      }
-      { this.props.edit !== undefined ? elementTopNavItem.renderImage(elementTopNavItem.edit, { horz: 'end', onPress: this.props.edit }) : null }
-      { this.props.delete !== undefined ? elementTopNavItem.renderImage(elementTopNavItem.delete, { horz: 'end', onPress: this.props.delete }) : null }
-    </View>
-  }
+export interface ITopNavigationProps {
+  title: string
+  back?: boolean
+  navigation: TNavigation
+  onEdit?: (text: string) => any
+  onDelete?: () => any
 }
 
-export const TopNavigation = withNavigation(TopNavigationClass)
+export const TopNavigation = withNavigation((props: ITopNavigationProps) => {
+  const [ editing, setEditing ] = useState(false)
+  const textEdit = createRef<TextInput>()
+  return <View style={ topNav }>
+    { props.back
+      ? <elementTopNavItem.back.Render onPress={ () => props.navigation.goBack() } />
+      : <elementTopNavEmpty.logo.Render/>
+    }
+    { editing
+      ? <View>
+          <elementTopNavEdit.Render place={ elementTopNavEdit.background.place } horz={ 'stretch' } item={() =>
+            <View style={{
+              position: 'absolute',
+              width: '100%',
+              height: elementTopNavEdit.background.place.height,
+              backgroundColor: elementTopNavEdit.background.fill.color,
+              borderColor: elementTopNavEdit.underline.border.fill.color,
+              borderBottomWidth: elementTopNavEdit.underline.border.thickness
+            } as ViewStyle}></View>
+          }/>
+          <elementTopNavEdit.title.Render horz={ 'stretch' } value={ props.title } onEdit={ props.onEdit }
+            targetRef={ textEdit } onLayout={ () => textEdit.current && textEdit.current.focus() } onBlur={ () => setEditing(false) }/>
+        </View>
+      : (props.onEdit || props.onDelete)
+        ? <elementTopNavItem.title.Render horz={ 'stretch' } value={ props.title } onPress={ () => props.onEdit && setEditing(true) } />
+        : <elementTopNavEmpty.title.Render horz={ 'stretch' } value={ props.title } />
+    }
+    { (props.onEdit !== undefined && !editing) ? <elementTopNavItem.edit.Render horz={ 'end' } onPress={ () => setEditing(true) }/> : null }
+    { props.onDelete !== undefined ? <elementTopNavItem.delete.Render horz={ 'end' } onPress={ props.onDelete }/> : null }
+  </View>
+})

@@ -14,23 +14,6 @@ const cardStyle: ViewStyle = {
   marginBottom: 15
 }
 
-const bgStyle = Object.freeze(elementCardVaultClose.background.place.style({ position: 'absolute' } as ImageStyle))
-const iconStyle = Object.freeze(elementCardVaultClose.icon.place.style({ position: 'absolute' } as ImageStyle))
-
-function opened () {
-  return <View>
-    { elementCardVaultOpen.icon.img(iconStyle) }
-    <Text style={ elementCardVaultOpen.status.styleAbsolute }>{ elementCardVaultOpen.status.text }</Text>
-  </View>
-}
-
-function closed () {
-  return <View>
-    { elementCardVaultClose.icon.img(iconStyle) }
-    <Text style={ elementCardVaultClose.status.styleAbsolute }>{ elementCardVaultClose.status.text }</Text>
-  </View>
-}
-
 class VaultCardClass extends React.Component<{ item: any, navigation: TNavigation }, { state: VaultState }> {
 
   componentWillMount () {
@@ -44,12 +27,13 @@ class VaultCardClass extends React.Component<{ item: any, navigation: TNavigatio
   }
 
   render () {
+    const proto = this.state.state === 'open' ? elementCardVaultOpen : elementCardVaultClose
     return <TouchableOpacity style={ cardStyle } onPress={ this.onPress.bind(this) } activeOpacity={ 0.55 }>
-      { elementCardVaultClose.background.img(bgStyle) }
-      { elementCardVaultClose.icon.img(iconStyle) }
-      { elementCardVaultClose.title.renderAbsolute(this.props.item.key) }
-      { elementCardVaultClose.lastAccess.renderAbsolute(elementCardVaultClose.lastAccess.text) }
-      { this.state.state === 'open' ? opened() : closed() } 
+      <proto.background.Render style={{ position: 'absolute' }}/>
+      <proto.title.Render value={ this.props.item.key } />
+      <proto.lastAccess.Render />
+      <proto.icon.Render style={{ position: 'absolute' }}/>
+      <proto.status.Render style={{ position: 'absolute' }}/>
     </TouchableOpacity>
   }
 }

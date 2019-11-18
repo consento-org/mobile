@@ -34,12 +34,12 @@ export class ImageAsset {
     }
   }
 
-  img (style?: FlexStyle) {
+  img (style?: FlexStyle, ref?: React.RefObject<Image>, onLayout?: () => any) {
     const imgStyle = style as ImageStyle
     if (style && imgStyle.resizeMode === 'stretch') {
-      return <Image source={ this.source } style={ imgStyle } fadeDuration={ 0 } />
+      return <Image ref={ ref } onLayout={ onLayout } source={ this.source } style={ imgStyle } fadeDuration={ 0 } />
     }
-    return <Image source={ this.source } style={ imgStyle } />
+    return <Image ref={ ref } onLayout={ onLayout } source={ this.source } style={ imgStyle } />
   }
 }
 
@@ -114,7 +114,7 @@ export class Slice9 {
     this._slices = slices
   }
 
-  render (style?: ViewStyle) {
+  render (style?: ViewStyle, ref?: React.RefObject<View>, onLayout?: () => any) {
     if (style === null || style === undefined) {
       style = this._columsStyle
     } else {
@@ -123,7 +123,7 @@ export class Slice9 {
         ...style
       }
     }
-    return <View style={ style }>
+    return <View style={ style } ref={ ref } onLayout={ onLayout }>
       <View style={ this._rows[0] }>
         <Image source={ this._slices[0] } style={ this._styles[0] } fadeDuration={ 0 } />
         <Image source={ this._slices[1] } style={ this._styles[1] } fadeDuration={ 0 } />
@@ -144,38 +144,28 @@ export class Slice9 {
 }
 
 const images = new Cache<ImageAsset, ImageSourcePropType> (ImageAsset)
-const slice9s = new Cache<Slice9, Slice9Args> (Slice9)
 
 export const Asset = {
+  buttonAddHexagonal () {
+    return images.fetch('buttonAddHexagonal', () => require('../assets/button/add/hexagonal.png'))
+  },
+  buttonAddRound () {
+    return images.fetch('buttonAddRound', () => require('../assets/button/add/round.png'))
+  },
+  elementCardVaultBackground () {
+    return images.fetch('elementCardVaultBackground', () => require('../assets/element/card/vault/background.png'))
+  },
   elementWelcome () {
     return images.fetch('elementWelcome', () => require('../assets/element/welcome.png'))
   },
-  iconVaultBigOpen () {
-    return images.fetch('iconVaultBigOpen', () => require('../assets/icon/vault/big/open.png'))
-  },
-  iconVaultBigClosed () {
-    return images.fetch('iconVaultBigClosed', () => require('../assets/icon/vault/big/closed.png'))
-  },
-  iconRelationsIdle () {
-    return images.fetch('iconRelationsIdle', () => require('../assets/icon/relations/idle.png'))
-  },
-  iconConsentoIdle () {
-    return images.fetch('iconConsentoIdle', () => require('../assets/icon/consento/idle.png'))
-  },
-  iconVaultIdle () {
-    return images.fetch('iconVaultIdle', () => require('../assets/icon/vault/idle.png'))
-  },
-  iconVaultActive () {
-    return images.fetch('iconVaultActive', () => require('../assets/icon/vault/active.png'))
+  iconBackGrey () {
+    return images.fetch('iconBackGrey', () => require('../assets/icon/back/grey.png'))
   },
   iconConsentoActive () {
     return images.fetch('iconConsentoActive', () => require('../assets/icon/consento/active.png'))
   },
-  iconRelationsActive () {
-    return images.fetch('iconRelationsActive', () => require('../assets/icon/relations/active.png'))
-  },
-  iconLogo () {
-    return images.fetch('iconLogo', () => require('../assets/icon/logo.png'))
+  iconConsentoIdle () {
+    return images.fetch('iconConsentoIdle', () => require('../assets/icon/consento/idle.png'))
   },
   iconDeleteGrey () {
     return images.fetch('iconDeleteGrey', () => require('../assets/icon/delete/grey.png'))
@@ -183,11 +173,26 @@ export const Asset = {
   iconEditGrey () {
     return images.fetch('iconEditGrey', () => require('../assets/icon/edit/grey.png'))
   },
-  iconBackGrey () {
-    return images.fetch('iconBackGrey', () => require('../assets/icon/back/grey.png'))
+  iconLogo () {
+    return images.fetch('iconLogo', () => require('../assets/icon/logo.png'))
   },
-  illustrationVault () {
-    return images.fetch('illustrationVault', () => require('../assets/illustration/vault.png'))
+  iconRelationsActive () {
+    return images.fetch('iconRelationsActive', () => require('../assets/icon/relations/active.png'))
+  },
+  iconRelationsIdle () {
+    return images.fetch('iconRelationsIdle', () => require('../assets/icon/relations/idle.png'))
+  },
+  iconVaultActive () {
+    return images.fetch('iconVaultActive', () => require('../assets/icon/vault/active.png'))
+  },
+  iconVaultBigClosed () {
+    return images.fetch('iconVaultBigClosed', () => require('../assets/icon/vault/big/closed.png'))
+  },
+  iconVaultBigOpen () {
+    return images.fetch('iconVaultBigOpen', () => require('../assets/icon/vault/big/open.png'))
+  },
+  iconVaultIdle () {
+    return images.fetch('iconVaultIdle', () => require('../assets/icon/vault/idle.png'))
   },
   illustrationFriends () {
     return images.fetch('illustrationFriends', () => require('../assets/illustration/friends.png'))
@@ -198,13 +203,8 @@ export const Asset = {
   illustrationSun () {
     return images.fetch('illustrationSun', () => require('../assets/illustration/sun.png'))
   },
-  elementCardVaultBackground () {
-    return images.fetch('elementCardVaultBackground', () => require('../assets/element/card/vault/background.png'))
-  },
-  buttonAddRound () {
-    return images.fetch('buttonAddRound', () => require('../assets/button/add/round.png'))
-  },
-  buttonAddHexagonal () {
-    return images.fetch('buttonAddHexagonal', () => require('../assets/button/add/hexagonal.png'))
+  illustrationVault () {
+    return images.fetch('illustrationVault', () => require('../assets/illustration/vault.png'))
   }
 }
+

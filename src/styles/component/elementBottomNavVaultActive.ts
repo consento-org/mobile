@@ -3,7 +3,8 @@ import { Component, ImagePlacement, Text } from '../Component'
 import { Asset } from '../../Asset'
 import { TextStyles } from '../TextStyles'
 
-export class elementBottomNavVaultActiveClass extends Component {
+/* eslint-disable lines-between-class-members */
+export class ElementBottomNavVaultActiveClass extends Component {
   icon: ImagePlacement
   title: Text
   constructor () {
@@ -13,4 +14,4 @@ export class elementBottomNavVaultActiveClass extends Component {
   }
 }
 
-export const elementBottomNavVaultActive = new elementBottomNavVaultActiveClass()
+export const elementBottomNavVaultActive = new ElementBottomNavVaultActiveClass()

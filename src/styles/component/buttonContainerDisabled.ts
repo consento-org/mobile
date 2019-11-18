@@ -3,13 +3,14 @@ import { Component, Polygon, Text } from '../Component'
 import { Color } from '../Color'
 import { TextStyles } from '../TextStyles'
 
-export class buttonContainerDisabledClass extends Component {
-  shape = new Polygon({ x: 0, y: 0, w: 96, h: 36 }, null, 16, { 
+/* eslint-disable lines-between-class-members */
+export class ButtonContainerDisabledClass extends Component {
+  shape = new Polygon({ x: 0, y: 0, w: 96, h: 36 }, null, 16, {
     fill: Color.borderDark,
     thickness: 1,
     lineEnd: 'Butt'
   }, [])
-  Container = new Polygon({ x: 0, y: 0, w: 96, h: 36 }, null, 16, { 
+  Container = new Polygon({ x: 0, y: 0, w: 96, h: 36 }, null, 16, {
     fill: Color.borderDark,
     thickness: 1,
     lineEnd: 'Butt'
@@ -21,4 +22,4 @@ export class buttonContainerDisabledClass extends Component {
   }
 }
 
-export const buttonContainerDisabled = new buttonContainerDisabledClass()
+export const buttonContainerDisabled = new ButtonContainerDisabledClass()

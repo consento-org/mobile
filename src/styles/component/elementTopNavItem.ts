@@ -4,8 +4,9 @@ import { TextStyles } from '../TextStyles'
 import { Asset } from '../../Asset'
 import { Color } from '../Color'
 
-export class elementTopNavItemClass extends Component {
-  borderTop = new Polygon({ x: 0, y: 58.25, w: 360, h: 2 }, null, 0, { 
+/* eslint-disable lines-between-class-members */
+export class ElementTopNavItemClass extends Component {
+  borderTop = new Polygon({ x: 0, y: 58.25, w: 360, h: 2 }, null, 0, {
     fill: '#d9d9d9ff',
     thickness: 1,
     lineEnd: 'Butt'
@@ -23,4 +24,4 @@ export class elementTopNavItemClass extends Component {
   }
 }
 
-export const elementTopNavItem = new elementTopNavItemClass()
+export const elementTopNavItem = new ElementTopNavItemClass()

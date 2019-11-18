@@ -2,9 +2,10 @@
 import { Component, Link, Polygon } from '../Component'
 import { buttonContainerEnabled } from './buttonContainerEnabled'
 
-export class elementSealVaultActiveClass extends Component {
+/* eslint-disable lines-between-class-members */
+export class ElementSealVaultActiveClass extends Component {
   enabled = new Link(buttonContainerEnabled, { x: 90, y: 12, w: 180, h: 36 })
-  borderBottom = new Polygon({ x: 0, y: 58.25, w: 360, h: 2 }, null, 0, { 
+  borderBottom = new Polygon({ x: 0, y: 58.25, w: 360, h: 2 }, null, 0, {
     fill: '#d9d9d9ff',
     thickness: 1,
     lineEnd: 'Butt'
@@ -14,4 +15,4 @@ export class elementSealVaultActiveClass extends Component {
   }
 }
 
-export const elementSealVaultActive = new elementSealVaultActiveClass()
+export const elementSealVaultActive = new ElementSealVaultActiveClass()

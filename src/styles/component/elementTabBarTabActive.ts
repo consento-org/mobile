@@ -3,9 +3,10 @@ import { Component, Text, Polygon } from '../Component'
 import { TextStyles } from '../TextStyles'
 import { Color } from '../Color'
 
-export class elementTabBarTabActiveClass extends Component {
+/* eslint-disable lines-between-class-members */
+export class ElementTabBarTabActiveClass extends Component {
   label: Text
-  bottomLine = new Polygon({ x: -0.25, y: 47, w: 99, h: 2 }, null, 0, { 
+  bottomLine = new Polygon({ x: -0.25, y: 47, w: 99, h: 2 }, null, 0, {
     fill: Color.activeGrey,
     thickness: 2,
     lineEnd: 'Butt'
@@ -16,4 +17,4 @@ export class elementTabBarTabActiveClass extends Component {
   }
 }
 
-export const elementTabBarTabActive = new elementTabBarTabActiveClass()
+export const elementTabBarTabActive = new ElementTabBarTabActiveClass()

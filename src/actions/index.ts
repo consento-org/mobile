@@ -52,7 +52,7 @@ export const isChangeUser = isAction<IChangeUser>(Action.CHANGE_USER)
 export const isSubmit = isAction<ISubmit>(Action.SUBMIT)
 export const isMessage = isAction<IMessage>(Action.MESSAGE)
 export const isActive = isAction<IActive>(Action.ACTIVE)
-  
+
 export const changeUser = (user: string): IChangeUser => ({
   type: Action.CHANGE_USER,
   user

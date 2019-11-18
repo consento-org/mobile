@@ -3,7 +3,8 @@ import { Component, ImagePlacement, Text } from '../Component'
 import { Asset } from '../../Asset'
 import { TextStyles } from '../TextStyles'
 
-export class elementCardVaultCloseClass extends Component {
+/* eslint-disable lines-between-class-members */
+export class ElementCardVaultCloseClass extends Component {
   background: ImagePlacement
   title: Text
   lastAccess: Text
@@ -19,4 +20,4 @@ export class elementCardVaultCloseClass extends Component {
   }
 }
 
-export const elementCardVaultClose = new elementCardVaultCloseClass()
+export const elementCardVaultClose = new ElementCardVaultCloseClass()

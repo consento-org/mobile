@@ -3,7 +3,8 @@ import { Component, Text, Polygon } from '../Component'
 import { TextStyles } from '../TextStyles'
 import { Color } from '../Color'
 
-export class elementTabBarTabRestingClass extends Component {
+/* eslint-disable lines-between-class-members */
+export class ElementTabBarTabRestingClass extends Component {
   label: Text
   effect = new Polygon({ x: 64, y: 4, w: 34, h: 32 }, Color.activeGrey, 0, null, [])
   constructor () {
@@ -12,4 +13,4 @@ export class elementTabBarTabRestingClass extends Component {
   }
 }
 
-export const elementTabBarTabResting = new elementTabBarTabRestingClass()
+export const elementTabBarTabResting = new ElementTabBarTabRestingClass()

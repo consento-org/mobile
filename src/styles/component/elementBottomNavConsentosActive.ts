@@ -3,7 +3,8 @@ import { Component, ImagePlacement, Text } from '../Component'
 import { Asset } from '../../Asset'
 import { TextStyles } from '../TextStyles'
 
-export class elementBottomNavConsentosActiveClass extends Component {
+/* eslint-disable lines-between-class-members */
+export class ElementBottomNavConsentosActiveClass extends Component {
   icon: ImagePlacement
   title: Text
   constructor () {
@@ -13,4 +14,4 @@ export class elementBottomNavConsentosActiveClass extends Component {
   }
 }
 
-export const elementBottomNavConsentosActive = new elementBottomNavConsentosActiveClass()
+export const elementBottomNavConsentosActive = new ElementBottomNavConsentosActiveClass()

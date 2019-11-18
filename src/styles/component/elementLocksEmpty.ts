@@ -4,7 +4,8 @@ import { TextStyles } from '../TextStyles'
 import { Asset } from '../../Asset'
 import { Color } from '../Color'
 
-export class elementLocksEmptyClass extends Component {
+/* eslint-disable lines-between-class-members */
+export class ElementLocksEmptyClass extends Component {
   description: Text
   title: Text
   illustration: ImagePlacement
@@ -16,4 +17,4 @@ export class elementLocksEmptyClass extends Component {
   }
 }
 
-export const elementLocksEmpty = new elementLocksEmptyClass()
+export const elementLocksEmpty = new ElementLocksEmptyClass()

@@ -4,7 +4,8 @@ import { TextStyles } from '../TextStyles'
 import { Asset } from '../../Asset'
 import { Color } from '../Color'
 
-export class elementVaultEmptyClass extends Component {
+/* eslint-disable lines-between-class-members */
+export class ElementVaultEmptyClass extends Component {
   description: Text
   title: Text
   illustration: ImagePlacement
@@ -16,4 +17,4 @@ export class elementVaultEmptyClass extends Component {
   }
 }
 
-export const elementVaultEmpty = new elementVaultEmptyClass()
+export const elementVaultEmpty = new ElementVaultEmptyClass()

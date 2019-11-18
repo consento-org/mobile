@@ -4,14 +4,15 @@ import { Color } from '../Color'
 import { TextStyles } from '../TextStyles'
 import { Asset } from '../../Asset'
 
-export class elementTopNavEditClass extends Component {
-  borderTop = new Polygon({ x: 0, y: 58.25, w: 360, h: 2 }, null, 0, { 
+/* eslint-disable lines-between-class-members */
+export class ElementTopNavEditClass extends Component {
+  borderTop = new Polygon({ x: 0, y: 58.25, w: 360, h: 2 }, null, 0, {
     fill: '#d9d9d9ff',
     thickness: 1,
     lineEnd: 'Butt'
   }, [])
   background = new Polygon({ x: 52, y: 12, w: 259, h: 36 }, Color.white, 0, null, [])
-  underline = new Polygon({ x: 52, y: 47.25, w: 259, h: 2 }, null, 0, { 
+  underline = new Polygon({ x: 52, y: 47.25, w: 259, h: 2 }, null, 0, {
     fill: Color.coral,
     thickness: 1,
     lineEnd: 'Butt'
@@ -27,4 +28,4 @@ export class elementTopNavEditClass extends Component {
   }
 }
 
-export const elementTopNavEdit = new elementTopNavEditClass()
+export const elementTopNavEdit = new ElementTopNavEditClass()

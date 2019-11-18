@@ -3,7 +3,8 @@ import { Component, Polygon, ImagePlacement } from '../Component'
 import { Color } from '../Color'
 import { Asset } from '../../Asset'
 
-export class screen01WelcomeClass extends Component {
+/* eslint-disable lines-between-class-members */
+export class Screen01WelcomeClass extends Component {
   Oval = new Polygon({ x: 33.49, y: 9.65, w: 4, h: 4 }, '#e23e06ff', 0, null, [])
   elementLogo = new Polygon({ x: 0, y: 0, w: 104, h: 104 }, Color.white, 0, null, [])
   c = new Polygon({ x: 0, y: 0, w: 35, h: 41.65 }, '#e23e06ff', 0, null, [])
@@ -18,4 +19,4 @@ export class screen01WelcomeClass extends Component {
   }
 }
 
-export const screen01Welcome = new screen01WelcomeClass()
+export const screen01Welcome = new Screen01WelcomeClass()

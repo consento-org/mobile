@@ -2,7 +2,22 @@ import { StyleSheet, StatusBar, Platform, ViewStyle } from 'react-native'
 import { Color } from './styles/Color'
 
 const shadows: { [elevation: number]: ViewStyle } = {}
-export function shadow (elevation: number = 4) {
+
+interface AndroidShadow {
+  elevation: number
+}
+
+interface IOSShadow {
+  shadowColor: 'string'
+  shadowOffset: {
+    width: number
+    height: number
+  }
+  shadowOpacity: number
+  shadowRadius: number
+}
+
+export function shadow (elevation: number = 4): IOSShadow | AndroidShadow {
   let shadow = shadows[elevation]
   if (shadow === undefined) {
     shadow = Object.freeze(Platform.select({

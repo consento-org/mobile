@@ -4,7 +4,8 @@ import { TextStyles } from '../TextStyles'
 import { Asset } from '../../Asset'
 import { Color } from '../Color'
 
-export class elementConsentosEmptyClass extends Component {
+/* eslint-disable lines-between-class-members */
+export class ElementConsentosEmptyClass extends Component {
   lastUpdate: Text
   description: Text
   title: Text
@@ -18,4 +19,4 @@ export class elementConsentosEmptyClass extends Component {
   }
 }
 
-export const elementConsentosEmpty = new elementConsentosEmptyClass()
+export const elementConsentosEmpty = new ElementConsentosEmptyClass()

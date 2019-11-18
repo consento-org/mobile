@@ -3,7 +3,8 @@ import { Component, Polygon, Text } from '../Component'
 import { Color } from '../Color'
 import { TextStyles } from '../TextStyles'
 
-export class elementLogLineClass extends Component {
+/* eslint-disable lines-between-class-members */
+export class ElementLogLineClass extends Component {
   bg = new Polygon({ x: 0, y: 34, w: 375, h: 64 }, Color.grey, 5, null, [])
   time: Text
   text: Text
@@ -14,4 +15,4 @@ export class elementLogLineClass extends Component {
   }
 }
 
-export const elementLogLine = new elementLogLineClass()
+export const elementLogLine = new ElementLogLineClass()

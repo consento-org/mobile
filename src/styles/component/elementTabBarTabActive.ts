@@ -13,7 +13,11 @@ export class ElementTabBarTabActiveClass extends Component {
   }, [])
   constructor () {
     super('elementTabBarTabActive', 98, 48, Color.grey)
-    this.label = new Text('Label', TextStyles.SubtitleRobotoBold13BlackCenter, { x: 0, y: 0, w: 98, h: 48 }, this)
+    this.label = new Text('Label', {
+      ... TextStyles.SubtitleRobotoBold13BlackCenter,
+      textTransform: 'uppercase',
+      textAlignVertical: 'center'
+    }, { x: 0, y: 0, w: 98, h: 48 }, this)
   }
 }
 

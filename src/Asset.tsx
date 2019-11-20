@@ -191,6 +191,9 @@ export const Asset = {
   iconVaultBigOpen () {
     return images.fetch('iconVaultBigOpen', () => require('../assets/icon/vault/big/open.png'))
   },
+  iconVaultBigPending () {
+    return images.fetch('iconVaultBigPending', () => require('../assets/icon/vault/big/pending.png'))
+  },
   iconVaultIdle () {
     return images.fetch('iconVaultIdle', () => require('../assets/icon/vault/idle.png'))
   },

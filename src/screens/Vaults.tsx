@@ -43,7 +43,11 @@ function Open ({}) {
     <ScrollView centerContent={ true }>
       <View style={ listStyle }>
       {
-        list.map(item => <VaultCard key={ item.key } item={ item } />)
+        list.map((item, index) =>
+          <VaultCard key={ item.key } item={ item } state={
+            index % 3 === 0 ? 'open' :
+            index % 3 === 1 ? 'pending' : 'locked' }/>
+        )
       }
       </View>
     </ScrollView>

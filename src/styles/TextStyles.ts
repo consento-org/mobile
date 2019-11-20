@@ -1,6 +1,6 @@
 // This file has been generated with expo-export, a Sketch plugin.
-import { Color } from './Color'
 import { Font } from './Font'
+import { Color } from './Color'
 import { TextStyle } from 'react-native'
 
 export const H6BlackHighEmphasisCenter: TextStyle = Object.freeze({
@@ -41,6 +41,15 @@ export const TITLERobotoSmallCapRegular12BlueCenter: TextStyle = Object.freeze({
 
 export const TITLERobotoSmallCapRegular12RedCenter: TextStyle = Object.freeze({
   color: Color.coral,
+  fontFamily: Font.RobotoMedium,
+  fontSize: 12,
+  textAlign: 'center',
+  textTransform: 'uppercase',
+  textAlignVertical: 'center'
+})
+
+export const TITLERobotoSmallCapRegular12GreyCenter: TextStyle = Object.freeze({
+  color: Color.darkGrey,
   fontFamily: Font.RobotoMedium,
   fontSize: 12,
   textAlign: 'center',
@@ -135,6 +144,7 @@ export const TextStyles = {
   TimestampRobotoSmallCapRegular10BlackLeft,
   TITLERobotoSmallCapRegular12BlueCenter,
   TITLERobotoSmallCapRegular12RedCenter,
+  TITLERobotoSmallCapRegular12GreyCenter,
   SubtitleRobotoRegular13BlackCenter,
   SubtitleRobotoBold13BlackCenter,
   H5RobotoRegular24BlackCenter,

@@ -1,10 +1,11 @@
 import React from 'react'
-import { Text, View, ViewStyle, ImageStyle, TextStyle, TouchableOpacity } from 'react-native'
+import { ViewStyle, TouchableOpacity } from 'react-native'
 import { elementCardVaultClose } from '../../styles/component/elementCardVaultClose'
+import { elementCardVaultPending } from '../../styles/component/elementCardVaultPending'
 import { elementCardVaultOpen } from '../../styles/component/elementCardVaultOpen'
 import { withNavigation, TNavigation } from '../navigation'
 
-type VaultState = 'open' | 'locked' | 'unlocking'
+type VaultState = 'open' | 'locked' | 'pending'
 
 const cardStyle: ViewStyle = {
   width: elementCardVaultClose.width,
@@ -14,7 +15,16 @@ const cardStyle: ViewStyle = {
   marginBottom: 15
 }
 
-class VaultCardClass extends React.Component<{ item: any, navigation: TNavigation }, { state: VaultState }> {
+function getPrototype (state: VaultState) {
+  if (state === 'open') {
+    return elementCardVaultOpen
+  } else if (state === 'pending') {
+    return elementCardVaultPending
+  }
+  return elementCardVaultClose
+}
+
+class VaultCardClass extends React.Component<{ item: any, navigation: TNavigation, state: VaultState }> {
 
   componentWillMount () {
     this.setState({
@@ -27,7 +37,7 @@ class VaultCardClass extends React.Component<{ item: any, navigation: TNavigatio
   }
 
   render () {
-    const proto = this.state.state === 'open' ? elementCardVaultOpen : elementCardVaultClose
+    const proto = getPrototype(this.props.state)
     return <TouchableOpacity style={ cardStyle } onPress={ this.onPress.bind(this) } activeOpacity={ 0.55 }>
       <proto.background.Render style={{ position: 'absolute' }}/>
       <proto.title.Render value={ this.props.item.key } />

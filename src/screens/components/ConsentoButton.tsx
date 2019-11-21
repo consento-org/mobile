@@ -1,8 +1,9 @@
 import React from 'react'
-import { TouchableOpacity, View, ViewStyle, Text, TextStyle } from 'react-native'
+import { TouchableOpacity, Text } from 'react-native'
 import { shadow } from '../../styles'
 import { buttonContainerDisabled } from '../../styles/component/buttonContainerDisabled'
 import { buttonContainerEnabled } from '../../styles/component/buttonContainerEnabled'
+import { buttonContainerLight } from '../../styles/component/buttonContainerLight'
 
 const disabledStyle = {
   ... buttonContainerDisabled.label.style,
@@ -20,10 +21,20 @@ const activeStyle = {
   ...buttonContainerEnabled.label.style
 }
 
+const lightStyle = {
+  backgroundColor: buttonContainerLight.shape.fill.color,
+  borderRadius: buttonContainerLight.shape.borderRadius,
+  width: buttonContainerLight.width,
+  height: buttonContainerLight.height,
+  ...shadow(),
+  ...buttonContainerLight.label.style
+}
+
 export interface IButtonProps {
   title: string
   enabled?: boolean
   disabled?: boolean
+  light?: boolean
   style?: {
     width: number
     height: number
@@ -41,7 +52,7 @@ export function ConsentoButton (props: IButtonProps) {
   }
   return <TouchableOpacity style={{ display: 'flex' }} onPress={ props.onPress }>
     <Text style={{
-      ...activeStyle,
+      ...props.light ? lightStyle : activeStyle,
       width: props.style.width,
       height: props.style.height
     }}>{ props.title }</Text>

@@ -91,7 +91,7 @@ export class Slice9 {
     }, {
       ...rowsStyle,
       height: bottom
-    }].map((rowStyle: ViewStyle) => Object.freeze(rowStyle))
+    }]
     this._styles = [
       { width: x, height: '100%' },
       { flexGrow: 1, height: '100%' },
@@ -106,7 +106,7 @@ export class Slice9 {
       // Causes images to flicker on first render
       // It looks weird if only the streched images flicker.
       style.resizeMode = 'stretch'
-      return Object.freeze(style)
+      return style
     })
     if (slices.length !== 9) {
       throw new Error('For a slice-9 we need 9 resources!')

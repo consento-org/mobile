@@ -22,7 +22,7 @@ const lockStyle: ViewStyle = {
 }
 
 const VaultNavigator = createTabBar({
-  vaultData: () => <EmptyView prototype={ elementVaultEmpty }/>,
+  vaultData: () => <EmptyView prototype={ elementVaultEmpty } onAdd={ () => {} }/>,
   vaultLocks: () => <EmptyView prototype={ elementLocksEmpty }/>,
   vaultLog: () => <Logs/>
 })

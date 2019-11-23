@@ -155,6 +155,9 @@ export const Asset = {
   elementCardVaultBackground () {
     return images.fetch('elementCardVaultBackground', () => require('../assets/element/card/vault/background.png'))
   },
+  elementIconLockWhiteClose () {
+    return images.fetch('elementIconLockWhiteClose', () => require('../assets/element/icon/lock-white/close.png'))
+  },
   elementWelcome () {
     return images.fetch('elementWelcome', () => require('../assets/element/welcome.png'))
   },
@@ -208,6 +211,9 @@ export const Asset = {
   },
   illustrationVault () {
     return images.fetch('illustrationVault', () => require('../assets/illustration/vault.png'))
+  },
+  illustrationWaiting () {
+    return images.fetch('illustrationWaiting', () => require('../assets/illustration/waiting.png'))
   }
 }
 

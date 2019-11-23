@@ -138,6 +138,15 @@ export const time: TextStyle = Object.freeze({
   textAlignVertical: 'center'
 })
 
+export const waiting: TextStyle = Object.freeze({
+  color: Color.white,
+  fontFamily: Font.RobotoMediumItalic,
+  fontSize: 26,
+  textAlign: 'center',
+  textTransform: 'none',
+  textAlignVertical: 'center'
+})
+
 export const TextStyles = {
   H6BlackHighEmphasisCenter,
   H6RobotoMedium18BlackCenter,
@@ -153,5 +162,6 @@ export const TextStyles = {
   H2PalanquinDarkMedium36BlackCenter,
   BodyRobotoRegular18BlueCenter,
   BodyRobotoRegular18BlackLeft,
-  time
+  time,
+  waiting
 }

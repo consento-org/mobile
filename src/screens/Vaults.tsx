@@ -5,6 +5,7 @@ import { VaultCard } from './components/VaultCard'
 import { styles } from '../styles'
 import { TopNavigation } from './components/TopNavigation'
 import { Asset } from '../Asset'
+import { Waiting } from './components/Waiting'
 
 const mapStateToProps = state => state
 const mapDispatchToProps = dispatch => ({})
@@ -52,6 +53,7 @@ function Open ({}) {
       </View>
     </ScrollView>
     <AddButton style={{ position: 'absolute', right: 10, bottom: 10 }} onPress={ () => {} }/>
+    <Waiting />
   </View>
 }
 

@@ -1,5 +1,5 @@
 import React from 'react'
-import { TouchableOpacity, Text } from 'react-native'
+import { TouchableOpacity, Text, ViewStyle } from 'react-native'
 import { shadow } from '../../styles'
 import { buttonContainerDisabled } from '../../styles/component/buttonContainerDisabled'
 import { buttonContainerEnabled } from '../../styles/component/buttonContainerEnabled'
@@ -30,15 +30,18 @@ const lightStyle = {
   ...buttonContainerLight.label.style
 }
 
+export interface IButtonStyle extends ViewStyle {
+  width: number
+  height: number
+}
+
 export interface IButtonProps {
   title: string
   enabled?: boolean
   disabled?: boolean
   light?: boolean
-  style?: {
-    width: number
-    height: number
-  }
+  style?: IButtonStyle
+  styleDisabled?: IButtonStyle
   onPress?: () => void
 }
 
@@ -46,15 +49,13 @@ export function ConsentoButton (props: IButtonProps) {
   if (props.onPress === undefined || props.enabled === false || props.disabled === true) {
     return <Text style={{
       ...disabledStyle,
-      width: props.style.width,
-      height: props.style.height
+      ...(props.styleDisabled || props.style)
     }}>{ props.title }</Text>
   }
   return <TouchableOpacity style={{ display: 'flex' }} onPress={ props.onPress }>
     <Text style={{
       ...props.light ? lightStyle : activeStyle,
-      width: props.style.width,
-      height: props.style.height
+      ...props.style
     }}>{ props.title }</Text>
   </TouchableOpacity>
 }

@@ -52,8 +52,9 @@ export function Waiting () {
     setOffset( (offset + 0.01) % 1 )
   }, 25)
 
-  return <View style={{ position: 'absolute', left: 0, top: 0, paddingLeft: 50, paddingTop: 50, zIndex: 10, width: 500, height: 500, backgroundColor: elementVaultUnlock.backgroundColor }}>
-    <View>
+  return <View style={{ flexGrow: 1, backgroundColor: elementVaultUnlock.backgroundColor, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    { elementVaultUnlock.illustrationWaiting.img({ marginBottom: elementVaultUnlock.waiting.place.top - elementVaultUnlock.illustrationWaiting.place.bottom }) }
+    <View style={{ width: outWidth, height: outHeight, position: 'relative' }}>
       <Svg width={ outWidth } height={ outHeight } viewBox={ viewBox } style={ absolute }>
         <Path
           d={ box(0, offset) }

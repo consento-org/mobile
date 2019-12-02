@@ -34,4 +34,4 @@ export const VaultCard = withNavigation(({ vault, navigation }: { vault: IVault,
     <proto.icon.Render style={{ position: 'absolute' }}/>
     <proto.status.Render style={{ position: 'absolute' }}/>
   </TouchableOpacity>
-}))
+})

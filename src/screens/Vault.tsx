@@ -11,7 +11,8 @@ import { elementLocksEmpty } from '../styles/component/elementLocksEmpty'
 import { ConsentoButton } from './components/ConsentoButton'
 import { EmptyView } from './components/EmptyView'
 import { Logs } from './Logs'
-import { TVaultState } from '../model/Vault'
+import { TVaultState, IVault } from '../model/Vault'
+import { Waiting } from './components/Waiting'
 
 const lockStyle: ViewStyle = {
   height: elementSealVaultActive.height,
@@ -28,25 +29,21 @@ const VaultNavigator = createTabBar({
   vaultLog: () => <Logs/>
 })
 
-class VaultClass extends React.Component<{ navigation: TNavigation, locked: TVaultState }, {}> {
-  static router = VaultNavigator.router
-
-  render () {
-    const { navigation } = this.props
-    const vault = navigation.state.params.vault
-    return <View style={ styles.screen }>
-      <TopNavigation title={ vault } back={ true } onEdit={ text => console.log(`changed text: ${text}`) } onDelete={ () => {} }/>
-      <View style={ lockStyle }>
-        <ConsentoButton style={ elementSealVaultIdle.disabled.place } title={ 'lock' } />
-      </View>
-      <View style={ lockStyle }>
-        <ConsentoButton onPress={ () => {} } style={ elementSealVaultActive.enabled.place } title={ 'lock' } />
-      </View>
-      {
-        <VaultNavigator navigation={ navigation }></VaultNavigator>
-      }
-    </View>
-  }
+function LockButton (props: { onPress?: () => any }) {
+  return <View style={ lockStyle }>
+    <ConsentoButton style={ elementSealVaultActive.enabled.place.size() } styleDisabled={ elementSealVaultIdle.disabled.place.size() } title={ 'lock' } onPress={ props.onPress }/>
+  </View>
 }
-
-export const Vault = withNavigation(VaultClass)
+export const VaultRouter = VaultNavigator.router
+export const Vault = ({ navigation, vault }:　{ navigation: TNavigation, vault: IVault }) => {
+  const isOpen = vault.state === TVaultState.open
+  return <View style={ styles.screen }>
+    <TopNavigation title={ vault.name } back={ true } onEdit={ isOpen ? text => console.log(`changed text: ${text}`) : undefined } onDelete={ () => {} }/>
+    {
+      isOpen ? [
+        <LockButton key={ 'lock' }/>,
+        <VaultNavigator key={ 'vault' } navigation={ navigation }></VaultNavigator>
+      ] : <Waiting />
+    }
+  </View>
+}

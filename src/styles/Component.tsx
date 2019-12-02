@@ -227,14 +227,19 @@ export class Placement {
     }
   }
 
-  style<T extends IStylePlace> (style?: T): T {
+  size<T extends IStylePlace> (style?: T): T {
     if (style === undefined || style === null) {
       style = {} as T
     }
-    style.top = this.top
-    style.left = this.left
     style.width = this.width
     style.height = this.height
+    return style
+  }
+
+  style<T extends IStylePlace> (style?: T): T {
+    style = this.size(style)
+    style.top = this.top
+    style.left = this.left
     return style
   }
 

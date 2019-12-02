@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
-import { View, ViewStyle, Text, TextStyle } from 'react-native'
 import Svg, { Path } from 'react-native-svg'
-import { createBoxOutline } from './createBoxOutline'
 import useInterval from '@use-it/interval'
+import { View, ViewStyle, Text, TextStyle } from 'react-native'
+import { createBoxOutline } from './createBoxOutline'
 import { elementVaultUnlock } from '../../styles/component/elementVaultUnlock'
 
 export interface IWaitingProps {
@@ -45,8 +45,6 @@ const adjust = - thickness / 2
 const viewBox = `${adjust} ${adjust} ${outWidth} ${outHeight}`
 const textStyle = { ...elementVaultUnlock.waiting.style, position: 'absolute', width: outWidth, height: outHeight, fontStyle: 'italic' } as TextStyle
 const absolute = { position: 'absolute' } as ViewStyle
-
-console.log(textStyle)
 
 export function Waiting () {
   const [ offset, setOffset ] = useState(0.2)

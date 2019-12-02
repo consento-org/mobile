@@ -2,7 +2,7 @@ import React from 'react'
 import { Text } from 'react-native'
 import { Provider } from 'react-redux'
 import { Loading } from './src/screens/Loading'
-import { loadFonts } from './src/fonts'
+import { loadFonts } from './src/styles/Font'
 import 'react-native-gesture-handler' // Imported to fix gesture error in tab navigation  
 
 export default class App extends React.Component<{}, { store, Screens, error: Error }> {

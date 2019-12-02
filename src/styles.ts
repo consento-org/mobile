@@ -1,7 +1,5 @@
-import { StyleSheet, StatusBar, Platform, ViewStyle } from 'react-native'
+import { StyleSheet, StatusBar, Platform } from 'react-native'
 import { Color } from './styles/Color'
-
-const shadows: { [elevation: number]: ViewStyle } = {}
 
 interface AndroidShadow {
   elevation: number
@@ -17,8 +15,12 @@ interface IOSShadow {
   shadowRadius: number
 }
 
-export function shadow (elevation: number = 4): IOSShadow | AndroidShadow {
-  let shadow = shadows[elevation]
+type Shadow = IOSShadow | AndroidShadow
+
+const shadows: { [elevation: number]: Shadow } = {}
+
+export function shadow (elevation: number = 4) {
+  let shadow: Shadow = shadows[elevation]
   if (shadow === undefined) {
     shadow = Object.freeze(Platform.select({
       android: {
@@ -30,7 +32,7 @@ export function shadow (elevation: number = 4): IOSShadow | AndroidShadow {
         shadowOpacity: 0.3,
         shadowRadius: 0.8 * elevation
       }
-    }))
+    })) as Shadow
     shadows[elevation] = shadow
   }
   return shadow

@@ -11,6 +11,7 @@ import { elementLocksEmpty } from '../styles/component/elementLocksEmpty'
 import { ConsentoButton } from './components/ConsentoButton'
 import { EmptyView } from './components/EmptyView'
 import { Logs } from './Logs'
+import { TVaultState } from '../model/Vault'
 
 const lockStyle: ViewStyle = {
   height: elementSealVaultActive.height,
@@ -27,7 +28,7 @@ const VaultNavigator = createTabBar({
   vaultLog: () => <Logs/>
 })
 
-class VaultClass extends React.Component<{ navigation: TNavigation }, {}> {
+class VaultClass extends React.Component<{ navigation: TNavigation, locked: TVaultState }, {}> {
   static router = VaultNavigator.router
 
   render () {

@@ -30,6 +30,15 @@ export const TimestampRobotoSmallCapRegular10BlackLeft: TextStyle = Object.freez
   textAlignVertical: 'center'
 })
 
+export const TimestampRobotoSmallCapRegular10RedCenter: TextStyle = Object.freeze({
+  color: Color.red,
+  fontFamily: Font.RobotoRegular,
+  fontSize: 10,
+  textAlign: 'center',
+  textTransform: 'uppercase',
+  textAlignVertical: 'center'
+})
+
 export const TITLERobotoSmallCapRegular12BlueCenter: TextStyle = Object.freeze({
   color: Color.lightBlue,
   fontFamily: Font.RobotoMedium,
@@ -81,6 +90,42 @@ export const H5RobotoRegular24BlackCenter: TextStyle = Object.freeze({
   fontSize: 24,
   textAlign: 'center',
   textTransform: 'none',
+  textAlignVertical: 'center'
+})
+
+export const H5RobotoRegular24BlackLeft: TextStyle = Object.freeze({
+  color: Color.black,
+  fontFamily: Font.RobotoRegular,
+  fontSize: 24,
+  textAlign: 'left',
+  textTransform: 'none',
+  textAlignVertical: 'center'
+})
+
+export const H5RobotoRegular24RedCenter: TextStyle = Object.freeze({
+  color: Color.red,
+  fontFamily: Font.RobotoMedium,
+  fontSize: 24,
+  textAlign: 'center',
+  textTransform: 'uppercase',
+  textAlignVertical: 'center'
+})
+
+export const H5RobotoRegular24GreenCenter: TextStyle = Object.freeze({
+  color: Color.green,
+  fontFamily: Font.RobotoMedium,
+  fontSize: 24,
+  textAlign: 'center',
+  textTransform: 'uppercase',
+  textAlignVertical: 'center'
+})
+
+export const H5RobotoRegular24GreyCenter: TextStyle = Object.freeze({
+  color: Color.darkGrey,
+  fontFamily: Font.RobotoMedium,
+  fontSize: 24,
+  textAlign: 'center',
+  textTransform: 'uppercase',
   textAlignVertical: 'center'
 })
 
@@ -151,12 +196,17 @@ export const TextStyles = {
   H6BlackHighEmphasisCenter,
   H6RobotoMedium18BlackCenter,
   TimestampRobotoSmallCapRegular10BlackLeft,
+  TimestampRobotoSmallCapRegular10RedCenter,
   TITLERobotoSmallCapRegular12BlueCenter,
   TITLERobotoSmallCapRegular12RedCenter,
   TITLERobotoSmallCapRegular12GreyCenter,
   SubtitleRobotoRegular13BlackCenter,
   SubtitleRobotoBold13BlackCenter,
   H5RobotoRegular24BlackCenter,
+  H5RobotoRegular24BlackLeft,
+  H5RobotoRegular24RedCenter,
+  H5RobotoRegular24GreenCenter,
+  H5RobotoRegular24GreyCenter,
   BUTTONRobotoSmallCapRegular18WhiteCenter,
   BUTTONRobotoSmallCapRegular18BlackCenter,
   H2PalanquinDarkMedium36BlackCenter,

@@ -11,8 +11,10 @@ import { TNavigation } from './navigation'
 import { Text } from 'react-native'
 import { Vault, VaultRouter } from './Vault'
 import { IVault, TVaultState } from '../model/Vault'
+import { IConsento, IConsentoAccess, TConsentoType, TConsentoAccessState } from '../model/Consento'
+import { IRelation } from '../model/Relation'
 
-const list: IVault[] = [
+const vaults: IVault[] = [
   {key: 'Devin'},
   {key: 'Dan'},
   {key: 'Dominic'},
@@ -37,8 +39,32 @@ const list: IVault[] = [
   }
 })
 
+const relations: IRelation[] = [
+  { key: 'a', name: 'XXX', image: 'abcd' }
+]
+
+const consentos: IConsento[] = [
+  { type: TConsentoType.requestAccess },
+  { type: TConsentoType.requestAccess },
+  { type: TConsentoType.requestAccess },
+  { type: TConsentoType.requestAccess }
+].map((obj, index) => {
+  return {
+    ...obj,
+    key: `consento-${index}`,
+    relation: relations[0],
+    vault: vaults[0],
+    time: Date.now(),
+    state: 
+      index % 4 === 0 ? TConsentoAccessState.accepted :
+      index % 4 === 1 ? TConsentoAccessState.denied :
+      index % 4 === 2 ? TConsentoAccessState.expired :
+      TConsentoAccessState.idle
+  } as IConsentoAccess
+})
+
 function getVaultByKey (key: string): IVault {
-  for (const vault of list) {
+  for (const vault of vaults) {
     if (vault.key === key) {
       return vault
     }
@@ -52,8 +78,8 @@ function init () {
       main: {
         path: '',
         screen: createBottomTabBar({
-          vaults: () => <VaultsScreen vaults={ list } />,
-          consentos: () => <ConsentosScreen />,
+          vaults: () => <VaultsScreen vaults={ vaults } />,
+          consentos: () => <ConsentosScreen consentos={ consentos }/>, 
           relations: () => <RelationsScreen />,
           notificationTest: () => <NotificationTestScreen />
         })

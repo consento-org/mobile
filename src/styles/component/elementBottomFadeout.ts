@@ -21,7 +21,7 @@ export class ElementBottomFadeoutClass extends Component {
       x: 0.5877866921943831,
       y: 0
     }
-  } }, 0, null, [])
+  } }, null, [])
   constructor () {
     super('elementBottomFadeout', 375, 100)
   }

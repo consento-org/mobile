@@ -7,12 +7,13 @@ import { Asset } from '../../Asset'
 /* eslint-disable lines-between-class-members */
 export class ElementVaultUnlockClass extends Component {
   waiting: Text
-  inactive = new Polygon({ x: 52.5, y: 552, w: 270, h: 60 }, null, 14, {
+  inactive = new Polygon({ x: 52.5, y: 552, w: 270, h: 60 }, null, {
     fill: '#ffffff5e',
     thickness: 4,
-    lineEnd: 'Round'
+    lineEnd: 'Round',
+    radius: 14
   }, [])
-  active = new Polygon({ x: 52.5, y: 552, w: 270, h: 60 }, null, 0, {
+  active = new Polygon({ x: 52.5, y: 552, w: 270, h: 60 }, null, {
     fill: Color.white,
     thickness: 4,
     lineEnd: 'Round'

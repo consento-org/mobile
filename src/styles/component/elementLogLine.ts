@@ -5,7 +5,7 @@ import { TextStyles } from '../TextStyles'
 
 /* eslint-disable lines-between-class-members */
 export class ElementLogLineClass extends Component {
-  bg = new Polygon({ x: 0, y: 34, w: 375, h: 64 }, Color.grey, 5, null, [])
+  bg = new Polygon({ x: 0, y: 34, w: 375, h: 64 }, Color.grey, { radius: 5 }, [])
   time: Text
   text: Text
   constructor () {

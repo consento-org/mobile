@@ -5,10 +5,11 @@ import { TextStyles } from '../TextStyles'
 
 /* eslint-disable lines-between-class-members */
 export class ButtonContainerDisabledClass extends Component {
-  shape = new Polygon({ x: 0, y: 0, w: 96, h: 36 }, null, 16, {
+  shape = new Polygon({ x: 0, y: 0, w: 96, h: 36 }, null, {
     fill: Color.borderDark,
     thickness: 1,
-    lineEnd: 'Butt'
+    lineEnd: 'Butt',
+    radius: 16
   }, [])
   label: Text
   constructor () {

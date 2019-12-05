@@ -8,7 +8,7 @@ import { Color } from '../Color'
 export class ElementTopNavEmptyClass extends Component {
   title: Text
   logo: ImagePlacement
-  borderTop = new Polygon({ x: 0, y: 58.25, w: 360, h: 2 }, null, 0, {
+  borderTop = new Polygon({ x: 0, y: 58.25, w: 360, h: 2 }, null, {
     fill: '#d9d9d9ff',
     thickness: 1,
     lineEnd: 'Butt'

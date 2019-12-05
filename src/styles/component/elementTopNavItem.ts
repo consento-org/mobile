@@ -6,7 +6,7 @@ import { Color } from '../Color'
 
 /* eslint-disable lines-between-class-members */
 export class ElementTopNavItemClass extends Component {
-  borderTop = new Polygon({ x: 0, y: 58.25, w: 360, h: 2 }, null, 0, {
+  borderTop = new Polygon({ x: 0, y: 58.25, w: 360, h: 2 }, null, {
     fill: '#d9d9d9ff',
     thickness: 1,
     lineEnd: 'Butt'

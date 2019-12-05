@@ -352,13 +352,14 @@ export type TLineEnd = 'Butt' | 'Round' | 'Projecting'
 export type TLineJoin = 'Miter' | 'Round' | 'Bevel'
 
 export interface TBorderData {
-  fill: TFillData,
-  thickness: number
+  fill?: TFillData,
+  thickness?: number
   endArrowhead?: TArrowHead
   startArrowhead?: TArrowHead
   lineEnd?: TLineEnd
   lineJoin?: TLineJoin
   dashPattern?: number[]
+  radius?: number
 }
 
 const reg = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})?/ig
@@ -417,6 +418,22 @@ export class Fill {
   }
 }
 
+export enum TBorderStyle {
+  dotted = 'dotted',
+  dashed = 'dashed',
+  solid = 'solid'
+}
+
+function dashPatternToBorderStyle (dashPattern: number[]) {
+  if (dashPattern.length === 1) {
+    return TBorderStyle.dotted
+  }
+  if (dashPattern.length === 2) {
+    return TBorderStyle.dashed
+  }
+  return TBorderStyle.solid
+}
+
 export class Border {
   endArrowhead: TArrowHead
   startArrowhead: TArrowHead
@@ -425,14 +442,28 @@ export class Border {
   dashPattern: number[]
   fill: Fill
   thickness: number
+  radius: number
+  borderStyle: TBorderStyle
+
   constructor (options: TBorderData | null) {
-    this.fill = new Fill(options === null ? null : options.fill)
-    this.thickness = options === null ? 0 : options.thickness
+    this.fill = new Fill(options === null || options.fill === undefined ? null : options.fill)
+    this.thickness = options === null || options.thickness === undefined ? 0 : options.thickness
     this.endArrowhead = options === null || options.endArrowhead === undefined ? 'None' : options.endArrowhead
     this.startArrowhead = options === null || options.startArrowhead === undefined ? 'None' : options.startArrowhead
     this.lineEnd = options === null || options.lineEnd === undefined ? 'Projecting' : options.lineEnd
     this.lineJoin = options === null || options.lineJoin === undefined ? 'Miter' : options.lineJoin
     this.dashPattern = options === null || options.dashPattern === undefined ? [] : options.dashPattern
+    this.borderStyle = dashPatternToBorderStyle(this.dashPattern)
+    this.radius = options === null || options.radius === undefined ? 0 : options.radius
+  }
+
+  style (): ViewStyle {
+    return {
+      borderRadius: this.radius,
+      borderColor: this.fill.color,
+      borderWidth: this.thickness,
+      borderStyle: this.borderStyle
+    }
   }
 }
 
@@ -467,11 +498,11 @@ export class Polygon {
   border: Border
   shadows: Shadow[]
 
-  constructor (frame: IFrameData, fill: TFillData | null, borderRadius: number, border: TBorderData | null, shadows: TShadowData[]) {
+  constructor (frame: IFrameData, fill: TFillData | null, border: TBorderData | null, shadows: TShadowData[]) {
     this.place = new Placement(frame)
     this.fill = new Fill(fill)
-    this.borderRadius = borderRadius
     this.border = new Border(border)
+    this.borderRadius = this.border.radius
     this.shadows = shadows.map(data => new Shadow(data))
     this.RenderRect = this.RenderRect.bind(this)
   }
@@ -503,11 +534,7 @@ export class Polygon {
   }
 
   borderStyle (): ViewStyle {
-    return {
-      borderRadius: this.borderRadius,
-      borderColor: this.border.fill.color,
-      borderWidth: this.border.thickness
-    }
+    return this.border.style()
   }
 }
 

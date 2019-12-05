@@ -6,7 +6,7 @@ import { Color } from '../Color'
 /* eslint-disable lines-between-class-members */
 export class ElementTabBarTabActiveClass extends Component {
   label: Text
-  bottomLine = new Polygon({ x: -0.25, y: 47, w: 99, h: 2 }, null, 0, {
+  bottomLine = new Polygon({ x: -0.25, y: 47, w: 99, h: 2 }, null, {
     fill: Color.activeGrey,
     thickness: 2,
     lineEnd: 'Butt'

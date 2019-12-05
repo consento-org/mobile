@@ -5,7 +5,7 @@ import { TextStyles } from '../TextStyles'
 
 /* eslint-disable lines-between-class-members */
 export class ButtonContainerEnabledClass extends Component {
-  shape = new Polygon({ x: 0, y: 0, w: 96, h: 36 }, Color.coral, 16, null, [
+  shape = new Polygon({ x: 0, y: 0, w: 96, h: 36 }, Color.coral, { radius: 16 }, [
     { x: 0, y: 1, blur: 3, spread: 0, color: '#00000033' },
     { x: 0, y: 2, blur: 1, spread: -1, color: Color.borderDark },
     { x: 0, y: 1, blur: 1, spread: 0, color: '#00000024' }

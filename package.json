@@ -8,7 +8,9 @@
     "web": "expo start --web",
     "start": "expo start",
     "test": "jest",
-    "lint": "eslint --ext .js,.ts ."
+    "lint": "eslint --ext .js,.ts .",
+    "android:reload": "adb shell input text \"RR\"",
+    "android:menu": "adb shell input keyevent 82"
   },
   "dependencies": {
     "@consento/api": "0.0.7",

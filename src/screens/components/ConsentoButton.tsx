@@ -40,6 +40,7 @@ export interface IButtonProps {
   enabled?: boolean
   disabled?: boolean
   light?: boolean
+  thin?: boolean
   style?: IButtonStyle
   styleDisabled?: IButtonStyle
   onPress?: () => void
@@ -52,10 +53,26 @@ export function ConsentoButton (props: IButtonProps) {
       ...(props.styleDisabled || props.style)
     }}>{ props.title }</Text>
   }
-  return <TouchableOpacity style={{ display: 'flex' }} onPress={ props.onPress }>
-    <Text style={{
-      ...props.light ? lightStyle : activeStyle,
-      ...props.style
-    }}>{ props.title }</Text>
+  const parentStyle = {
+    display: 'flex',
+    top: props.style !== undefined ? props.style.top : 0,
+    left: props.style !== undefined ? props.style.left : 0,
+    position: props.style !== undefined ? props.style.position : undefined,
+    width: props.style !== undefined ? props.style.width : undefined,
+    height: props.style !== undefined ? props.style.height : undefined
+  } as ViewStyle
+  const style = {
+    ...props.light ? lightStyle : props.thin ? disabledStyle : activeStyle,
+    ...props.style,
+    left: undefined,
+    top: undefined
+  } as ViewStyle
+  if (props.style !== undefined) {
+    delete props.style.left
+    delete props.style.top
+    delete props.style.position
+  }
+  return <TouchableOpacity style={ parentStyle } onPress={ props.onPress }>
+    <Text style={ style }>{ props.title }</Text>
   </TouchableOpacity>
 }

@@ -12,6 +12,6 @@ const style: ViewStyle = {
 
 export function Loading () {
   return <View style={style}>
-    { screen01Welcome.elementWelcome.img() }
+    { screen01Welcome.illustration.asset().img() }
   </View>
 }

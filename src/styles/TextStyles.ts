@@ -174,6 +174,15 @@ export const BodyRobotoRegular18BlackLeft: TextStyle = Object.freeze({
   textAlignVertical: 'top'
 })
 
+export const BodyRobotoRegular18BlackCenter: TextStyle = Object.freeze({
+  color: Color.black,
+  fontFamily: Font.RobotoRegular,
+  fontSize: 18,
+  textAlign: 'center',
+  textTransform: 'none',
+  textAlignVertical: 'top'
+})
+
 export const time: TextStyle = Object.freeze({
   color: Color.black,
   fontFamily: Font.RobotoRegular,
@@ -212,6 +221,7 @@ export const TextStyles = {
   H2PalanquinDarkMedium36BlackCenter,
   BodyRobotoRegular18BlueCenter,
   BodyRobotoRegular18BlackLeft,
+  BodyRobotoRegular18BlackCenter,
   time,
   waiting
 }

@@ -207,6 +207,8 @@ export class Placement {
   bottom: number
   width: number
   height: number
+  centerX: number
+  centerY: number
 
   constructor({ x, y, w, h }: IFrameData) {
     this.x = x
@@ -217,6 +219,8 @@ export class Placement {
     this.right = this.x + w
     this.height = h
     this.bottom = y + h
+    this.centerX = x + w / 2
+    this.centerY = y + h / 2
   }
 
   dynWidthStyle (): { left: number, top: number, right: number } {

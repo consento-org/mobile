@@ -7,7 +7,7 @@ import { buttonContainerLight } from './buttonContainerLight'
 /* eslint-disable lines-between-class-members */
 export class ElementConsentosBaseIdleClass extends Component {
   deleteButton = new Link(buttonContainerDisabled, { x: 80, y: 78, w: 180, h: 36 }, {
-    label: 'DENY'
+    label: 'deny'
   })
   timeLeft: Text
   allowButton = new Link(buttonContainerLight, { x: 80, y: 31, w: 180, h: 36 }, {

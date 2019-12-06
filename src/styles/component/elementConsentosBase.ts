@@ -22,7 +22,7 @@ export class ElementConsentosBaseClass extends Component {
   constructor () {
     super('elementConsentosBase', 340, 270, Color.black)
     this.vaultIcon = new ImagePlacement(Asset.iconVaultGrey, { x: 29, y: 111, w: 24, h: 24 }, this)
-    this.vaultName = new Text('Vault  Name', TextStyles.H5RobotoRegular24BlackLeft, { x: 80, y: 103, w: 207, h: 36 }, this)
+    this.vaultName = new Text('Vault  Name', TextStyles.H5RobotoRegular24BlackLeft, { x: 80, y: 103, w: 260, h: 36 }, this)
     this.relationName = new Text('Name', TextStyles.H5RobotoRegular24BlackLeft, { x: 86, y: 30, w: 223, h: 36 }, this)
     this.actionRequested = new Text('requests access to:', TextStyles.BodyRobotoRegular18BlackLeft, { x: 86, y: 66, w: 223, h: 24 }, this)
     this.lastAccess = new Text('23 Sec. ago', {

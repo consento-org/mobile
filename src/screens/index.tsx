@@ -11,7 +11,7 @@ import { TNavigation } from './navigation'
 import { Text } from 'react-native'
 import { Vault, VaultRouter } from './Vault'
 import { IVault, TVaultState } from '../model/Vault'
-import { IConsento, IConsentoAccess, TConsentoType, TConsentoAccessState } from '../model/Consento'
+import { IConsento, IConsentoAccess, TConsentoType, TConsentoState } from '../model/Consento'
 import { IRelation } from '../model/Relation'
 
 const vaults: IVault[] = [
@@ -51,17 +51,35 @@ const consentos: IConsento[] = [
 ].map((obj, index) => {
   return {
     ...obj,
-    key: `consento-${index}`,
+    key: `consento-access-${index}`,
     relation: relations[0],
     vault: vaults[0],
     time: Date.now(),
     state: 
-      index % 4 === 0 ? TConsentoAccessState.accepted :
-      index % 4 === 1 ? TConsentoAccessState.denied :
-      index % 4 === 2 ? TConsentoAccessState.expired :
-      TConsentoAccessState.idle
+      index % 4 === 0 ? TConsentoState.accepted :
+      index % 4 === 1 ? TConsentoState.denied :
+      index % 4 === 2 ? TConsentoState.expired :
+      TConsentoState.idle
   } as IConsentoAccess
-})
+}).concat([
+  { type: TConsentoType.requestLockee },
+  { type: TConsentoType.requestLockee },
+  { type: TConsentoType.requestLockee },
+  { type: TConsentoType.requestLockee }
+].map((obj, index) => {
+  return {
+    ...obj,
+    key: `consento-lockee-${index}`,
+    relation: relations[0],
+    vault: vaults[0],
+    time: Date.now(),
+    state: 
+      index % 4 === 0 ? TConsentoState.accepted :
+      index % 4 === 1 ? TConsentoState.denied :
+      index % 4 === 2 ? TConsentoState.expired :
+      TConsentoState.idle
+  } as IConsentoAccess
+}))
 
 function getVaultByKey (key: string): IVault {
   for (const vault of vaults) {

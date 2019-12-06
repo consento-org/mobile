@@ -9,10 +9,11 @@ import { IConsento, isConsentoAccess, TConsentoAccessState } from '../model/Cons
 import { elementConsentosBase } from '../styles/component/elementConsentosBase'
 import { elementConsentosAccessAccepted } from '../styles/component/elementConsentosAccessAccepted'
 import { ConsentoButton } from './components/ConsentoButton'
-import { elementConsentosAccessExpired } from '../styles/component/elementConsentosAccessExpired'
-import { elementConsentosAccessDenied } from '../styles/component/elementConsentosAccessDenied'
-import { elementConsentosAccessIdle } from '../styles/component/elementConsentosAccessIdle'
-import { Polygon } from '../styles/Component'
+import { elementConsentosBaseIdle } from '../styles/component/elementConsentosBaseIdle'
+import { elementConsentosBaseAccepted } from '../styles/component/elementConsentosBaseAccepted'
+import { elementConsentosBaseExpired } from '../styles/component/elementConsentosBaseExpired'
+import { elementConsentosBaseDenied } from '../styles/component/elementConsentosBaseDenied'
+import { Polygon, Text, Link } from '../styles/Component'
 import { screen02Consentos } from '../styles/component/screen02Consentos'
 
 const mapStateToProps = state => state
@@ -40,6 +41,42 @@ function humanTime (time: number) {
   return String(time)
 }
 
+interface IStateStyle {
+  state: Text
+  line: Polygon
+  deleteButton: Link<any, { label: string }>
+}
+
+function ConsentoState ({ state, style, onDelete, onAccept }: { state: TConsentoAccessState, onDelete: () => any, onAccept: () => any, style?: ViewStyle }) {
+  const viewStyle = {
+    position: 'absolute',
+    ... style
+  } as ViewStyle
+  if (state === TConsentoAccessState.idle) {
+    return <View style={ viewStyle }>
+      <elementConsentosBaseIdle.timeLeft.Render value={ '1235' }/>
+      <ConsentoButton style={{ ...elementConsentosBaseIdle.allowButton.place.style(), position: 'absolute' }} light={ true } title={
+        elementConsentosBaseIdle.allowButton.text.label
+      } onPress={ onAccept } />
+      <ConsentoButton style={{ ...elementConsentosBaseIdle.deleteButton.place.style(), position: 'absolute' }} thin={ true } title={
+        elementConsentosBaseIdle.deleteButton.text.label
+      } onPress={ onDelete } />
+    </View>
+  }
+  const stateStyle: IStateStyle = (
+    state === TConsentoAccessState.denied ? elementConsentosBaseDenied :
+    state === TConsentoAccessState.expired ? elementConsentosBaseExpired :
+    elementConsentosBaseAccepted
+  )
+  return <View style={ viewStyle }>
+    <HorzLine proto={ stateStyle.line } />
+    <stateStyle.state.Render />
+    <ConsentoButton style={{ ...stateStyle.deleteButton.place.style(), position: 'absolute' }} thin={ true } title={
+      stateStyle.deleteButton.text.label
+    } onPress={ onDelete } /> 
+  </View>
+}
+
 class Consento extends React.Component<{ consento: IConsento, key: string }> {
   render () {
     const consento = this.props.consento
@@ -50,32 +87,7 @@ class Consento extends React.Component<{ consento: IConsento, key: string }> {
         <elementConsentosBase.actionRequested.Render />
         <elementConsentosBase.vaultIcon.Render />
         <elementConsentosBase.vaultName.Render value={ 'Vault Name' } />
-        {
-          consento.state !== TConsentoAccessState.idle
-            ? <View style={{ position: 'absolute' }}>
-                <HorzLine proto={ elementConsentosAccessAccepted.line } />
-                {
-                  consento.state === TConsentoAccessState.denied
-                    ? <elementConsentosAccessDenied.state.Render />
-                    : (consento.state === TConsentoAccessState.expired
-                      ? <elementConsentosAccessExpired.state.Render />
-                      : <elementConsentosAccessAccepted.state.Render />
-                    )
-                }
-                <ConsentoButton style={{ ...elementConsentosAccessAccepted.deleteButton.place.style(), position: 'absolute' }} thin={ true } title={
-                  elementConsentosAccessAccepted.deleteButton.text.label
-                } onPress={ () => {} } /> 
-              </View>
-            : <View style={{ position: 'absolute' }}>
-                <elementConsentosAccessIdle.timeLeft.Render value={ '1235' }/>
-                <ConsentoButton style={{ ...elementConsentosAccessIdle.allowButton.place.style(), position: 'absolute' }} light={ true } title={
-                  elementConsentosAccessIdle.allowButton.text.label
-                } onPress={ () => {} } />
-                <ConsentoButton style={{ ...elementConsentosAccessIdle.deleteButton.place.style(), position: 'absolute' }} thin={ true } title={
-                  elementConsentosAccessIdle.deleteButton.text.label
-                } onPress={ () => {} } />
-              </View>
-        }
+        <ConsentoState state={ consento.state } onAccept={ () => {} } onDelete={ () => {} } style={ elementConsentosAccessAccepted.state.place.style() }/>
       </View>
     }
     return <View></View>

@@ -13,6 +13,9 @@ import { Vault, VaultRouter } from './Vault'
 import { IVault, TVaultState } from '../model/Vault'
 import { IConsento, IConsentoAccess, TConsentoType, TConsentoState } from '../model/Consento'
 import { IRelation } from '../model/Relation'
+import { ConsentoContext } from '../model/ConsentoContext'
+import { setup, IReceiver, IAnnonymous, IEncryptedMessage } from '@consento/api'
+import { sodium } from '@consento/crypto/core/sodium'
 
 const vaults: IVault[] = [
   {key: 'Devin'},
@@ -130,7 +133,26 @@ function init () {
     return () => <Text>{ 'Cant load it' }</Text>
   }
 }
+const Navigator = init()
+const api = setup({
+  cryptoCore: sodium,
+  notificationTransport: {
+    async subscribe (receivers: IReceiver[]) {
+      return false
+    },
+    async unsubscribe (receivers: IReceiver[]) {
+      return false
+    },
+    async send (channel: IAnnonymous, message: IEncryptedMessage) {
+      return []
+    }
+  }
+})
 
-export const Screens = init()
+export function Screens () {
+  return <ConsentoContext.Provider value={ api }>
+    <Navigator />
+  </ConsentoContext.Provider>
+}
 
 export default Screens

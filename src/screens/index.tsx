@@ -1,6 +1,6 @@
 import React from 'react'
 import { View } from 'react-native'
-import { createAppContainer, NavigationContainerProps, NavigationContainerComponent, withNavigation } from 'react-navigation'
+import { createAppContainer, withNavigation } from 'react-navigation'
 import { createStackNavigator } from 'react-navigation-stack'
 import { createBottomTabBar } from './components/createBottomTabBar'
 import { NotificationTestScreen } from './NotificationTest'
@@ -122,12 +122,12 @@ function init () {
       headerMode: 'none',
       initialRouteKey: 'vaults'
     })
-    return (createAppContainer(AppNavigator) as any) as {
-      new(props: NavigationContainerProps, context?: any): NavigationContainerComponent
-    }
+
+    const Container = createAppContainer(AppNavigator)
+    return () => <Container />
   } catch (err) {
     console.log(err)
-    return <Text>{ 'Cant load it' }</Text>
+    return () => <Text>{ 'Cant load it' }</Text>
   }
 }
 

@@ -10,7 +10,7 @@ import { elementConsentosBase } from '../styles/component/elementConsentosBase'
 import { elementConsentosAccessAccepted } from '../styles/component/elementConsentosAccessAccepted'
 import { screen02Consentos } from '../styles/component/screen02Consentos'
 import { ConsentoState } from './components/ConsentoState'
-import Svg, { Circle, Rect, Defs, ClipPath, Image, G } from 'react-native-svg'
+import Svg, { Circle, Rect, G } from 'react-native-svg'
 import { elementConsentosLockeeIdle } from '../styles/component/elementConsentosLockeeIdle'
 
 const mapStateToProps = state => state

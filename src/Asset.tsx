@@ -158,6 +158,9 @@ export const Asset = {
   iconBackGrey () {
     return images.fetch('iconBackGrey', () => require('../assets/icon/back/grey.png'))
   },
+  iconCloseFilled () {
+    return images.fetch('iconCloseFilled', () => require('../assets/icon/close/filled.png'))
+  },
   iconConsentoActive () {
     return images.fetch('iconConsentoActive', () => require('../assets/icon/consento/active.png'))
   },
@@ -197,6 +200,12 @@ export const Asset = {
   iconVaultIdle () {
     return images.fetch('iconVaultIdle', () => require('../assets/icon/vault/idle.png'))
   },
+  illustrationBottomLeft () {
+    return images.fetch('illustrationBottomLeft', () => require('../assets/illustration/bottom/left.png'))
+  },
+  illustrationBottomRight () {
+    return images.fetch('illustrationBottomRight', () => require('../assets/illustration/bottom/right.png'))
+  },
   illustrationFriends () {
     return images.fetch('illustrationFriends', () => require('../assets/illustration/friends.png'))
   },
@@ -205,6 +214,12 @@ export const Asset = {
   },
   illustrationSun () {
     return images.fetch('illustrationSun', () => require('../assets/illustration/sun.png'))
+  },
+  illustrationTopLeft () {
+    return images.fetch('illustrationTopLeft', () => require('../assets/illustration/top/left.png'))
+  },
+  illustrationTopRight () {
+    return images.fetch('illustrationTopRight', () => require('../assets/illustration/top/right.png'))
   },
   illustrationVault () {
     return images.fetch('illustrationVault', () => require('../assets/illustration/vault.png'))

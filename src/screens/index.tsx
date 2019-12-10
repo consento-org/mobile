@@ -13,6 +13,7 @@ import { Vault, VaultRouter } from './Vault'
 import { IVault, TVaultState } from '../model/Vault'
 import { IConsento, IConsentoAccess, TConsentoType, TConsentoState } from '../model/Consento'
 import { IRelation } from '../model/Relation'
+import { NewRelation } from './NewRelation'
 import { ConsentoContext } from '../model/ConsentoContext'
 import { setup, IReceiver, IAnnonymous, IEncryptedMessage } from '@consento/api'
 import { sodium } from '@consento/crypto/core/sodium'
@@ -120,6 +121,10 @@ function init () {
             return <Vault vault={ vault } navigation={ navigation } />
           }
         })
+      },
+      newRelation: {
+        path: 'newRelation',
+        screen: () => <NewRelation />
       }
     }, {
       headerMode: 'none',

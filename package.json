@@ -13,7 +13,7 @@
     "android:menu": "adb shell input keyevent 82"
   },
   "dependencies": {
-    "@consento/api": "0.0.7",
+    "@consento/api": "0.0.9",
     "@consento/crypto": "0.0.6",
     "@consento/notification-server": "0.0.4",
     "@use-it/interval": "^0.1.3",

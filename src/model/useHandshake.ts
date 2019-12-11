@@ -1,5 +1,5 @@
 import { useEffect, useState, useContext } from 'react'
-import { IHandshakeInit, IReceiver, IEncodable, IHandshakeAcceptMessage, IHandshakeConfirmation } from '@consento/crypto'
+import { IHandshakeInit, IEncodable, IHandshakeAcceptMessage } from '@consento/crypto'
 import { ConsentoContext } from './ConsentoContext'
 
 function isAcceptMessage (body: IEncodable): body is IHandshakeAcceptMessage {
@@ -25,8 +25,10 @@ export function useHandshake () {
 
   const [ connectionState, setConnectionState ] = useState<string>('no-connection')
   const [ refresh, setRefresh ] = useState<number>(Date.now())
-  const [ closeIncoming, setCloseIncoming ] = useState<() => any>(null)
-  const [ closeOutgoing, setCloseOutgoing ] = useState<() => any>(null)
+  const [ close ] = useState<{
+    outgoing: () => any
+    incoming: () => any
+  }>({} as any)
 
   useEffect(() => {
     if (crypto !== null) {
@@ -36,12 +38,11 @@ export function useHandshake () {
           handshake,
           initMessage: data.toString('base64')
         })
-        /*
         const { promise, cancel } = notifications.receive(handshake.receiver, isAcceptMessage)
-        if (closeIncoming !== null) {
-          closeIncoming() //
+        if (close.incoming !== undefined) {
+          close.incoming()
         }
-        setCloseIncoming(cancel)
+        close.incoming = cancel
         promise.then(acceptMessage => {
           setConnectionState('confirming-incoming')
           return handshake.confirm(acceptMessage).then(confirmation => {
@@ -50,19 +51,22 @@ export function useHandshake () {
                 console.log('done incoming', confirmation)
               })
           })
+        }).catch(err => {
+          if (err.message !== 'cancelled') {
+            console.error(err)
+          }
         })
-        */
       }).catch(err => {
         console.log(`Error getting handshake`)
         console.log(err)
       })
     }
     return () => {
-      if (closeIncoming !== null) {
-        closeIncoming()
+      if (close.incoming !== undefined) {
+        close.incoming()
       }
-      if (closeOutgoing !== null) {
-        closeOutgoing()
+      if (close.outgoing !== undefined) {
+        close.outgoing()
       }
     }
   }, [refresh, crypto])
@@ -73,18 +77,21 @@ export function useHandshake () {
       if (crypto !== null) {
         const accept = new crypto.HandshakeAccept(Buffer.from(initMessage, 'base64'))
         setConnectionState('connecting')
-        /*
         const { promise, cancel } = notifications.sendAndReceive(accept, accept.acceptMessage, isUint8Array)
-        if (closeOutgoing !== null) {
-          closeOutgoing()
+        if (close.outgoing !== undefined) {
+          close.outgoing()
         }
-        setCloseOutgoing(cancel)
+        close.outgoing = cancel
         promise.then(finalMessage => accept.finalize(finalMessage) 
           .then(done => {
             console.log('done outgoing', done)
           })
+          .catch(err => {
+            if (err.message !== 'cancelled') {
+              console.error(err)
+            }
+          })
         )
-        */
       }
     },
     initMessage: parts.initMessage,

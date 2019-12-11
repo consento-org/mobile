@@ -7,7 +7,7 @@ import { usePermission, Permissions } from '../util/usePermission'
 import { useVUnits } from '../util/useVUnits'
 import { topPadding } from '../styles'
 import { withNavigation, TNavigation } from './navigation'
-import { useHandshake } from '../model/useHandshake'
+import { useHandshake, isInitLink } from '../model/useHandshake'
 import { ConsentoButton } from './components/ConsentoButton'
 import QRCode from 'react-native-qrcode-svg'
 import Svg, { Path } from 'react-native-svg'
@@ -124,7 +124,10 @@ export const NewRelation = withNavigation(({ navigation }: { navigation: TNaviga
   })
   const { vw, vh, isHorz, isVert } = useVUnits()
   const [ size, setSize ] = useState<ISize>(undefined)
-  const { initMessage } = useHandshake()
+  const { initLink, connect, connectionState } = useHandshake()
+  const [ receivedLink, setReceivedLink ] = useState<string>(null)
+
+  console.log({ connectionState })
 
   const qrSpace = isHorz ? Math.min(vw(50), vh(100)) : Math.min(vw(100), vh(50))
 
@@ -188,7 +191,12 @@ export const NewRelation = withNavigation(({ navigation }: { navigation: TNaviga
   const cutOutG = `M0 0 L0 ${camSpace.height} L${camSpace.width} ${camSpace.height} L${camSpace.width} 0 z M${cutOut.left} ${cutOut.top} L${cutOut.left} ${cutOutRect.top + cutOutRect.height} L${cutOutRect.left + cutOutRect.width} ${cutOutRect.top + cutOutRect.height} L${cutOutRect.left + cutOutRect.width} ${cutOut.top} z`
 
   function onCode (code: BarCodeScanningResult) {
-    console.log(code)
+    if (isInitLink(code.data)) {
+      if (receivedLink !== code.data) {
+        setReceivedLink(code.data)
+        connect(code.data)
+      }
+    }
   }
 
   return <View style={{ width: '100%', height: '100%', display: 'flex', flexDirection: isHorz ? 'row' : 'column', backgroundColor: screen09ScanQRCode.backgroundColor }}>
@@ -227,8 +235,8 @@ export const NewRelation = withNavigation(({ navigation }: { navigation: TNaviga
     </View>
     <View style={ qrStyle }>
       <View style={{ margin: screen09ScanQRCode.code.place.left }}>
-      { initMessage !== undefined
-        ? <QRCode value={ initMessage } logo={ screen09ScanQRCode.logo.asset().source } backgroundColor="#00000000" color={ screen09ScanQRCode.code.border.fill.color } size={ qrSpace - (screen09ScanQRCode.code.place.left * 2) } />
+      { initLink !== undefined
+        ? <QRCode value={ initLink } logo={ screen09ScanQRCode.logo.asset().source } backgroundColor="#00000000" color={ screen09ScanQRCode.code.border.fill.color } size={ qrSpace - (screen09ScanQRCode.code.place.left * 2) } />
         : null
       }
       </View>

@@ -17,6 +17,8 @@ import { NewRelation } from './NewRelation'
 import { ConsentoContext } from '../model/ConsentoContext'
 import { setup, IReceiver, IAnnonymous, IEncryptedMessage } from '@consento/api'
 import { sodium } from '@consento/crypto/core/sodium'
+import { ExpoTransport } from '@consento/notification-server'
+import { getExpoToken } from '../util/getExpoToken'
 
 const vaults: IVault[] = [
   {key: 'Devin'},
@@ -139,22 +141,21 @@ function init () {
   }
 }
 const Navigator = init()
+const transport = new ExpoTransport({
+  address: 'http://192.168.11.11:3000',
+  getToken: getExpoToken
+})
 const api = setup({
   cryptoCore: sodium,
-  notificationTransport: {
-    async subscribe (receivers: IReceiver[]) {
-      return false
-    },
-    async unsubscribe (receivers: IReceiver[]) {
-      return false
-    },
-    async send (channel: IAnnonymous, message: IEncryptedMessage) {
-      return []
-    }
-  }
+  notificationTransport: transport
+})
+transport.on('message', (receiver: string, message: any) => {
+  console.log('received message', { receiver, message })
+  api.notifications.handle(receiver, message)
 })
 
 export function Screens () {
+
   return <ConsentoContext.Provider value={ api }>
     <Navigator />
   </ConsentoContext.Provider>

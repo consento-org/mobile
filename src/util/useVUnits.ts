@@ -34,7 +34,7 @@ function updateVUnits () {
   }
   mem.vw = vw
   mem.vh = vh
-  const orientation = vw > vh ? Orientation.horizontal : Orientation.vertical
+  const orientation = vw > vh ? TOrientation.horizontal : TOrientation.vertical
   globalLastUpdate = Date.now()
   vUnits = Object.freeze({
     vw: (number: number = 1) => vw * number,
@@ -42,8 +42,8 @@ function updateVUnits () {
     vmin: (number: number = 1) => Math.min(vw * number, vh * number),
     vmax: (number: number = 1) => Math.max(vw * number, vh * number),
     orientation: orientation,
-    isHorz: orientation === Orientation.horizontal,
-    isVert: orientation === Orientation.vertical
+    isHorz: orientation === TOrientation.horizontal,
+    isVert: orientation === TOrientation.vertical
   })
   const iter = listeners.values()
   do {

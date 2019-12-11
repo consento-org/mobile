@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
-import { PermissionStatus, PermissionType, askAsync } from 'expo-permissions'
+import { askAsync, PermissionStatus, PermissionType } from 'expo-permissions'
+
+export { PermissionStatus }
 
 export enum Permissions {
   CAMERA = "camera",
@@ -21,7 +23,7 @@ export function usePermission (permission: PermissionType, processError: (error:
   useEffect(() => {
     askAsync(permission)
       .then(result => {
-        setStatus(result.status)
+        setStatus(result.permissions[permission].status)
       })
       .catch(processError)
     return () => {

@@ -1,5 +1,16 @@
 import * as Permissions from 'expo-permissions'
 import { Notifications } from 'expo'
+import randomBytes from '@consento/sync-randombytes'
+import Constants from 'expo-constants'
+
+function rndChar (num: number): string {
+  return randomBytes(new Uint8Array(num * 2)).toString('hex')
+}
+
+function randomDummyExpoToken (): string {
+  const prefix = Math.random() > 0.5 ? 'ExponentPushToken' : 'ExpoPushToken'
+  return `${prefix}[${rndChar(8)}-${rndChar(4)}-${rndChar(4)}-${rndChar(4)}-${rndChar(12)}]`
+}
 
 export async function getExpoToken (): Promise<string> {
   // Adopted from https://docs.expo.io/versions/v34.0.0/guides/push-notifications/
@@ -23,5 +34,13 @@ export async function getExpoToken (): Promise<string> {
   }
 
   // Get the token that uniquely identifies this device
-  return Notifications.getExpoPushTokenAsync()
+  try {
+    return Notifications.getExpoPushTokenAsync()
+  } catch (error) {
+    if (Constants.debugMode) {
+      console.warn(`[DEV MODE ONLY!] Error while collecting expo token, using dummy token: ${error}`)
+      return randomDummyExpoToken()
+    }
+    throw error
+  }
 }

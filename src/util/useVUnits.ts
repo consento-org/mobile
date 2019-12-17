@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { createGlobalEffect } from './createGlobalEffect'
 import { Dimensions } from 'react-native'
 
 export enum TOrientation {
@@ -16,60 +16,32 @@ export interface IVUnits {
   isVert: boolean
 }
 
-const listeners = new Set<(lastUpdate: number) => any>()
 const mem = {
-  vw: 0,
-  vh: 0
+  vw: null,
+  vh: null
 }
 
-let vUnits: IVUnits
-let globalLastUpdate: number
-
-function updateVUnits () {
-  const { width, height } = Dimensions.get('window')
-  const vw = width / 100
-  const vh = height / 100
-  if (vw === mem.vw && vh === mem.vh) {
-    return
-  }
-  mem.vw = vw
-  mem.vh = vh
-  const orientation = vw > vh ? TOrientation.horizontal : TOrientation.vertical
-  globalLastUpdate = Date.now()
-  vUnits = Object.freeze({
-    vw: (number: number = 1) => vw * number,
-    vh: (number: number = 1) => vh * number,
-    vmin: (number: number = 1) => Math.min(vw * number, vh * number),
-    vmax: (number: number = 1) => Math.max(vw * number, vh * number),
-    orientation: orientation,
-    isHorz: orientation === TOrientation.horizontal,
-    isVert: orientation === TOrientation.vertical
-  })
-  const iter = listeners.values()
-  do {
-    let update = iter.next()
-    if (update.done) {
+export const useVUnits = createGlobalEffect({
+  update() {
+    const { width, height } = Dimensions.get('window')
+    const vw = width / 100
+    const vh = height / 100
+    if (vw === mem.vw && vh === mem.vh) {
       return
     }
-    update.value(globalLastUpdate)
-  } while (true)
-}
-
-updateVUnits()
-
-export function useVUnits () {
-  const setLastUpdate = useState<number>(globalLastUpdate)[1]
-  useEffect(() => {
-    listeners.add(setLastUpdate)
-    if (listeners.size === 1) {
-      Dimensions.addEventListener('change', updateVUnits)
-    }
-    return () => {
-      listeners.delete(setLastUpdate)
-      if (listeners.size === 0) {
-        Dimensions.removeEventListener('change', updateVUnits)
-      }
-    }
-  }, [false]) // Only update the effect once
-  return vUnits
-}
+    mem.vw = vw
+    mem.vh = vh
+    const orientation = vw > vh ? TOrientation.horizontal : TOrientation.vertical
+    return Object.freeze({
+      vw: (number: number = 1) => vw * number,
+      vh: (number: number = 1) => vh * number,
+      vmin: (number: number = 1) => Math.min(vw * number, vh * number),
+      vmax: (number: number = 1) => Math.max(vw * number, vh * number),
+      orientation: orientation,
+      isHorz: orientation === TOrientation.horizontal,
+      isVert: orientation === TOrientation.vertical
+    })
+  },
+  init: handler => Dimensions.addEventListener('change', handler),
+  exit: handler => Dimensions.removeEventListener('change', handler)
+})

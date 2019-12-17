@@ -2,6 +2,7 @@ import React from 'react'
 import { View } from 'react-native'
 import { createAppContainer, withNavigation } from 'react-navigation'
 import { createStackNavigator } from 'react-navigation-stack'
+import Constants from 'expo-constants'
 import { createBottomTabBar } from './components/createBottomTabBar'
 import { NotificationTestScreen } from './NotificationTest'
 import { VaultsScreen } from './Vaults'
@@ -142,7 +143,7 @@ function init () {
 }
 const Navigator = init()
 const transport = new ExpoTransport({
-  address: 'http://192.168.11.11:3000',
+  address: Constants.isDevice ? 'http://192.168.1.95:3000' : 'http://10.0.2.2:3000',
   getToken: getExpoToken
 })
 const api = setup({

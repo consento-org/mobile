@@ -1,5 +1,5 @@
 import React from 'react'
-import { View } from 'react-native'
+import { View, AppState } from 'react-native'
 import { createAppContainer, withNavigation } from 'react-navigation'
 import { createStackNavigator } from 'react-navigation-stack'
 import Constants from 'expo-constants'
@@ -150,10 +150,21 @@ const api = setup({
   cryptoCore: sodium,
   notificationTransport: transport
 })
-transport.on('message', (receiver: string, message: any) => {
-  console.log('received message', { receiver, message })
-  api.notifications.handle(receiver, message)
-})
+let cancel
+const stateChange = state => {
+  if (state !== "background") {
+    if (cancel === undefined) {
+      cancel = transport.connect()
+    }
+  } else {
+    if (cancel !== undefined) {
+      cancel()
+      cancel = undefined
+    }
+  }
+}
+AppState.addEventListener('change', stateChange)
+stateChange(AppState.currentState)
 
 export function Screens () {
 

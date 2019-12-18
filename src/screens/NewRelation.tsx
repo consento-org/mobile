@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { View, Text, ViewStyle, TouchableOpacity } from 'react-native'
+import { View, Text, ViewStyle, TouchableOpacity, Alert } from 'react-native'
 import { Camera } from 'expo-camera'
 import { BarCodeScanningResult } from 'expo-camera/build/Camera.types'
 import { screen09ScanQRCode } from '../styles/component/screen09ScanQRCode'
@@ -124,7 +124,12 @@ export const NewRelation = withNavigation(({ navigation }: { navigation: TNaviga
   })
   const { vw, vh, isHorz, isVert } = useVUnits()
   const [ size, setSize ] = useState<ISize>(undefined)
-  const { initLink, connect, connectionState } = useHandshake()
+  const { initLink, connect, connectionState } = useHandshake(async connection => {
+    Alert.alert('received connection', `{
+      receiver: ${await connection.receiver.smallJSON()},
+      sender: ${await connection.sender.smallJSON()}
+    }`)
+  })
   const [ receivedLink, setReceivedLink ] = useState<string>(null)
 
   console.log({ connectionState })

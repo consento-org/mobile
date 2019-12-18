@@ -2,6 +2,7 @@ import { useEffect, useState, useContext } from 'react'
 import { IHandshakeInit, IEncodable, IHandshakeAcceptMessage } from '@consento/crypto'
 import { ConsentoContext } from './ConsentoContext'
 import { Buffer } from 'buffer'
+import { IConnection } from '@consento/api'
 
 function isAcceptMessage (body: IEncodable): body is IHandshakeAcceptMessage {
   console.log({ received: body })
@@ -31,7 +32,13 @@ export function getInitMessage (url: string): Buffer | null {
   return Buffer.from(result[1], 'base64')
 }
 
-export function useHandshake () {
+export enum ConnectionState {
+  noConnection = 'no-connection',
+  connecting = 'connecting',
+  confirmIncoming = 'confirm-incoming'
+}
+
+export function useHandshake (onHandshake: (connection: IConnection) => any) {
   const {
     crypto,
     notifications
@@ -41,7 +48,7 @@ export function useHandshake () {
     initLink?: string
   }>({})
 
-  const [ connectionState, setConnectionState ] = useState<string>('no-connection')
+  const [ connectionState, setConnectionState ] = useState<string>(ConnectionState.connecting)
   const [ refresh, setRefresh ] = useState<number>(Date.now())
   const [ close ] = useState<{
     outgoing: () => any
@@ -51,32 +58,32 @@ export function useHandshake () {
   useEffect(() => {
     if (crypto !== null) {
       const handshake = new crypto.HandshakeInit()
-      handshake.initMessage().then((data: Buffer) => {
+      handshake.initMessage().then(async (data: Buffer) => {
         setHandshake({
           handshake,
           initLink: `consento://connect:${data.toString('base64')}`
         })
-        const { promise, cancel } = notifications.receive(handshake.receiver, isAcceptMessage)
+        const { promise, cancel } = await notifications.receive(handshake.receiver, isAcceptMessage)
         if (close.incoming !== undefined) {
           close.incoming()
         }
         close.incoming = cancel
-        promise.then(acceptMessage => {
-          setConnectionState('confirming-incoming')
-          return handshake.confirm(acceptMessage).then(confirmation => {
-            return notifications.send(confirmation.sender, confirmation.finalMessage)
-              .then(() => {
-                console.log('done incoming', confirmation)
-              })
-          })
-        }).catch(err => {
+        try {
+          const acceptMessage = await promise
+          setConnectionState(ConnectionState.confirmIncoming)
+          const confirmation = await handshake.confirm(acceptMessage)
+          await notifications.send(confirmation.sender, confirmation.finalMessage)
+          onHandshake(confirmation)
+        } catch (err) {
           if (err.message !== 'cancelled') {
             console.error(err)
           }
+        }
+      }).catch(error => {
+        console.log({
+          message: `Error getting handshake`,
+          error: error.stack || error
         })
-      }).catch(err => {
-        console.log(`Error getting handshake`)
-        console.log(err)
       })
     }
     return () => {
@@ -96,25 +103,26 @@ export function useHandshake () {
         const initMessage = getInitMessage(initLink)
         if (crypto !== null && initMessage !== null) {
           const accept = new crypto.HandshakeAccept(initMessage)
-          setConnectionState('connecting')
-          const { promise, cancel } = notifications.sendAndReceive(accept, await accept.acceptMessage(), isUint8Array)
+          setConnectionState(ConnectionState.connecting)
+          const { promise, cancel } = await notifications.receive(accept.receiver)
           if (close.outgoing !== undefined) {
             close.outgoing()
           }
           close.outgoing = cancel
-          try {
-            const finalMessage = await promise
-            const done = await accept.finalize(finalMessage)
-            console.log('done outgoing', done)
-          } catch (err) {
-            if (err.message !== 'cancelled') {
-              console.error(err)
-            }
+          const msg = await accept.acceptMessage()
+          await notifications.send(accept.sender, msg)
+          const finalMessage = await promise
+          if (!isUint8Array(finalMessage)) {
+            throw new Error('finalization is supposed to be an uint8 array')
           }
+          const done = await accept.finalize(finalMessage)
+          onHandshake(done)
         }
       })()
         .catch(err => {
-          console.error(err)
+          if (err.message !== 'cancelled') {
+            console.error(err)
+          }
         })
     },
     initLink: parts.initLink,

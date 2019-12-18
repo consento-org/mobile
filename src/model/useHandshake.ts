@@ -5,7 +5,6 @@ import { Buffer } from 'buffer'
 import { IConnection } from '@consento/api'
 
 function isAcceptMessage (body: IEncodable): body is IHandshakeAcceptMessage {
-  console.log({ received: body })
   if (typeof body === 'object' && !(body instanceof Uint8Array)) {
     return typeof body['token'] === 'string' && typeof body['secret'] === 'string'
   }

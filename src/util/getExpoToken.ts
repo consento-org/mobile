@@ -12,7 +12,7 @@ function randomDummyExpoToken (): string {
   return `${prefix}[${rndChar(8)}-${rndChar(4)}-${rndChar(4)}-${rndChar(4)}-${rndChar(12)}]`
 }
 
-export async function getExpoToken (): Promise<string> {
+async function _getExpoToken (): Promise<string> {
   // Adopted from https://docs.expo.io/versions/v34.0.0/guides/push-notifications/
   const result = await Permissions.getAsync(Permissions.NOTIFICATIONS)
 
@@ -43,4 +43,10 @@ export async function getExpoToken (): Promise<string> {
     }
     throw error
   }
+}
+
+const expoToken = _getExpoToken()
+
+export async function getExpoToken (): Promise<string> {
+  return expoToken
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useContext } from 'react'
 import { View, Text, ViewStyle, TouchableOpacity, Alert } from 'react-native'
 import { Camera } from 'expo-camera'
 import { BarCodeScanningResult } from 'expo-camera/build/Camera.types'
@@ -125,14 +125,10 @@ export const NewRelation = withNavigation(({ navigation }: { navigation: TNaviga
   const { vw, vh, isHorz, isVert } = useVUnits()
   const [ size, setSize ] = useState<ISize>(undefined)
   const { initLink, connect, connectionState } = useHandshake(async connection => {
-    Alert.alert('received connection', `{
-      receiver: ${await connection.receiver.smallJSON()},
-      sender: ${await connection.sender.smallJSON()}
-    }`)
+    // await addRelation(connection)
+    navigation.navigate('relation', { relation: await connection.receiver.idBase64 })
   })
   const [ receivedLink, setReceivedLink ] = useState<string>(null)
-
-  console.log({ connectionState })
 
   const qrSpace = isHorz ? Math.min(vw(50), vh(100)) : Math.min(vw(100), vh(50))
 
@@ -205,6 +201,7 @@ export const NewRelation = withNavigation(({ navigation }: { navigation: TNaviga
   }
 
   return <View style={{ width: '100%', height: '100%', display: 'flex', flexDirection: isHorz ? 'row' : 'column', backgroundColor: screen09ScanQRCode.backgroundColor }}>
+    <Text style={{ position: 'absolute', borderRadius: 20, top: topPadding, padding: 10, backgroundColor: '#fff', color: '#000' }}>{ connectionState }</Text>
     <View style={ camStyle }>
       <View style={{ position: 'absolute', ...camSpace, overflow: 'hidden' }}>
         { status === 'granted'

@@ -11,7 +11,7 @@ import { elementLocksEmpty } from '../styles/component/elementLocksEmpty'
 import { ConsentoButton } from './components/ConsentoButton'
 import { EmptyView } from './components/EmptyView'
 import { Logs } from './Logs'
-import { TVaultState, IVault } from '../model/Vault'
+import { TVaultState, Vault as VaultModel } from '../model/Vault'
 import { Waiting } from './components/Waiting'
 
 const lockStyle: ViewStyle = {
@@ -35,12 +35,11 @@ function LockButton (props: { onPress?: () => any }) {
   </View>
 }
 export const VaultRouter = VaultNavigator.router
-export const Vault = ({ navigation, vault }:　{ navigation: TNavigation, vault: IVault }) => {
-  const isOpen = vault.state === TVaultState.open
+export const Vault = ({ navigation, vault }:　{ navigation: TNavigation, vault: VaultModel }) => {
   return <View style={ styles.screen }>
-    <TopNavigation title={ vault.name } back={ true } onEdit={ isOpen ? text => console.log(`changed text: ${text}`) : undefined } onDelete={ () => {} }/>
+    <TopNavigation title={ vault.name } back={ true } onEdit={ vault.isOpen ? text => console.log(`changed text: ${text}`) : undefined } onDelete={ () => {} }/>
     {
-      isOpen ? [
+      vault.isOpen ? [
         <LockButton key={ 'lock' }/>,
         <VaultNavigator key={ 'vault' } navigation={ navigation }></VaultNavigator>
       ] : <Waiting />

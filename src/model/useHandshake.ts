@@ -39,8 +39,10 @@ export enum ConnectionState {
 
 export function useHandshake (onHandshake: (connection: IConnection) => any) {
   const {
-    crypto,
-    notifications
+    api: {
+      crypto,
+      notifications
+    }
   } = useContext(ConsentoContext)
   const [ parts, setHandshake ] = useState<{
     handshake?: IHandshakeInit,

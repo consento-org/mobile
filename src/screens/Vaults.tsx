@@ -1,15 +1,12 @@
-import React from 'react'
-import { connect } from 'react-redux'
+import React, { useContext } from 'react'
 import { View, ViewStyle, ScrollView } from 'react-native'
 import { VaultCard } from './components/VaultCard'
 import { styles } from '../styles'
 import { TopNavigation } from './components/TopNavigation'
 import { Asset } from '../Asset'
-import { Waiting } from './components/Waiting'
-import { IVault } from '../model/Vault'
-
-const mapStateToProps = state => state
-const mapDispatchToProps = dispatch => ({})
+import { ConsentoContext } from '../model/ConsentoContext'
+import { observer } from 'mobx-react'
+import { map } from '../util/map'
 
 const listStyle: ViewStyle = {
   display: 'flex',
@@ -22,19 +19,29 @@ const listStyle: ViewStyle = {
 
 const AddButton = Asset.buttonAddHexagonal().component
 
-export const VaultsScreen = connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(({ vaults }: { vaults: IVault[] }) => 
-  <View style={ styles.screen }>
+export const VaultsScreen = observer(() => {
+  const { user: { vaults }} = useContext(ConsentoContext)
+  /*
+  useEffect(() => {
+    setTimeout(() => {
+      vaults.push({
+        key: 'abcd' + Date.now(),
+        name: 'alfalfa',
+        state: TVaultState.open
+      })
+      setState(Date.now())
+    }, 2000)
+  }, [false])
+  */
+  return <View style={ styles.screen }>
     <TopNavigation title="Vaults"/>
     <ScrollView centerContent={ true }>
       <View style={ listStyle }>
       {
-        vaults.map(vault => <VaultCard key={ vault.key } vault={ vault } />)
+        map(vaults.values(), vault => <VaultCard key={vault.$modelId} vault={vault} />)
       }
       </View>
     </ScrollView>
     <AddButton style={{ position: 'absolute', right: 10, bottom: 10 }} onPress={ () => {} }/>
   </View>
-)
+})

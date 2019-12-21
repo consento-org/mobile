@@ -1,39 +1,19 @@
-import { IRelation } from './Relation'
-import { IVault } from './Vault'
+import { Relation } from './Relation'
+import { Vault } from './Vault'
+import { RequestBase } from './RequestBase'
+import { tProp, types } from 'mobx-keystone'
 
-export enum TConsentoState {
-  idle = 'idle',
-  accepted = 'accepted',
-  denied = 'denied',
-  expired = 'expired'
-}
+const BECOME_CONSENTEE_TIMEOUT = 24 * 60 * 1000
+const DEFAULT_UNLOCK_TIME = 5000
 
-export enum TConsentoType {
-  requestAccess = 'requestAccess',
-  requestLockee = 'requestLockee'
-}
+export const ConsentoBecomeLockee = RequestBase('consento/ConsentoBecomeLockee', BECOME_CONSENTEE_TIMEOUT, {
+  relation: tProp(types.ref(types.model(Relation))),
+  title: tProp(types.string)
+})
 
-export interface IConsento {
-  state: TConsentoState
-  key: string
-  type: TConsentoType
-  time: number
-}
+export const ConsentoUnlockVault = RequestBase('consento/ConsentoUnlockVault', DEFAULT_UNLOCK_TIME, {
+  relation: tProp(types.ref(types.model(Relation))),
+  vault: tProp(types.ref(types.model(Vault)))
+})
 
-export interface IConsentoAccess extends IConsento {
-  relation: IRelation
-  vault: IVault
-}
-
-export interface IConsentoLockee extends IConsento {
-  relation: IRelation
-  vault: IVault
-}
-
-export function isConsentoAccess (consento: IConsento): consento is IConsentoAccess {
-  return consento.type === TConsentoType.requestAccess
-}
-
-export function isConsentoLockee (consento: IConsento): consento is IConsentoLockee {
-  return consento.type === TConsentoType.requestLockee
-}
+export type Consento = typeof ConsentoUnlockVault | typeof ConsentoBecomeLockee

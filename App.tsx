@@ -1,34 +1,30 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Text } from 'react-native'
-import { Provider } from 'react-redux'
 import { Loading } from './src/screens/Loading'
 import { loadFonts } from './src/styles/Font'
 import 'react-native-gesture-handler' // Imported to fix gesture error in tab navigation  
 
-export default class App extends React.Component<{}, { store, Screens, error: Error }> {
-
-  componentDidMount() {
-    this.initProject().catch(error => {
-      console.log(error)
-      this.setState({ error })
-    })
-  }
-  async initProject () {
-    const [ { store }, { Screens }, _ ] = await Promise.all([
-      import('./src/store'),
+export default function App () {
+  const [ error, setError ] = useState<Error>()
+  const [ loaded, setLoaded ] = useState<{ Screens: () => JSX.Element }>()
+  useEffect(() => {
+    Promise.all([
       import('./src/screens'),
       loadFonts()
     ])
-    this.setState({ store, Screens })
+      .then(([{ Screens }]) => {
+        if (Screens === undefined || Screens === null) {
+          throw new Error('No Screen returned by ./src/screens')
+        }
+        setLoaded({ Screens })
+      })
+      .catch(setError)
+  }, [])
+  if (error !== undefined) {
+    return <Text>{ `Error while initing:\n${this.state.error}` }</Text>
   }
-  render () {
-    if (!this.state) return <Loading/>
-    if (this.state.error !== undefined) {
-      return <Text>{ `Error while initing:\n${this.state.error}` }</Text>
-    }
-    return <Provider store={this.state.store}>
-      <this.state.Screens />
-    </Provider>
-
+  if (loaded !== undefined) {
+    return <loaded.Screens />
   }
+  return <Loading/>
 }

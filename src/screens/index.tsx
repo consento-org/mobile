@@ -1,112 +1,108 @@
 import React from 'react'
-import { View, AppState } from 'react-native'
+import { View, AppState, Text } from 'react-native'
 import { createAppContainer, withNavigation } from 'react-navigation'
 import { createStackNavigator } from 'react-navigation-stack'
 import Constants from 'expo-constants'
 import { createBottomTabBar } from './components/createBottomTabBar'
-import { NotificationTestScreen } from './NotificationTest'
 import { VaultsScreen } from './Vaults'
 import { RelationsScreen } from './Relations'
 import { ConsentosScreen } from './Consentos'
 import { TNavigation } from './navigation'
-import { Text } from 'react-native'
 import { Vault, VaultRouter } from './Vault'
-import { IVault, TVaultState } from '../model/Vault'
-import { IConsento, IConsentoAccess, TConsentoType, TConsentoState } from '../model/Consento'
-import { IRelation } from '../model/Relation'
+import { Vault as VaultModel } from '../model/Vault'
+import { User as UserModel, User } from '../model/User'
+import { Relation as RelationModel } from '../model/Relation'
+import { ConsentoBecomeLockee, ConsentoUnlockVault } from '../model/Consento'
 import { NewRelation } from './NewRelation'
 import { ConsentoContext } from '../model/ConsentoContext'
-import { setup, IReceiver, IAnnonymous, IEncryptedMessage } from '@consento/api'
+import { setup, IAPI } from '@consento/api'
 import { sodium } from '@consento/crypto/core/sodium'
 import { ExpoTransport } from '@consento/notification-server'
 import { getExpoToken } from '../util/getExpoToken'
+import { rootRef, registerRootStore, ArraySet, customRef, findParent } from 'mobx-keystone'
+import { Connection } from '../model/Connection'
+import { first } from '../util/first'
+import { VaultRef, findVault } from '../model/VaultRef'
+import { RelationRef } from '../model/RelationRef'
 
-const vaults: IVault[] = [
-  {key: 'Devin'},
-  {key: 'Dan'},
-  {key: 'Dominic'},
-  {key: 'Jackson'},
-  {key: 'James'},
-  {key: 'Joel'},
-  {key: 'John'},
-  {key: 'Jillian'},
-  {key: 'Jimmy'},
-  {key: 'Martin'},
-  {key: 'Maz'},
-  {key: 'Very Very Very Very Very Long Text Interrupted'},
-  {key: 'VeryVeryVeryVeryVeryVeryLongTextUninterrupted'},
-  {key: '日本語のテキスト、試すために'}
-].map((obj, index) => {
-  return {
-    ...obj,
-    name: obj.key,
-    state:
-      index % 3 === 0 ? TVaultState.open : 
-      index % 3 === 1 ? TVaultState.pending : TVaultState.locked
-  }
+let ctx: { api: IAPI, user: User }
+let Navigator: () => JSX.Element = () => <></>
+
+try {
+const users = new ArraySet<User>({ items: [] })
+registerRootStore(users)
+
+const user = new UserModel({})
+users.add(user)
+;[
+  'Devin',
+  'Dan',
+  'Dominic',
+  'Jackson',
+  'James',
+  'Joel',
+  'John',
+  'Jillian',
+  'Jimmy',
+  'Martin',
+  'Maz',
+  'Very Very Very Very Very Long Text Interrupted',
+  'VeryVeryVeryVeryVeryVeryLongTextUninterrupted',
+  '日本語のテキスト、試すために'
+].forEach((name: string) => {
+  user.vaults.add(
+    new VaultModel({
+      name
+    })
+  )
+})
+;['frank'].forEach(name => {
+  user.relations.add(new RelationModel({
+    name,
+    connection: new Connection({
+      sendKey: 'abcd',
+      receiveKey: 'def'
+    })
+  }))
 })
 
-const relations: IRelation[] = [
-  { key: 'a', name: 'XXX', image: 'abcd' }
-]
-
-const consentos: IConsento[] = [
-  { type: TConsentoType.requestAccess },
-  { type: TConsentoType.requestAccess },
-  { type: TConsentoType.requestAccess },
-  { type: TConsentoType.requestAccess }
-].map((obj, index) => {
-  return {
-    ...obj,
-    key: `consento-access-${index}`,
-    relation: relations[0],
-    vault: vaults[0],
-    time: Date.now(),
-    state: 
-      index % 4 === 0 ? TConsentoState.accepted :
-      index % 4 === 1 ? TConsentoState.denied :
-      index % 4 === 2 ? TConsentoState.expired :
-      TConsentoState.idle
-  } as IConsentoAccess
-}).concat([
-  { type: TConsentoType.requestLockee },
-  { type: TConsentoType.requestLockee },
-  { type: TConsentoType.requestLockee },
-  { type: TConsentoType.requestLockee }
-].map((obj, index) => {
-  return {
-    ...obj,
-    key: `consento-lockee-${index}`,
-    relation: relations[0],
-    vault: vaults[0],
-    time: Date.now(),
-    state: 
-      index % 4 === 0 ? TConsentoState.accepted :
-      index % 4 === 1 ? TConsentoState.denied :
-      index % 4 === 2 ? TConsentoState.expired :
-      TConsentoState.idle
-  } as IConsentoAccess
-}))
-
-function getVaultByKey (key: string): IVault {
-  for (const vault of vaults) {
-    if (vault.key === key) {
-      return vault
-    }
+;[ 0, 1, 2, 3 ].forEach(index => {
+  const consento = new ConsentoUnlockVault({
+    vault: VaultRef(first(user.vaults).$modelId),
+    relation: RelationRef(first(user.relations).$modelId),
+    time: index % 4 === 2 ? 0 : Date.now()
+  })
+  if (index % 4 === 0) {
+    consento.accept()
+  } else if (index % 4 === 1) { 
+    consento.deny()
   }
-  return undefined
-}
+  user.consentos.add(consento)
+})
 
-function init () {
+;[ 'someVault', 'someVault', 'someVault', 'someVault' ].forEach((title, index) => {
+  const consento = new ConsentoBecomeLockee({
+    relation: RelationRef(first(user.relations).$modelId),
+    title,
+    time: index % 4 === 2 ? 0 : undefined
+  })
+  if (index % 4 === 0) {
+    consento.accept()
+  } else if (index % 4 === 1) { 
+    consento.deny()
+  }
+  user.consentos.add(consento)
+})
+
+const init = () => {
   try {
     const AppNavigator = createStackNavigator({
       main: {
         path: '',
         screen: createBottomTabBar({
-          vaults: () => <VaultsScreen vaults={ vaults } />,
-          consentos: () => <ConsentosScreen consentos={ consentos }/>, 
-          relations: () => <RelationsScreen />,
-          notificationTest: () => <NotificationTestScreen />
+          vaults: () => <VaultsScreen />,
+          consentos: () => <ConsentosScreen />, 
+          relations: () => <RelationsScreen />
         })
       },
       vault: {
@@ -116,12 +112,12 @@ function init () {
           render () {
             const { navigation } = this.props
             const vaultKey = navigation.state.params.vault
-            const vault = getVaultByKey(vaultKey)
-            if (vault === undefined) {
+            const vault = findVault(user, vaultKey)
+            if (vault instanceof VaultModel) {
               // TODO!
-              return <View />
+              return <Vault vault={ vault } navigation={ navigation } />
             }
-            return <Vault vault={ vault } navigation={ navigation } />
+            return <View />
           }
         })
       },
@@ -141,9 +137,9 @@ function init () {
     return () => <Text>{ 'Cant load it' }</Text>
   }
 }
-const Navigator = init()
+Navigator = init()
 const transport = new ExpoTransport({
-  address: Constants.isDevice ? 'http://192.168.1.95:3000' : 'http://10.0.2.2:3000',
+  address: Constants.isDevice ? 'http://192.168.11.11:3000' : 'http://10.0.2.2:3000',
   getToken: getExpoToken
 })
 const api = setup({
@@ -166,9 +162,16 @@ const stateChange = state => {
 AppState.addEventListener('change', stateChange)
 stateChange(AppState.currentState)
 
-export function Screens () {
+ctx = { api, user }
 
-  return <ConsentoContext.Provider value={ api }>
+} catch (err) {
+  setTimeout(() => {
+    console.error(err)
+  }, 100)
+}
+
+export function Screens () {
+  return <ConsentoContext.Provider value={ctx}>
     <Navigator />
   </ConsentoContext.Provider>
 }

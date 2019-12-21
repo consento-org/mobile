@@ -1,12 +1,12 @@
 import React from 'react'
 import { View, ViewStyle } from 'react-native'
 import { ConsentoButton } from './ConsentoButton'
-import { TConsentoState } from '../../model/Consento'
 import { Text, Polygon, Link } from '../../styles/Component'
 import { elementConsentosBaseIdle } from '../../styles/component/elementConsentosBaseIdle'
 import { elementConsentosBaseDenied } from '../../styles/component/elementConsentosBaseDenied'
 import { elementConsentosBaseExpired } from '../../styles/component/elementConsentosBaseExpired'
 import { elementConsentosBaseAccepted } from '../../styles/component/elementConsentosBaseAccepted'
+import { TRequestState } from '../../model/RequestBase'
 
 interface IStateStyle {
   state: Text
@@ -24,12 +24,12 @@ function HorzLine ({ proto }: { proto: Polygon }) {
   }} />
 }
 
-export function ConsentoState ({ state, style, onDelete, onAccept }: { state: TConsentoState, onDelete: () => any, onAccept: () => any, style?: ViewStyle }) {
+export function ConsentoState ({ state, style, onDelete, onAccept }: { state: TRequestState, onDelete: () => any, onAccept: () => any, style?: ViewStyle }) {
   const viewStyle = {
     position: 'absolute',
     ... style
   } as ViewStyle
-  if (state === TConsentoState.idle) {
+  if (state === TRequestState.active) {
     return <View style={ viewStyle }>
       <elementConsentosBaseIdle.timeLeft.Render value={ '1235' }/>
       <ConsentoButton style={{ ...elementConsentosBaseIdle.allowButton.place.style(), position: 'absolute' }} light={ true } title={
@@ -41,8 +41,8 @@ export function ConsentoState ({ state, style, onDelete, onAccept }: { state: TC
     </View>
   }
   const stateStyle: IStateStyle = (
-    state === TConsentoState.denied ? elementConsentosBaseDenied :
-    state === TConsentoState.expired ? elementConsentosBaseExpired :
+    state === TRequestState.denied ? elementConsentosBaseDenied :
+    state === TRequestState.expired ? elementConsentosBaseExpired :
     elementConsentosBaseAccepted
   )
   return <View style={ viewStyle }>

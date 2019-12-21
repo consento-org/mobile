@@ -4,7 +4,7 @@ import { elementCardVaultClose } from '../../styles/component/elementCardVaultCl
 import { elementCardVaultPending } from '../../styles/component/elementCardVaultPending'
 import { elementCardVaultOpen } from '../../styles/component/elementCardVaultOpen'
 import { withNavigation, TNavigation } from '../navigation'
-import { TVaultState, IVault } from '../../model/Vault'
+import { TVaultState, Vault as VaultModel } from '../../model/Vault'
 
 const cardStyle: ViewStyle = {
   width: elementCardVaultClose.width,
@@ -23,9 +23,9 @@ function getPrototype (state: TVaultState) {
   return elementCardVaultClose
 }
 
-export const VaultCard = withNavigation(({ vault, navigation }: { vault: IVault, navigation: TNavigation }) => {
+export const VaultCard = withNavigation(({ vault, navigation }: { vault: VaultModel, navigation: TNavigation }) => {
   const proto = getPrototype(vault.state)
-  const onPress = () => navigation.navigate('vault', { vault: vault.key })
+  const onPress = () => navigation.navigate('vault', { vault: vault.$modelId })
 
   return <TouchableOpacity style={ cardStyle } onPress={ onPress } activeOpacity={ 0.55 }>
     <proto.background.Render style={{ position: 'absolute' }}/>

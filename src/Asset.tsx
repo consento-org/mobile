@@ -2,17 +2,22 @@
 import React from 'react'
 import { Image, ImageStyle, View, ViewStyle, ImageSourcePropType, TouchableOpacity, FlexStyle } from 'react-native'
 
+function exists <T> (value: T | null | undefined): value is T {
+  return value !== null && value !== undefined
+}
+
 class Cache<Type, Args> {
   cache: { [key: string]: Type } = {}
-  clazz: { new (Args): Type }
+  clazz: new (Args) => Type
 
-  constructor (clazz: { new (Args: Args): Type }) {
+  constructor (clazz: new (Args: Args) => Type) {
     this.clazz = clazz
   }
 
   fetch (key: string, load: () => Args): Type {
     let result = this.cache[key]
     if (result === undefined) {
+      // eslint-disable-next-line new-cap
       result = new this.clazz(load())
       this.cache[key] = result
     }
@@ -26,20 +31,20 @@ export class ImageAsset {
 
   constructor (source: ImageSourcePropType) {
     this.source = source
-    this.component = ({ style, onPress }) =>  {
+    this.component = ({ style, onPress }) => {
       if (onPress !== undefined) {
-        return <TouchableOpacity onPress={ onPress } style={ style }>{ this.img() }</TouchableOpacity>
+        return <TouchableOpacity onPress={onPress} style={style}>{this.img()}</TouchableOpacity>
       }
       return this.img(style)
     }
   }
 
-  img (style?: FlexStyle, ref?: React.RefObject<Image>, onLayout?: () => any) {
+  img (style?: FlexStyle, ref?: React.RefObject<Image>, onLayout?: () => any): JSX.Element {
     const imgStyle = style as ImageStyle
-    if (style && imgStyle.resizeMode === 'stretch') {
-      return <Image ref={ ref } onLayout={ onLayout } source={ this.source } style={ imgStyle } fadeDuration={ 0 } />
+    if (exists(imgStyle) && imgStyle.resizeMode === 'stretch') {
+      return <Image ref={ref} onLayout={onLayout} source={this.source} style={imgStyle} fadeDuration={0} />
     }
-    return <Image ref={ ref } onLayout={ onLayout } source={ this.source } style={ imgStyle } />
+    return <Image ref={ref} onLayout={onLayout} source={this.source} style={imgStyle} />
   }
 }
 
@@ -114,7 +119,7 @@ export class Slice9 {
     this._slices = slices
   }
 
-  render (style?: ViewStyle, ref?: React.RefObject<View>, onLayout?: () => any) {
+  render (style?: ViewStyle, ref?: React.RefObject<View>, onLayout?: () => any): JSX.Element {
     if (style === null || style === undefined) {
       style = this._columsStyle
     } else {
@@ -123,27 +128,27 @@ export class Slice9 {
         ...style
       }
     }
-    return <View style={ style } ref={ ref } onLayout={ onLayout }>
-      <View style={ this._rows[0] }>
-        <Image source={ this._slices[0] } style={ this._styles[0] } fadeDuration={ 0 } />
-        <Image source={ this._slices[1] } style={ this._styles[1] } fadeDuration={ 0 } />
-        <Image source={ this._slices[2] } style={ this._styles[2] } fadeDuration={ 0 } />
+    return <View style={style} ref={ref} onLayout={onLayout}>
+      <View style={this._rows[0]}>
+        <Image source={this._slices[0]} style={this._styles[0]} fadeDuration={0} />
+        <Image source={this._slices[1]} style={this._styles[1]} fadeDuration={0} />
+        <Image source={this._slices[2]} style={this._styles[2]} fadeDuration={0} />
       </View>
-      <View style={ this._rows[1] }>
-        <Image source={ this._slices[3] } style={ this._styles[3] } fadeDuration={ 0 } />
-        <Image source={ this._slices[4] } style={ this._styles[4] } fadeDuration={ 0 } />
-        <Image source={ this._slices[5] } style={ this._styles[5] } fadeDuration={ 0 } />
+      <View style={this._rows[1]}>
+        <Image source={this._slices[3]} style={this._styles[3]} fadeDuration={0} />
+        <Image source={this._slices[4]} style={this._styles[4]} fadeDuration={0} />
+        <Image source={this._slices[5]} style={this._styles[5]} fadeDuration={0} />
       </View>
-      <View style={ this._rows[2] }>
-        <Image source={ this._slices[6] } style={ this._styles[6] } fadeDuration={ 0 } />
-        <Image source={ this._slices[7] } style={ this._styles[7] } fadeDuration={ 0 } />
-        <Image source={ this._slices[8] } style={ this._styles[8] } fadeDuration={ 0 } />
+      <View style={this._rows[2]}>
+        <Image source={this._slices[6]} style={this._styles[6]} fadeDuration={0} />
+        <Image source={this._slices[7]} style={this._styles[7]} fadeDuration={0} />
+        <Image source={this._slices[8]} style={this._styles[8]} fadeDuration={0} />
       </View>
     </View>
   }
 }
 
-const images = new Cache<ImageAsset, ImageSourcePropType> (ImageAsset)
+const images = new Cache<ImageAsset, ImageSourcePropType>(ImageAsset)
 
 export const Asset = {
   buttonAddHexagonal () {
@@ -231,4 +236,3 @@ export const Asset = {
     return images.fetch('illustrationWelcome', () => require('../assets/illustration/welcome.png'))
   }
 }
-

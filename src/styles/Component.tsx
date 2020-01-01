@@ -6,19 +6,30 @@ import { LinearGradient } from 'expo-linear-gradient'
 
 export type TRenderGravity = 'start' | 'end' | 'center' | 'stretch'
 export interface IRenderOptions {
-  vert?: TRenderGravity,
-  horz?: TRenderGravity,
-  onPress?: () => any,
+  vert?: TRenderGravity
+  horz?: TRenderGravity
+  onPress?: () => any
   onLayout?: () => any
 }
 
 function applyRenderOptions<T extends FlexStyle> ({ horz, vert }: IRenderOptions = {}, place: Placement, style?: T): T {
   if (style === null || style === undefined) {
-    style = {} as T
+    style = {} as any
   }
   style.width = horz === 'stretch' ? '100%' : place.width
   style.height = vert === 'stretch' ? '100%' : place.height
   return style
+}
+
+function exists <T> (value: T | null | undefined): value is T {
+  return value !== null && value !== undefined
+}
+
+function useDefault <T> (value: T | null | undefined, defaultValue: T): T {
+  if (exists(value)) {
+    return value
+  }
+  return defaultValue
 }
 
 // Todo: LRU?
@@ -55,7 +66,7 @@ export interface ISlice9Props extends IBaseProps<View, ViewStyle> {
 export interface IRenderProps<T extends React.Component, TStyle extends FlexStyle> extends IBaseProps<T, TStyle> {
   place: Placement
   item: (opts: {
-    ref?: React.RefObject<T>,
+    ref?: React.RefObject<T>
     style?: TStyle
   }) => JSX.Element
 }
@@ -77,8 +88,9 @@ export class Component {
     this.Slice9 = this.Slice9.bind(this)
   }
 
-  Text (props: ITextProps) {
-    return this.Render({
+  Text (props: ITextProps): JSX.Element {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+    const renderProps = {
       ...props,
       place: props.prototype.place,
       item: ({ ref, style }) => props.prototype.render({
@@ -88,28 +100,33 @@ export class Component {
         ref,
         onBlur: props.onBlur
       })
-    } as IRenderProps<NativeText, TextStyle>)
+    } as IRenderProps<NativeText, TextStyle>
+    return this.Render(renderProps)
   }
 
-  Image (props: IImageProps) {
+  Image (props: IImageProps): JSX.Element {
     const { prototype } = props
-    return this.Render({
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+    const renderProps = {
       ...props,
       place: prototype.place,
       item: ({ ref, style }) => prototype.img(applyRenderOptions(props, prototype.place, style), ref)
-    } as IRenderProps<Image, ImageStyle>)
+    } as IRenderProps<Image, ImageStyle>
+    return this.Render(renderProps)
   }
 
-  Slice9 (props: ISlice9Props) {
+  Slice9 (props: ISlice9Props): JSX.Element {
     const { prototype } = props
-    return this.Render({
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+    const renderProps = {
       ...props,
       place: prototype.place,
       item: ({ ref, style }) => prototype.render(applyRenderOptions(props, prototype.place, style), ref)
-    } as IRenderProps<View, ViewStyle>)
+    } as IRenderProps<View, ViewStyle>
+    return this.Render(renderProps)
   }
 
-  Render <T extends React.Component, S extends FlexStyle>(props: IRenderProps<T, S>) {
+  Render <T extends React.Component, S extends FlexStyle> (props: IRenderProps<T, S>): JSX.Element {
     return this._renderItem(props.item({
       ref: props.targetRef,
       style: props.style
@@ -121,12 +138,12 @@ export class Component {
     })
   }
 
-  renderText ({ text, opts, value, style, onEdit, ref, onLayout, onBlur }: { text: Text, opts?: IRenderOptions, value?: string, style?: TextStyle, onEdit?: (text: string) => any, ref?: React.RefObject<TextInput>, onLayout?: () => any, onBlur?: () => any }) {
+  renderText ({ text, opts, value, style, onEdit, ref, onLayout, onBlur }: { text: Text, opts?: IRenderOptions, value?: string, style?: TextStyle, onEdit?: (text: string) => any, ref?: React.RefObject<TextInput>, onLayout?: () => any, onBlur?: () => any }): JSX.Element {
     style = applyRenderOptions(opts, text.place, style)
     return this._renderItem(text.render({ value, style, onEdit, ref, onLayout, onBlur }), text.place, opts)
   }
 
-  renderImage (asset: ImagePlacement, opts?: IRenderOptions, style?: ImageStyle, ref?: React.RefObject<Image>, onLayout?: () => any) {
+  renderImage (asset: ImagePlacement, opts?: IRenderOptions, style?: ImageStyle, ref?: React.RefObject<Image>, onLayout?: () => any): JSX.Element {
     style = applyRenderOptions(opts, asset.place, style)
     if (opts.horz === 'stretch' || opts.vert === 'stretch') {
       style.resizeMode = 'stretch'
@@ -134,13 +151,13 @@ export class Component {
     return this._renderItem(asset.img(style, ref, onLayout), asset.place, opts)
   }
 
-  renderSlice9 (asset: Slice9Placement, opts?: IRenderOptions, style?: ViewStyle) {
+  renderSlice9 (asset: Slice9Placement, opts?: IRenderOptions, style?: ViewStyle): JSX.Element {
     style = applyRenderOptions(opts, asset.place, style)
     return this._renderItem(asset.render(style), asset.place, opts)
   }
 
-  _renderItem (item: React.ReactNode, place: Placement, { horz, vert, onPress, onLayout }: IRenderOptions = {}) {
-    const horzKey = `horz:${horz || 'start'}:${vert || 'start'}:${this.width}:${this.height}:${place.top}:${place.left}:${place.right}:${place.bottom}`
+  _renderItem (item: React.ReactNode, place: Placement, { horz, vert, onPress, onLayout }: IRenderOptions = {}): JSX.Element {
+    const horzKey = `horz:${useDefault(horz, 'start')}:${useDefault(vert, 'start')}:${this.width}:${this.height}:${place.top}:${place.left}:${place.right}:${place.bottom}`
     let horzStyle = renderCache[horzKey]
     if (horzStyle === undefined) {
       horzStyle = {
@@ -165,7 +182,7 @@ export class Component {
       }
       renderCache[horzKey] = horzStyle
     }
-    const vertKey = `vert:${vert || 'start'}:${horz || 'start'}`
+    const vertKey = `vert:${useDefault(vert, 'start')}:${useDefault(horz, 'start')}`
     let vertStyle = renderCache[vertKey]
     if (vertStyle === undefined) {
       vertStyle = {
@@ -173,14 +190,14 @@ export class Component {
         width: horz === 'stretch' ? '100%' : 'auto',
         flexDirection: 'column',
         height: '100%',
-        justifyContent: vert === 'end' ? 'flex-end' : vert === 'center' ? 'center': 'flex-start'
+        justifyContent: vert === 'end' ? 'flex-end' : vert === 'center' ? 'center' : 'flex-start'
       }
       renderCache[vertKey] = vertStyle
     }
     if (onPress !== null && onPress !== undefined) {
-      item = <TouchableOpacity onLayout={ onLayout } onPress={ onPress }>{ item }</TouchableOpacity>
+      item = <TouchableOpacity onLayout={onLayout} onPress={onPress}>{item}</TouchableOpacity>
     }
-    return <View onLayout={ onLayout } style={ horzStyle }><View style={ vertStyle }>{ item }</View></View>
+    return <View onLayout={onLayout} style={horzStyle}><View style={vertStyle}>{item}</View></View>
   }
 }
 
@@ -210,7 +227,7 @@ export class Placement {
   centerX: number
   centerY: number
 
-  constructor({ x, y, w, h }: IFrameData) {
+  constructor ({ x, y, w, h }: IFrameData) {
     this.x = x
     this.left = x
     this.y = y
@@ -233,7 +250,7 @@ export class Placement {
 
   size<T extends IStylePlace> (style?: T): T {
     if (style === undefined || style === null) {
-      style = {} as T
+      style = {} as any
     }
     style.width = this.width
     style.height = this.height
@@ -274,14 +291,14 @@ export class ImagePlacement {
     this.Render = this.Render.bind(this)
   }
 
-  Render (props: IBaseProps<Image, ImageStyle>) {
+  Render (props: IBaseProps<Image, ImageStyle>): JSX.Element {
     return this.parent.Image({
       ...props,
       prototype: this
     })
   }
 
-  img (style?: ImageStyle, ref?: React.RefObject<Image>, onLayout?: () => any) {
+  img (style?: ImageStyle, ref?: React.RefObject<Image>, onLayout?: () => any): JSX.Element {
     return this.asset().img(style, ref, onLayout)
   }
 }
@@ -297,7 +314,7 @@ export class Slice9Placement {
     this.parent = parent
   }
 
-  render (style?: ViewStyle, ref?: React.RefObject<View>, onLayout?: () => any) {
+  render (style?: ViewStyle, ref?: React.RefObject<View>, onLayout?: () => any): JSX.Element {
     return this.asset().render(style, ref, onLayout)
   }
 }
@@ -328,14 +345,14 @@ export enum GradientType {
 
 export interface IGradient {
   gradient: {
-    type: GradientType,
-    stops: IStop[],
+    type: GradientType
+    stops: IStop[]
     from: {
-      x: number,
+      x: number
       y: number
-    },
+    }
     to: {
-      x: number,
+      x: number
       y: number
     }
   }
@@ -356,7 +373,7 @@ export type TLineEnd = 'Butt' | 'Round' | 'Projecting'
 export type TLineJoin = 'Miter' | 'Round' | 'Bevel'
 
 export interface TBorderData {
-  fill?: TFillData,
+  fill?: TFillData
   thickness?: number
   endArrowhead?: TArrowHead
   startArrowhead?: TArrowHead
@@ -377,14 +394,16 @@ export class RGBA {
   constructor (string: string) {
     reg.lastIndex = 0
     const parts = reg.exec(string)
-    this.r = parts ? parseInt(parts[1], 16) : 255
-    this.g = parts ? parseInt(parts[2], 16) : 255
-    this.b = parts ? parseInt(parts[3], 16) : 255
-    this.a = parts && parts[4] ? parseInt(parts[4], 16) : 255
+    this.r = exists(parts) ? parseInt(parts[1], 16) : 255
+    this.g = exists(parts) ? parseInt(parts[2], 16) : 255
+    this.b = exists(parts) ? parseInt(parts[3], 16) : 255
+    this.a = exists(parts) && exists(parts[4]) ? parseInt(parts[4], 16) : 255
   }
+
   toString (): string {
     return `#${hex(this.r | 0)}${hex(this.g | 0)}${hex(this.b | 0)}${hex(this.a | 0)}`
   }
+
   avg (other: RGBA): this {
     this.r = (this.r + other.r) / 2
     this.g = (this.g + other.g) / 2
@@ -428,7 +447,7 @@ export enum TBorderStyle {
   solid = 'solid'
 }
 
-function dashPatternToBorderStyle (dashPattern: number[]) {
+function dashPatternToBorderStyle (dashPattern: number[]): TBorderStyle {
   if (dashPattern.length === 1) {
     return TBorderStyle.dotted
   }
@@ -471,11 +490,11 @@ export class Border {
   }
 }
 
-export type TShadowData = {
-  x: number,
-  y: number,
-  blur: number,
-  spread: number,
+export interface TShadowData {
+  x: number
+  y: number
+  blur: number
+  spread: number
   color: string
 }
 
@@ -524,12 +543,12 @@ export class Polygon {
       throw new Error(data.error)
     }
     return <LinearGradient
-      colors={ data.gradient.stops.map(stop => stop.color) }
-      locations={ data.gradient.stops.map(stop => stop.position) }
-      start={ [ data.gradient.from.x, data.gradient.from.y ] }
-      end={ [ data.gradient.to.x, data.gradient.to.y ] }
-      ref={ ref }
-      onLayout={ onLayout }
+      colors={data.gradient.stops.map(stop => stop.color)}
+      locations={data.gradient.stops.map(stop => stop.position)}
+      start={[data.gradient.from.x, data.gradient.from.y]}
+      end={[data.gradient.to.x, data.gradient.to.y]}
+      ref={ref}
+      onLayout={onLayout}
       style={{
         ...this.borderStyle(),
         ...style
@@ -564,14 +583,14 @@ export class Text {
     this.parent = parent
     this.place = new Placement(frame)
     this.styleAbsolute = {
-      ... style,
-      ... this.place.style(),
+      ...style,
+      ...this.place.style(),
       position: 'absolute'
     }
     this.Render = this.Render.bind(this)
   }
 
-  Render (props: ITextBaseProps) {
+  Render (props: ITextBaseProps): JSX.Element {
     return this.parent.Text({
       ...props,
       value: props.value === undefined ? this.text : props.value,
@@ -579,7 +598,7 @@ export class Text {
     })
   }
 
-  render ({ value, style, onEdit, ref, onLayout, onBlur }: ITextRenderOptions) {
+  render ({ value, style, onEdit, ref, onLayout, onBlur }: ITextRenderOptions): JSX.Element {
     if (value !== undefined) {
       value = String(value)
     } else {
@@ -587,18 +606,20 @@ export class Text {
     }
     const originalValue = value
     if (onEdit !== undefined) {
-      return <TextInput onChangeText={ text => value = text} onSubmitEditing={ () => originalValue !== value ? onEdit(value) : null } onLayout={ onLayout } onBlur={ onBlur } ref={ ref as React.RefObject<TextInput> } style={{
+      return <TextInput
+        onChangeText={text => { value = text }} onSubmitEditing={() => originalValue !== value ? onEdit(value) : null} onLayout={onLayout} onBlur={onBlur} ref={ref as React.RefObject<TextInput>} style={{
+          ...this.style,
+          ...style
+        }}>{value}</TextInput>
+    }
+    return <NativeText
+      onLayout={onLayout} ref={ref} style={{
         ...this.style,
         ...style
-      }}>{ value }</TextInput>
-    }
-    return <NativeText onLayout={ onLayout } ref={ ref } style={{
-      ...this.style,
-      ...style
-    }}>{ value }</NativeText>
+      }}>{value}</NativeText>
   }
 
-  renderAbsolute (opts: ITextRenderOptions) {
+  renderAbsolute (opts: ITextRenderOptions): JSX.Element {
     if (opts.style === undefined || opts.style === null) {
       opts.style = this.styleAbsolute
     } else {

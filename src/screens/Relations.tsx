@@ -11,8 +11,8 @@ const AddButton = Asset.buttonAddRound().component
 
 export const RelationsScreen = withNavigation(({ navigation }: { navigation: TNavigation }) => {
   return <View style={{ ...styles.screen }}>
-    <TopNavigation title="Relations"/>
-    <EmptyView prototype={ elementRelationsEmpty } />
-    <AddButton style={{ position: 'absolute', right: 10, bottom: 10 }} onPress={ () => navigation.navigate('newRelation', { timestamp: Date.now() }) }/>
+    <TopNavigation title='Relations' />
+    <EmptyView prototype={elementRelationsEmpty} />
+    <AddButton style={{ position: 'absolute', right: 10, bottom: 10 }} onPress={() => navigation.navigate('newRelation', { timestamp: Date.now() })} />
   </View>
 })

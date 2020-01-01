@@ -1,4 +1,4 @@
-export function map <In, Out>(iter: Iterator<In>, op: (value: In, index: number) => Out): Out[] {
+export function map <In, Out> (iter: Iterator<In>, op: (value: In, index: number) => Out): Out[] {
   const result: Out[] = []
   let index = -1
   while (true) {

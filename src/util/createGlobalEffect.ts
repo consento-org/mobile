@@ -2,13 +2,13 @@ import { useState, useEffect } from 'react'
 
 export function createGlobalEffect <T> ({ update, init, exit }: {
   update (): T | undefined
-  init (handler: () => any): void,
+  init (handler: () => any): void
   exit (handler: () => any): void
-}) {
+}): () => T {
   const listeners = new Set<(lastUpdate: number) => any>()
-  let output: T = update()
+  const output: T = update()
   let globalLastUpdate: number
-  function updateOutput () {
+  function updateOutput (): void {
     const newOutput = update()
     if (newOutput === undefined) {
       return
@@ -16,7 +16,7 @@ export function createGlobalEffect <T> ({ update, init, exit }: {
     globalLastUpdate = Date.now()
     const iter = listeners.values()
     do {
-      let update = iter.next()
+      const update = iter.next()
       if (update.done) {
         return
       }

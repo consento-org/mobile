@@ -1,16 +1,13 @@
-import { computed, action } from 'mobx'
-import { model, Model, prop, tProp, types, ExtendedModel, Ref, rootRef, customRef, findParent } from 'mobx-keystone'
+import { computed } from 'mobx'
+import { model, modelAction, Model, prop, tProp, types, ExtendedModel } from 'mobx-keystone'
 import { Connection } from './Connection'
 import { RequestBase } from './RequestBase'
-import { User } from './User'
 
 export enum TVaultState {
   open = 'open',
   locked = 'locked',
   pending = 'pending'
 }
-
-const DEFAULT_VAULT_OPEN_TIME = 5000
 
 @model('consento/MessageLogEntry')
 export class MessageLogEntry extends Model({
@@ -19,7 +16,6 @@ export class MessageLogEntry extends Model({
 }) {}
 
 export type VaultLogEntry = MessageLogEntry
-
 
 @model('consento/VaultClose')
 export class VaultClose extends Model({
@@ -31,7 +27,11 @@ export class VaultOpen extends Model({
   time: prop<number>(() => Date.now())
 }) {}
 
-export const VaultOpenRequest = RequestBase('consento/VaultOpenRequest', DEFAULT_VAULT_OPEN_TIME)
+@model('consento/VaultOpenRequest')
+export class VaultOpenRequest extends ExtendedModel(RequestBase, {
+}) {
+  static KEEP_ALIVE = 5000
+}
 
 export type VaultAccessEntry = typeof VaultOpenRequest | VaultClose | VaultOpen
 
@@ -51,18 +51,18 @@ export class Vault extends Model({
   log: VaultLogEntry[]
   _data: null
 
-  @computed get isClosable () {
+  @computed get isClosable (): boolean {
     return this.connections.length > 0
   }
 
-  @action requestUnlock () {
+  @modelAction requestUnlock (): void {
     if (!this.isClosable) {
       throw new Error('not-closable')
     }
     this.accessLog.push(new VaultOpenRequest({}))
   }
 
-  @action close () {
+  @modelAction close (): void {
     if (!this.isClosable) {
       throw new Error('not-closable')
     }
@@ -78,24 +78,24 @@ export class Vault extends Model({
     this.accessLog.push(new VaultClose({}))
   }
 
-  unlock (secret: Uint8Array) {
+  unlock (secret: Uint8Array): void {
     // this._data = new VaultData (secret)
     this.accessLog.push(new VaultOpen({}))
   }
 
-  get data () {
+  get data (): any {
     return this._data
   }
 
-  @computed get isOpen () {
+  @computed get isOpen (): boolean {
     return this.state === TVaultState.open
   }
 
-  @computed get isPending () {
+  @computed get isPending (): boolean {
     return this.state === TVaultState.pending
   }
 
-  @computed get state () {
+  @computed get state (): TVaultState {
     if (this._data !== null) {
       return TVaultState.open
     }

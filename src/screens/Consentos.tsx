@@ -1,5 +1,5 @@
 import React, { useContext } from 'react'
-import { View, ViewStyle, ScrollView, } from 'react-native'
+import { View, ViewStyle, ScrollView } from 'react-native'
 import { observer } from 'mobx-react'
 import { styles } from '../styles'
 import { EmptyView } from './components/EmptyView'
@@ -17,71 +17,75 @@ import { map } from '../util/map'
 
 const cardMargin = screen02Consentos.b.place.top - screen02Consentos.a.place.bottom
 
-const accessCardStyle = {
+const accessCardStyle: ViewStyle = {
   position: 'relative',
   width: elementConsentosBase.width,
   height: elementConsentosBase.height,
   backgroundColor: elementConsentosBase.background.fill.color,
   margin: cardMargin,
   ...elementConsentosBase.background.borderStyle()
-} as ViewStyle
+}
 
-function humanTime (time: number) {
+function humanTime (time: number): string {
+  // TODO!
   return String(time)
 }
 
-const viewBox = `0 0 ${elementConsentosLockeeIdle.width } ${elementConsentosLockeeIdle.height}`
-const lockeeCardStyle = {
+const viewBox = `0 0 ${elementConsentosLockeeIdle.width} ${elementConsentosLockeeIdle.height}`
+const lockeeCardStyle: ViewStyle = {
   position: 'relative',
   width: elementConsentosLockeeIdle.width,
   height: elementConsentosLockeeIdle.height,
   margin: cardMargin
-} as ViewStyle
+}
+
+// eslint-disable-next-line @typescript-eslint/no-empty-function
+const noop = (): void => {}
 
 const Consento = observer(({ consento }: { consento: ConsentoModel }) => {
-  if (consento instanceof ConsentoUnlockVault) { 
-    return <View style={ accessCardStyle }>
-      <elementConsentosBase.lastAccess.Render value={ humanTime(consento.time) } />
-      <elementConsentosBase.relationName.Render value={ 'Some Person' } style={{ ...elementConsentosBase.relationName.place.size(), backgroundColor: '#00000000', position: 'relative' }} />
+  if (consento instanceof ConsentoUnlockVault) {
+    return <View style={accessCardStyle}>
+      <elementConsentosBase.lastAccess.Render value={humanTime(consento.time)} />
+      <elementConsentosBase.relationName.Render value='Some Person' style={{ ...elementConsentosBase.relationName.place.size(), backgroundColor: '#00000000', position: 'relative' }} />
       <elementConsentosBase.actionRequested.Render />
       <elementConsentosBase.vaultIcon.Render />
-      <elementConsentosBase.vaultName.Render value={ 'Vault Name' } />
-      <ConsentoState state={ consento.state } onAccept={ () => {} } onDelete={ () => {} } style={ elementConsentosAccessAccepted.state.place.style() }/>
+      <elementConsentosBase.vaultName.Render value='Vault Name' />
+      <ConsentoState state={consento.state} onAccept={noop} onDelete={noop} style={elementConsentosAccessAccepted.state.place.style()} />
     </View>
   }
   if (consento instanceof ConsentoBecomeLockee) {
     const { card, outline } = elementConsentosLockeeIdle
     const thickness = card.border.thickness
-    return <View style={ lockeeCardStyle }>
-      <Svg width={ elementConsentosLockeeIdle.width } height={ elementConsentosLockeeIdle.height } viewBox={ viewBox }>
-        <G fill={ card.border.fill.color }>
+    return <View style={lockeeCardStyle}>
+      <Svg width={elementConsentosLockeeIdle.width} height={elementConsentosLockeeIdle.height} viewBox={viewBox}>
+        <G fill={card.border.fill.color}>
           <Rect
-            x={ card.place.x }
-            y={ card.place.y }
-            width={ card.place.width }
-            height={ card.place.height }
-            rx={ card.border.radius }
-            ry={ card.border.radius }
+            x={card.place.x}
+            y={card.place.y}
+            width={card.place.width}
+            height={card.place.height}
+            rx={card.border.radius}
+            ry={card.border.radius}
           />
           <Circle
-            x={ outline.place.centerX }
-            y={ outline.place.centerY }
-            r={ outline.place.width / 2 }
+            x={outline.place.centerX}
+            y={outline.place.centerY}
+            r={outline.place.width / 2}
           />
         </G>
-        <G fill={ card.fill.color }>
+        <G fill={card.fill.color}>
           <Rect
-            x={ card.place.x + thickness }
-            y={ card.place.y + thickness }
-            width={ card.place.width - thickness * 2 }
-            height={ card.place.height - thickness * 2 }
-            rx={ card.border.radius - thickness }
-            ry={ card.border.radius - thickness }
+            x={card.place.x + thickness}
+            y={card.place.y + thickness}
+            width={card.place.width - thickness * 2}
+            height={card.place.height - thickness * 2}
+            rx={card.border.radius - thickness}
+            ry={card.border.radius - thickness}
           />
           <Circle
-            x={ outline.place.centerX }
-            y={ outline.place.centerY }
-            r={ outline.place.width / 2 - thickness }
+            x={outline.place.centerX}
+            y={outline.place.centerY}
+            r={outline.place.width / 2 - thickness}
           />
         </G>
       </Svg>
@@ -90,7 +94,7 @@ const Consento = observer(({ consento }: { consento: ConsentoModel }) => {
       <elementConsentosLockeeIdle.relationName.Render />
       <elementConsentosLockeeIdle.question.Render />
       <elementConsentosLockeeIdle.vaultName.Render />
-      <ConsentoState state={ consento.state } onAccept={ () => {} } onDelete={ () => {} } style={ elementConsentosLockeeIdle.state.place.style() }/>
+      <ConsentoState state={consento.state} onAccept={noop} onDelete={noop} style={elementConsentosLockeeIdle.state.place.style()} />
     </View>
   }
   return null
@@ -106,19 +110,19 @@ const listStyle: ViewStyle = {
 }
 
 export const ConsentosScreen = observer(() => {
-  const { user: { consentos }} = useContext(ConsentoContext)
-  return <View style={ styles.screen }>
-    <TopNavigation title="Consentos" />
+  const { user: { consentos } } = useContext(ConsentoContext)
+  return <View style={styles.screen}>
+    <TopNavigation title='Consentos' />
     {
       (consentos.size === 0)
-        ? <EmptyView prototype={ elementConsentosEmpty } />
-        : <ScrollView centerContent={ true }>
-            <View style={ listStyle }>
+        ? <EmptyView prototype={elementConsentosEmpty} />
+        : <ScrollView centerContent>
+          <View style={listStyle}>
             {
-              map(consentos.values(), consento => <Consento consento={ consento } key={ consento.$modelId } />)
+              map(consentos.values(), consento => <Consento consento={consento} key={consento.$modelId} />)
             }
-            </View>
-          </ScrollView>
+          </View>
+        </ScrollView>
     }
   </View>
 })

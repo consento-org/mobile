@@ -1,6 +1,8 @@
 import React, { ReactNode } from 'react'
 import { Text } from 'react-native'
 import { flatten, Hierarchy } from './flatten'
+import { exists } from './exists'
+import { useDefault } from './useDefault'
 
 export interface IIconProps {
   focused: boolean
@@ -17,12 +19,12 @@ function isString (val: any): val is string {
 function isIcon (val: any): val is IIcon {
   if (typeof val !== 'object') return true
   if (Array.isArray(val)) return true
-  if (val.hasOwnProperty('type')) return true
+  if (exists(val.type)) return true
   return false
 }
 
 export interface TContextData {
-  icons: Hierarchy<IIcon>,
+  icons: Hierarchy<IIcon>
   strings: Hierarchy<string>
 }
 
@@ -34,7 +36,7 @@ export interface IContext {
   ctx (subPrefix: string): IContext
 }
 
-export function context ({ icons: iconsHierarchy, strings: stringsHierarchy }: TContextData) {
+export function context ({ icons: iconsHierarchy, strings: stringsHierarchy }: TContextData): IContext {
   const icons = flatten(isIcon, iconsHierarchy)
   const strings = flatten(isString, stringsHierarchy)
   return ctx('')
@@ -42,10 +44,10 @@ export function context ({ icons: iconsHierarchy, strings: stringsHierarchy }: T
   function ctx (prefix): IContext {
     return {
       t (key, ...params) {
-        return strings[`${prefix}${key}`] || `<${prefix}${key}>`
+        return useDefault(strings[`${prefix}${key}`], `<${prefix}${key}>`)
       },
       hasT (key) {
-        return strings.hasOwnProperty(`${prefix}${key}`)
+        return exists(strings[`${prefix}${key}`])
       },
       icon (key, props?: IIconProps) {
         const path = `${prefix}${key}`
@@ -53,7 +55,7 @@ export function context ({ icons: iconsHierarchy, strings: stringsHierarchy }: T
         if (typeof icon === 'function') {
           return icon(props)
         }
-        if (typeof icon !== undefined) {
+        if (exists(icon)) {
           return icon
         }
         return <Text>{`$ICON[${path}]`}</Text>

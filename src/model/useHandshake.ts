@@ -1,11 +1,13 @@
-import { useEffect, useState, useContext } from 'react'
-import { IHandshakeInit, IEncodable, IHandshakeAcceptMessage } from '@consento/crypto'
-import { ConsentoContext } from './ConsentoContext'
+import { useContext } from 'react'
 import { Buffer } from 'buffer'
-import { IConnection } from '@consento/api'
+import { IAPI, IConnection, IEncodable, IHandshakeAcceptMessage, IHandshakeConfirmation, cancelable, CancelError, ICancelable } from '@consento/api'
+import { bufferToString } from '@consento/crypto/util/buffer'
+import { ConsentoContext } from './ConsentoContext'
+import { useStateMachine, IStateMachine, IState } from '../util/useStateMachine'
 
 function isAcceptMessage (body: IEncodable): body is IHandshakeAcceptMessage {
   if (typeof body === 'object' && !(body instanceof Uint8Array)) {
+    // eslint-disable-next-line dot-notation
     return typeof body['token'] === 'string' && typeof body['secret'] === 'string'
   }
   return false
@@ -31,104 +33,133 @@ export function getInitMessage (url: string): Buffer | null {
   return Buffer.from(result[1], 'base64')
 }
 
-export enum ConnectionState {
-  noConnection = 'no-connection',
+export enum OutgoingState {
+  idle = 'idle',
   connecting = 'connecting',
-  confirmIncoming = 'confirm-incoming'
+  confirming = 'confirming'
 }
 
-export function useHandshake (onHandshake: (connection: IConnection) => any) {
-  const {
-    api: {
-      crypto,
-      notifications
-    }
-  } = useContext(ConsentoContext)
-  const [ parts, setHandshake ] = useState<{
-    handshake?: IHandshakeInit,
-    initLink?: string
-  }>({})
+export enum IncomingState {
+  init = 'init',
+  ready = 'ready',
+  confirming = 'confirming'
+}
 
-  const [ connectionState, setConnectionState ] = useState<string>(ConnectionState.connecting)
-  const [ refresh, setRefresh ] = useState<number>(Date.now())
-  const [ close ] = useState<{
-    outgoing: () => any
-    incoming: () => any
-  }>({} as any)
+type InitData = [ (connection: IConnection) => any, IAPI ]
 
-  useEffect(() => {
-    if (crypto !== null) {
-      const handshake = new crypto.HandshakeInit()
-      handshake.initMessage().then(async (data: Buffer) => {
-        setHandshake({
-          handshake,
-          initLink: `consento://connect:${data.toString('base64')}`
-        })
-        const { promise, cancel } = await notifications.receive(handshake.receiver, isAcceptMessage)
-        if (close.incoming !== undefined) {
-          close.incoming()
-        }
-        close.incoming = cancel
-        try {
-          const acceptMessage = await promise
-          setConnectionState(ConnectionState.confirmIncoming)
-          const confirmation = await handshake.confirm(acceptMessage)
-          await notifications.send(confirmation.sender, confirmation.finalMessage)
-          onHandshake(confirmation)
-        } catch (err) {
-          if (err.message !== 'cancelled') {
-            console.error(err)
-          }
-        }
-      }).catch(error => {
-        console.log({
-          message: `Error getting handshake`,
-          error: error.stack || error
-        })
+function incomingMachine (
+  updateState: (state: IncomingState, ops?: string) => void,
+  reset: () => void,
+  [onHandshake, { crypto, notifications }]: InitData
+): IStateMachine<IncomingState, any> {
+  const incoming = cancelable<IHandshakeConfirmation>(function * (child) {
+    const incoming = new crypto.HandshakeInit()
+    const data = (yield incoming.initMessage()) as unknown as Uint8Array
+    const { afterSubscribe: receive } = (yield child(notifications.receive(incoming.receiver, isAcceptMessage))) as { afterSubscribe: ICancelable<IHandshakeAcceptMessage> }
+    const link = `consento://connect:${bufferToString(data, 'base64')}`
+    updateState(IncomingState.ready, link)
+    const acceptMessage: IHandshakeAcceptMessage = yield child(receive)
+    updateState(IncomingState.confirming, link)
+    const confirmation: IHandshakeConfirmation = yield child(incoming.confirm(acceptMessage))
+    yield notifications.send(confirmation.sender, confirmation.finalMessage)
+    return confirmation
+  }).then(
+    onHandshake,
+    (error: Error) => {
+      if (error instanceof CancelError) {
+        return
+      }
+      console.log({
+        message: 'Error incoming handshake',
+        error: error.stack !== undefined ? error.stack : error
       })
+      reset()
     }
-    return () => {
-      if (close.incoming !== undefined) {
-        close.incoming()
-      }
-      if (close.outgoing !== undefined) {
-        close.outgoing()
-      }
-    }
-  }, [refresh, crypto])
-
+  )
   return {
-    connectionState,
-    connect (initLink: string) {
-      (async () => {
-        const initMessage = getInitMessage(initLink)
-        if (crypto !== null && initMessage !== null) {
+    initialState: IncomingState.init,
+    setState: (): boolean => false, // Only internally changable
+    close: incoming.cancel
+  }
+}
+
+function outgoingMachine (
+  updateState: (state: OutgoingState, ops?: any) => void,
+  reset: () => void,
+  [onHandshake, { crypto, notifications }]: InitData
+): IStateMachine<OutgoingState, any> {
+  let formerAcceptLink
+  let outgoing: ICancelable<IConnection>
+  const close = (): void => {
+    if (outgoing !== undefined) {
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
+      outgoing.cancel()
+      outgoing = undefined
+    }
+  }
+  return {
+    initialState: OutgoingState.idle,
+    setState: (state: OutgoingState, ops?: any): boolean => {
+      if (state === OutgoingState.connecting) {
+        if (typeof ops !== 'string') {
+          return false
+        }
+        const acceptLink = ops
+        if (acceptLink === formerAcceptLink) {
+          return false
+        }
+        const initMessage = getInitMessage(acceptLink)
+        if (initMessage === null) {
+          return false
+        }
+        close()
+        formerAcceptLink = acceptLink
+        const thisOutgoing = cancelable<IConnection>(function * (child) {
           const accept = new crypto.HandshakeAccept(initMessage)
-          setConnectionState(ConnectionState.connecting)
-          const { promise, cancel } = await notifications.receive(accept.receiver)
-          if (close.outgoing !== undefined) {
-            close.outgoing()
-          }
-          close.outgoing = cancel
-          const msg = await accept.acceptMessage()
-          await notifications.send(accept.sender, msg)
-          const finalMessage = await promise
+          const msg = (yield accept.acceptMessage()) as unknown as IHandshakeAcceptMessage
+          const { afterSubscribe: receive } = (yield child(notifications.receive(accept.receiver))) as { afterSubscribe: ICancelable<IEncodable>}
+          yield notifications.send(accept.sender, msg)
+          updateState(OutgoingState.confirming)
+          const finalMessage = yield child(receive)
           if (!isUint8Array(finalMessage)) {
             throw new Error('finalization is supposed to be an uint8 array')
           }
-          const done = await accept.finalize(finalMessage)
-          onHandshake(done)
-        }
-      })()
-        .catch(err => {
-          if (err.message !== 'cancelled') {
-            console.error(err)
-          }
+          return (yield accept.finalize(finalMessage)) as unknown as IConnection
         })
+        outgoing = thisOutgoing
+        thisOutgoing.then(
+          onHandshake,
+          error => {
+            if (error instanceof CancelError) {
+              return
+            }
+            console.log({
+              message: 'Error outgoing handshake',
+              error: error.stack !== undefined ? error.stack : error
+            })
+            reset()
+          })
+        return true
+      }
+      return false
     },
-    initLink: parts.initLink,
-    refresh () {
-      setRefresh(Date.now())
+    close
+  }
+}
+
+export function useHandshake (onHandshake: (connection: IConnection) => any): {
+  incoming: IState<IncomingState, any>
+  outgoing: IState<OutgoingState, any>
+  connect (initLink: string): void
+} {
+  const stateOps = [onHandshake, useContext(ConsentoContext).api]
+  const [incoming] = useStateMachine(incomingMachine, stateOps)
+  const [outgoing, outgoingManager] = useStateMachine(outgoingMachine, stateOps)
+  return {
+    incoming,
+    outgoing,
+    connect (initLink: string): void {
+      outgoingManager.setState(OutgoingState.connecting, initLink)
     }
   }
 }

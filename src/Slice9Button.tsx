@@ -1,6 +1,7 @@
 import React from 'react'
 import { View, Text, TextStyle, TouchableOpacity, ViewStyle } from 'react-native'
 import { Slice9Placement, Text as TextPlacement, Component } from './styles/Component'
+import { exists } from './util/exists'
 
 interface ISlice9Component extends Component {
   bg: Slice9Placement
@@ -8,8 +9,8 @@ interface ISlice9Component extends Component {
 }
 
 interface ISlice9ButtonProps {
-  prototype: ISlice9Component,
-  style: ViewStyle,
+  prototype: ISlice9Component
+  style: ViewStyle
   label: string
 }
 
@@ -30,13 +31,13 @@ export class Slice9Button extends React.Component<ISlice9ButtonProps, { width: n
     this._text = React.createRef()
   }
 
-  measure () {
+  measure (): void {
     this._text.current.measure((_, __, width, height) => {
       this.setState({ width: (width + 0.5) | 0, height: (height + 0.5) | 0 })
     })
   }
 
-  render () {
+  render (): JSX.Element {
     const proto = this.props.prototype
 
     const style: ViewStyle = {
@@ -58,10 +59,10 @@ export class Slice9Button extends React.Component<ISlice9ButtonProps, { width: n
       height = this.props.style.height
     }
 
-    if (width === undefined && this.state && this.state.width) {
+    if (width === undefined && exists(this.state) && exists(this.state.width)) {
       width = proto.label.place.left + this.state.width + proto.width - proto.label.place.right
     }
-    if (height === undefined && this.state && this.state.height) {
+    if (height === undefined && exists(this.state) && exists(this.state.height)) {
       height = proto.label.place.top + this.state.height + proto.height - proto.label.place.bottom
     }
 
@@ -71,16 +72,16 @@ export class Slice9Button extends React.Component<ISlice9ButtonProps, { width: n
     const w = (width - proto.bg.place.left + proto.bg.place.right - proto.width)
     const h = (height - proto.bg.place.top + proto.bg.place.bottom - proto.height)
 
-    return <TouchableOpacity style={ style }>
-      { width !== undefined && height !== undefined ? proto.bg.render({
+    return <TouchableOpacity style={style}>
+      {width !== undefined && height !== undefined ? proto.bg.render({
         top: proto.bg.place.top,
         left: proto.bg.place.left,
         width: w,
         height: h,
         position: 'absolute'
-      }) : null }
+      }) : null}
       <View style={{ display: 'flex', alignItems: 'center' }}>
-        <Text ref={ this._text } style={{ ...this._textStyle }} onLayout={ () => this.measure() }>{ this.props.label }</Text>
+        <Text ref={this._text} style={{ ...this._textStyle }} onLayout={() => this.measure()}>{this.props.label}</Text>
       </View>
     </TouchableOpacity>
   }

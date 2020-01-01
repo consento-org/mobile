@@ -23,7 +23,6 @@ export class Line implements ILinePart {
   length: number
   start: TPoint
   normal: TPoint
-  
   constructor (start: TPoint, end: TPoint) {
     const length = distance(start, end)
     this.length = length
@@ -33,11 +32,13 @@ export class Line implements ILinePart {
       y: (end.y - start.y) / length
     }
   }
-  point (from: number, target: TPoint) {
+
+  point (from: number, target: TPoint): void {
     target.x = this.start.x + this.normal.x * from
     target.y = this.start.y + this.normal.y * from
   }
-  target (to: number) {
+
+  target (to: number): string {
     this.point(to, P)
     return `L ${P.x} ${P.y}`
   }
@@ -60,13 +61,13 @@ export class Arc implements ILinePart {
     this.radius = radius
   }
 
-  point (from: number, target: TPoint) {
+  point (from: number, target: TPoint): void {
     const angle = ((from / this.length) * (this.end - this.start) + this.start)
     target.x = this.center.x + Math.sin(angle * TwoMathPi) * this.radius
     target.y = this.center.y - Math.cos(angle * TwoMathPi) * this.radius
   }
 
-  target (to: number) {
+  target (to: number): string {
     this.point(to, P)
     return `A ${this.radius} ${this.radius} 0, 0, 1, ${P.x} ${P.y}`
   }

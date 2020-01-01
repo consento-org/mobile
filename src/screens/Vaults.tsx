@@ -19,8 +19,11 @@ const listStyle: ViewStyle = {
 
 const AddButton = Asset.buttonAddHexagonal().component
 
+// eslint-disable-next-line @typescript-eslint/no-empty-function
+const noop = (): void => {}
+
 export const VaultsScreen = observer(() => {
-  const { user: { vaults }} = useContext(ConsentoContext)
+  const { user: { vaults } } = useContext(ConsentoContext)
   /*
   useEffect(() => {
     setTimeout(() => {
@@ -33,15 +36,15 @@ export const VaultsScreen = observer(() => {
     }, 2000)
   }, [false])
   */
-  return <View style={ styles.screen }>
-    <TopNavigation title="Vaults"/>
-    <ScrollView centerContent={ true }>
-      <View style={ listStyle }>
-      {
-        map(vaults.values(), vault => <VaultCard key={vault.$modelId} vault={vault} />)
-      }
+  return <View style={styles.screen}>
+    <TopNavigation title='Vaults' />
+    <ScrollView centerContent>
+      <View style={listStyle}>
+        {
+          map(vaults.values(), vault => <VaultCard key={vault.$modelId} vault={vault} />)
+        }
       </View>
     </ScrollView>
-    <AddButton style={{ position: 'absolute', right: 10, bottom: 10 }} onPress={ () => {} }/>
+    <AddButton style={{ position: 'absolute', right: 10, bottom: 10 }} onPress={noop} />
   </View>
 })

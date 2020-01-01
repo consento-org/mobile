@@ -4,12 +4,12 @@ import { User } from './User'
 import { Ref } from 'react'
 import { find } from '../util/find'
 
-export function findRelation (user: User, id: string) {
+export function findRelation (user: User, id: string): Relation {
   return find(user.relations, (relation): relation is Relation => relation.$modelId === id)
 }
 
-const getRef = customRef<Relation>(MODEL, { 
-  resolve(ref) {
+const getRef = customRef<Relation>(MODEL, {
+  resolve (ref) {
     const user = findParent<User>(ref, n => n instanceof User)
     if (user === undefined) {
       return
@@ -18,6 +18,6 @@ const getRef = customRef<Relation>(MODEL, {
   }
 })
 
-export function RelationRef (id: string) {
-  return getRef(id) as Ref<Relation>
+export function RelationRef (id: string): Ref<Relation> {
+  return getRef(id)
 }

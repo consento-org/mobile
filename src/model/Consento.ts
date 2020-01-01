@@ -1,19 +1,22 @@
 import { Relation } from './Relation'
 import { Vault } from './Vault'
 import { RequestBase } from './RequestBase'
-import { tProp, types } from 'mobx-keystone'
+import { tProp, types, model, ExtendedModel } from 'mobx-keystone'
 
-const BECOME_CONSENTEE_TIMEOUT = 24 * 60 * 1000
-const DEFAULT_UNLOCK_TIME = 5000
-
-export const ConsentoBecomeLockee = RequestBase('consento/ConsentoBecomeLockee', BECOME_CONSENTEE_TIMEOUT, {
-  relation: tProp(types.ref(types.model(Relation))),
+@model('consento/ConsentoBecomeLockee')
+export class ConsentoBecomeLockee extends ExtendedModel(RequestBase, {
+  relation: tProp(types.ref<Relation>()),
   title: tProp(types.string)
-})
+}) {
+  static KEEP_ALIVE: number = 24 * 60 * 1000
+}
 
-export const ConsentoUnlockVault = RequestBase('consento/ConsentoUnlockVault', DEFAULT_UNLOCK_TIME, {
-  relation: tProp(types.ref(types.model(Relation))),
-  vault: tProp(types.ref(types.model(Vault)))
-})
+@model('consento/ConsentoUnlockVault')
+export class ConsentoUnlockVault extends ExtendedModel(RequestBase, {
+  relation: tProp(types.ref<Relation>()),
+  vault: tProp(types.ref<Vault>())
+}) {
+  static KEEP_ALIVE: number = 5000
+}
 
 export type Consento = typeof ConsentoUnlockVault | typeof ConsentoBecomeLockee

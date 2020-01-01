@@ -1,30 +1,36 @@
 import React, { useState, useEffect } from 'react'
+import 'react-native-gesture-handler' // Imported to fix gesture error in tab navigation
 import { Text } from 'react-native'
 import { Loading } from './src/screens/Loading'
 import { loadFonts } from './src/styles/Font'
-import 'react-native-gesture-handler' // Imported to fix gesture error in tab navigation  
+import { exists } from './src/util/exists'
 
-export default function App () {
-  const [ error, setError ] = useState<Error>()
-  const [ loaded, setLoaded ] = useState<{ Screens: () => JSX.Element }>()
+export default function App (): JSX.Element {
+  const [error, setError] = useState<Error>()
+  const [loaded, setLoaded] = useState<{ ConsentoApp(): JSX.Element }>()
   useEffect(() => {
     Promise.all([
-      import('./src/screens'),
+      import('./src/ConsentoApp'),
       loadFonts()
     ])
-      .then(([{ Screens }]) => {
-        if (Screens === undefined || Screens === null) {
-          throw new Error('No Screen returned by ./src/screens')
+      .then(([{ ConsentoApp }]) => {
+        if (!exists(ConsentoApp)) {
+          setLoaded({ ConsentoApp: (): JSX.Element => <Text>'No Screen returned by ./src/ConsentoApp.tsx'</Text> })
         }
-        setLoaded({ Screens })
+        setLoaded({ ConsentoApp })
       })
       .catch(setError)
   }, [])
   if (error !== undefined) {
-    return <Text>{ `Error while initing:\n${this.state.error}` }</Text>
+    return <Text>{`Error while initing:\n${this.state.error}`}</Text>
   }
   if (loaded !== undefined) {
-    return <loaded.Screens />
+    try {
+      return <loaded.ConsentoApp />
+    // eslint-disable-next-line no-unreachable
+    } catch (err) {
+      return <Text>{`Error: ${err}`}</Text>
+    }
   }
-  return <Loading/>
+  return <Loading />
 }

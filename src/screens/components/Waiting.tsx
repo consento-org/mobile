@@ -7,12 +7,12 @@ import { elementVaultUnlock } from '../../styles/component/elementVaultUnlock'
 
 export interface IWaitingProps {
   start?: number
-  onDone?: () => any 
+  onDone?: () => any
 }
 
 export type TLineMode = 'center' | 'inside' | 'outside'
 
-function adjustPath (size: number, mode: TLineMode, thickness: number) {
+function adjustPath (size: number, mode: TLineMode, thickness: number): number {
   if (mode === 'center') {
     return size
   }
@@ -22,7 +22,7 @@ function adjustPath (size: number, mode: TLineMode, thickness: number) {
   return size - thickness
 }
 
-function adjustBox (size: number, mode: TLineMode, thickness: number) {
+function adjustBox (size: number, mode: TLineMode, thickness: number): number {
   if (mode === 'center') {
     return size + thickness
   }
@@ -41,38 +41,44 @@ const box = createBoxOutline(adjustPath(width, mode, thickness), adjustPath(heig
 
 const outWidth = adjustBox(width, mode, thickness)
 const outHeight = adjustBox(height, mode, thickness)
-const adjust = - thickness / 2
+const adjust = -thickness / 2
 const viewBox = `${adjust} ${adjust} ${outWidth} ${outHeight}`
-const textStyle = { ...elementVaultUnlock.waiting.style, position: 'absolute', width: outWidth, height: outHeight, fontStyle: 'italic' } as TextStyle
-const absolute = { position: 'absolute' } as ViewStyle
+const textStyle: TextStyle = {
+  ...elementVaultUnlock.waiting.style,
+  position: 'absolute',
+  width: outWidth,
+  height: outHeight,
+  fontStyle: 'italic'
+}
+const absolute: ViewStyle = { position: 'absolute' }
 
-export function Waiting () {
-  const [ offset, setOffset ] = useState(0.2)
+export function Waiting (): JSX.Element {
+  const [offset, setOffset] = useState(0.2)
   useInterval(() => {
-    setOffset( (offset + 0.01) % 1 )
+    setOffset((offset + 0.01) % 1)
   }, 25)
 
   return <View style={{ flexGrow: 1, backgroundColor: elementVaultUnlock.backgroundColor, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-    { elementVaultUnlock.illustrationWaiting.img({ marginBottom: elementVaultUnlock.waiting.place.top - elementVaultUnlock.illustrationWaiting.place.bottom }) }
+    {elementVaultUnlock.illustrationWaiting.img({ marginBottom: elementVaultUnlock.waiting.place.top - elementVaultUnlock.illustrationWaiting.place.bottom })}
     <View style={{ width: outWidth, height: outHeight, position: 'relative' }}>
-      <Svg width={ outWidth } height={ outHeight } viewBox={ viewBox } style={ absolute }>
+      <Svg width={outWidth} height={outHeight} viewBox={viewBox} style={absolute}>
         <Path
-          d={ box(0, offset) }
-          fill={ 'none' }
-          stroke={ elementVaultUnlock.inactive.border.fill.color }
-          strokeWidth={ elementVaultUnlock.inactive.border.thickness }
-          />
-      </Svg>
-      <Svg width={ outWidth } height={ outHeight } viewBox={ viewBox } style={ absolute }>
-        <Path
-          d={ box(offset, 1) }
-          fill={ 'none' }
-          stroke={ elementVaultUnlock.active.border.fill.color }
-          strokeWidth={ thickness }
-          strokeLinecap={ 'round' }
+          d={box(0, offset)}
+          fill='none'
+          stroke={elementVaultUnlock.inactive.border.fill.color}
+          strokeWidth={elementVaultUnlock.inactive.border.thickness}
         />
       </Svg>
-      <Text style={ textStyle }>{ elementVaultUnlock.waiting.text }</Text>
+      <Svg width={outWidth} height={outHeight} viewBox={viewBox} style={absolute}>
+        <Path
+          d={box(offset, 1)}
+          fill='none'
+          stroke={elementVaultUnlock.active.border.fill.color}
+          strokeWidth={thickness}
+          strokeLinecap='round'
+        />
+      </Svg>
+      <Text style={textStyle}>{elementVaultUnlock.waiting.text}</Text>
     </View>
   </View>
 }

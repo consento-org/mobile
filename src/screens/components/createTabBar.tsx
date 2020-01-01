@@ -25,6 +25,7 @@ const config = {
 
 const { t } = resources.ctx('navigation')
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 function createTabs (tabs: { [key: string]: () => ReactNode }) {
   const res = {}
   for (const key in tabs) {
@@ -36,6 +37,7 @@ function createTabs (tabs: { [key: string]: () => ReactNode }) {
   return res
 }
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export function createTabBar (tabs: { [key: string]: () => ReactNode }) {
   return createMaterialTopTabNavigator(createTabs(tabs), config)
 }

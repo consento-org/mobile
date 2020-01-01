@@ -1,4 +1,4 @@
-import { useStateMachine, IStateManager } from '../useStateMachine'
+import { useStateMachine, IStateManager, IStateMachine } from '../useStateMachine'
 import { mount, ReactWrapper } from 'enzyme'
 import { act } from 'react-dom/test-utils'
 import React, { useContext } from 'react'
@@ -9,7 +9,7 @@ describe('StateManager', () => {
   let _created = 0
   let _closed = 0
   let _init: any[]
-  const createStateMachine = (updateState: (state: string) => void, reset: () => void, init: any[]) => {
+  const createStateMachine = (updateState: (state: string) => void, reset: () => void, init: any[]): IStateMachine<string> => {
     _init = init
     _created += 1
     _update = updateState
@@ -23,19 +23,19 @@ describe('StateManager', () => {
     }
   }
   const Ctx = React.createContext('init-1')
-  const Any = (props: { state: string }) => {
+  const Any = (props: { state: string, manager: IStateManager<string, unknown> }): JSX.Element => {
     return <></>
   }
-  const Main = (props: { ctx: string }) => {
-    return <Ctx.Provider value={ props.ctx }><Component /></Ctx.Provider>
+  const Main = (props: { ctx: string }): JSX.Element => {
+    return <Ctx.Provider value={props.ctx}><Component /></Ctx.Provider>
   }
-  const Component = () => {
-    const data = [ useContext(Ctx) ]
-    const [ state, manager ] = useStateMachine(createStateMachine, data )
-    return <Any state={state} manager={manager} />
+  const Component = (): JSX.Element => {
+    const data = [useContext(Ctx)]
+    const [state, manager] = useStateMachine(createStateMachine, data)
+    return <Any state={state.state} manager={manager} />
   }
-  let init = 'init0'
-  const wrapper = mount(<Main ctx={ init }/>)
+  const init = 'init0'
+  const wrapper = mount(<Main ctx={init} />)
   const get = function <T> (component: T): ReactWrapper<T> { return wrapper.find(component).first() }
 
   it('initial state', () => {

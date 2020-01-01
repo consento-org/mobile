@@ -1,13 +1,13 @@
 import React from 'react'
-import { TouchableOpacity, Text, ViewStyle } from 'react-native'
+import { ViewStyle, TouchableOpacity, Text } from 'react-native'
 import { shadow } from '../../styles'
 import { buttonContainerDisabled } from '../../styles/component/buttonContainerDisabled'
 import { buttonContainerEnabled } from '../../styles/component/buttonContainerEnabled'
 import { buttonContainerLight } from '../../styles/component/buttonContainerLight'
 
 const disabledStyle = {
-  ... buttonContainerDisabled.label.style,
-  ... buttonContainerDisabled.shape.borderStyle(),
+  ...buttonContainerDisabled.label.style,
+  ...buttonContainerDisabled.shape.borderStyle(),
   width: buttonContainerDisabled.width,
   height: buttonContainerDisabled.height
 }
@@ -46,33 +46,35 @@ export interface IButtonProps {
   onPress?: () => void
 }
 
-export function ConsentoButton (props: IButtonProps) {
+export function ConsentoButton (props: IButtonProps): JSX.Element {
   if (props.onPress === undefined || props.enabled === false || props.disabled === true) {
     return <Text style={{
       ...disabledStyle,
-      ...(props.styleDisabled || props.style)
-    }}>{ props.title }</Text>
+      ...(props.styleDisabled !== undefined ? props.styleDisabled : props.style)
+    }}>
+      {props.title}
+    </Text>
   }
-  const parentStyle = {
+  const parentStyle: ViewStyle = {
     display: 'flex',
     top: props.style !== undefined ? props.style.top : 0,
     left: props.style !== undefined ? props.style.left : 0,
     position: props.style !== undefined ? props.style.position : undefined,
     width: props.style !== undefined ? props.style.width : undefined,
     height: props.style !== undefined ? props.style.height : undefined
-  } as ViewStyle
-  const style = {
+  }
+  const style: ViewStyle = {
     ...props.light ? lightStyle : props.thin ? disabledStyle : activeStyle,
     ...props.style,
     left: undefined,
     top: undefined
-  } as ViewStyle
+  }
   if (props.style !== undefined) {
     delete props.style.left
     delete props.style.top
     delete props.style.position
   }
-  return <TouchableOpacity style={ parentStyle } onPress={ props.onPress }>
-    <Text style={ style }>{ props.title }</Text>
+  return <TouchableOpacity style={parentStyle} onPress={props.onPress}>
+    <Text style={style}>{props.title}</Text>
   </TouchableOpacity>
 }

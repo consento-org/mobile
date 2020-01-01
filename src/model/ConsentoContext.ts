@@ -3,7 +3,7 @@ import { IAPI } from '@consento/api'
 import { User } from './User'
 
 export const ConsentoContext: Context<{
-  api: IAPI,
+  api: IAPI
   user: User
 }> = React.createContext({
   api: {

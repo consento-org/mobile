@@ -19,7 +19,7 @@ type Shadow = IOSShadow | AndroidShadow
 
 const shadows: { [elevation: number]: Shadow } = {}
 
-export function shadow (elevation: number = 4) {
+export function shadow (elevation: number = 4): Shadow {
   let shadow: Shadow = shadows[elevation]
   if (shadow === undefined) {
     shadow = Object.freeze(Platform.select({

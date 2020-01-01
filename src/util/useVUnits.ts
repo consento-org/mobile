@@ -22,7 +22,7 @@ const mem = {
 }
 
 export const useVUnits = createGlobalEffect({
-  update() {
+  update () {
     const { width, height } = Dimensions.get('window')
     const vw = width / 100
     const vh = height / 100

@@ -10,8 +10,8 @@ const style: ViewStyle = {
   backgroundColor: screen01Welcome.backgroundColor
 }
 
-export function Loading () {
+export function Loading (): JSX.Element {
   return <View style={style}>
-    { screen01Welcome.illustration.asset().img() }
+    {screen01Welcome.illustration.asset().img()}
   </View>
 }

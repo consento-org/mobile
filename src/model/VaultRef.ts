@@ -3,12 +3,12 @@ import { Vault, MODEL } from './Vault'
 import { User } from './User'
 import { find } from '../util/find'
 
-export function findVault (user: User, id: string) {
+export function findVault (user: User, id: string): Vault {
   return find(user.vaults, (vault): vault is Vault => vault.$modelId === id)
 }
 
-const getRef = customRef<Vault>(MODEL, { 
-  resolve(ref) {
+const getRef = customRef<Vault>(MODEL, {
+  resolve (ref) {
     const user = findParent<User>(ref, n => n instanceof User)
     if (user === undefined) {
       return
@@ -17,6 +17,6 @@ const getRef = customRef<Vault>(MODEL, {
   }
 })
 
-export function VaultRef (id: string) {
-  return getRef(id) as Ref<Vault>
+export function VaultRef (id: string): Ref<Vault> {
+  return getRef(id)
 }

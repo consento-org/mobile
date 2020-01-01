@@ -14,7 +14,7 @@ interface IStateStyle {
   deleteButton: Link<any, { label: string }>
 }
 
-function HorzLine ({ proto }: { proto: Polygon }) {
+function HorzLine ({ proto }: { proto: Polygon }): JSX.Element {
   return <View style={{
     width: proto.place.width,
     left: proto.place.left,
@@ -24,32 +24,47 @@ function HorzLine ({ proto }: { proto: Polygon }) {
   }} />
 }
 
-export function ConsentoState ({ state, style, onDelete, onAccept }: { state: TRequestState, onDelete: () => any, onAccept: () => any, style?: ViewStyle }) {
-  const viewStyle = {
+export function ConsentoState ({ state, style, onDelete, onAccept }: { state: TRequestState, onDelete: () => any, onAccept: () => any, style?: ViewStyle }): JSX.Element {
+  const viewStyle: ViewStyle = {
     position: 'absolute',
-    ... style
-  } as ViewStyle
+    ...style
+  }
   if (state === TRequestState.active) {
-    return <View style={ viewStyle }>
-      <elementConsentosBaseIdle.timeLeft.Render value={ '1235' }/>
-      <ConsentoButton style={{ ...elementConsentosBaseIdle.allowButton.place.style(), position: 'absolute' }} light={ true } title={
-        elementConsentosBaseIdle.allowButton.text.label
-      } onPress={ onAccept } />
-      <ConsentoButton style={{ ...elementConsentosBaseIdle.deleteButton.place.style(), position: 'absolute' }} thin={ true } title={
-        elementConsentosBaseIdle.deleteButton.text.label
-      } onPress={ onDelete } />
+    return <View style={viewStyle}>
+      <elementConsentosBaseIdle.timeLeft.Render value='1235' />
+      <ConsentoButton
+        style={{ ...elementConsentosBaseIdle.allowButton.place.style(), position: 'absolute' }}
+        light
+        title={
+          elementConsentosBaseIdle.allowButton.text.label
+        }
+        onPress={onAccept} />
+      <ConsentoButton
+        style={{ ...elementConsentosBaseIdle.deleteButton.place.style(), position: 'absolute' }}
+        thin
+        title={
+          elementConsentosBaseIdle.deleteButton.text.label
+        }
+        onPress={onDelete} />
     </View>
   }
   const stateStyle: IStateStyle = (
-    state === TRequestState.denied ? elementConsentosBaseDenied :
-    state === TRequestState.expired ? elementConsentosBaseExpired :
-    elementConsentosBaseAccepted
+    state === TRequestState.denied
+      ? elementConsentosBaseDenied
+      : state === TRequestState.expired
+        ? elementConsentosBaseExpired
+        : elementConsentosBaseAccepted
   )
-  return <View style={ viewStyle }>
-    <HorzLine proto={ stateStyle.line } />
+  return <View style={viewStyle}>
+    <HorzLine proto={stateStyle.line} />
     <stateStyle.state.Render />
-    <ConsentoButton style={{ ...stateStyle.deleteButton.place.style(), position: 'absolute' }} thin={ true } title={
-      stateStyle.deleteButton.text.label
-    } onPress={ onDelete } /> 
+    <ConsentoButton
+      style={{ ...stateStyle.deleteButton.place.style(), position: 'absolute' }}
+      thin
+      title={
+        stateStyle.deleteButton.text.label
+      }
+      onPress={onDelete}
+    />
   </View>
 }

@@ -1,6 +1,6 @@
 import { LineAnimation, Line, Arc } from './LineAnimation'
 
-export function createBoxOutline (width: number, height: number, radius: number) {
+export function createBoxOutline (width: number, height: number, radius: number): (from: number, to: number) => string {
   const ani = new LineAnimation([
     new Line({ x: radius, y: 0 }, { x: width - radius, y: 0 }),
     new Arc({ x: width - radius, y: radius }, radius, 0, 0.25),
@@ -14,6 +14,6 @@ export function createBoxOutline (width: number, height: number, radius: number)
 
   const offset = ani.first.node.length / 2
   return function (from: number, to: number) {
-    return ani.render( offset + from * ani.length, offset + to * ani.length)
+    return ani.render(offset + from * ani.length, offset + to * ani.length)
   }
 }

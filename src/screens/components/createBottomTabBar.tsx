@@ -25,6 +25,7 @@ const config = {
 
 const { t, icon } = resources.ctx('navigation')
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 function createTabs (tabs: { [key: string]: () => ReactNode }) {
   const res = {}
   for (const key in tabs) {
@@ -32,17 +33,18 @@ function createTabs (tabs: { [key: string]: () => ReactNode }) {
       path: key,
       screen: tabs[key],
       navigationOptions: {
-        tabBarLabel: ({ focused }) => <Text style={ focused ? elementBottomNavConsentosActive.title.style : elementBottomNavConsentosResting.title.style }>
-          { t(key) }
+        tabBarLabel: ({ focused }: { focused: boolean }) => <Text
+          style={focused ? elementBottomNavConsentosActive.title.style : elementBottomNavConsentosResting.title.style}>
+          {t(key)}
         </Text>,
-        tabBarIcon: opts => icon(key, opts),
+        tabBarIcon: opts => icon(key, opts)
       }
     }
   }
   return res
 }
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export function createBottomTabBar (tabs: { [key: string]: () => ReactNode}) {
   return createBottomTabNavigator(createTabs(tabs), config)
 }
-

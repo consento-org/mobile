@@ -1,5 +1,5 @@
-import { IComputedValue, computed, action } from 'mobx'
-import { tProp, model, Model, types, modelIdKey, BaseModel, ModelProps, AnyModel, ModelClass, ModelProp, modelAction } from 'mobx-keystone'
+import { computed } from 'mobx'
+import { tProp, model, modelAction, Model, types, modelIdKey, BaseModel } from 'mobx-keystone'
 
 export enum TRequestState {
   accepted = 'accepted',
@@ -35,23 +35,102 @@ export interface IRequestOpts {
   [modelIdKey]?: string
 }
 
-export function RequestBase (modelName: string, defaultKeepAlive: number, additionalProps?: { [key: string]: ModelProp<any, any, any> }) {
-  const m = model(modelName)(class extends Model({
+@model('RequestBase')
+export class RequestBase extends Model({
+  time: tProp(types.number, () => Date.now()),
+  keepAlive: tProp(types.number),
+  accepted: tProp(types.maybe(types.number)),
+  denied: tProp(types.maybe(types.number)),
+  cancelled: tProp(types.maybe(types.number))
+}) {
+  @modelAction accept (): boolean {
+    if (this.isActive) {
+      this.cancelled = Date.now()
+      return true
+    }
+    return false
+  }
+
+  @modelAction cancel (): boolean {
+    if (this.isActive) {
+      this.cancelled = Date.now()
+      return true
+    }
+    return false
+  }
+
+  @modelAction deny (): boolean {
+    if (this.isActive) {
+      this.cancelled = Date.now()
+      return true
+    }
+    return false
+  }
+
+  @computed get state (): TRequestState {
+    if (this.cancelled !== undefined) {
+      return TRequestState.cancelled
+    }
+    if (this.denied !== undefined) {
+      return TRequestState.denied
+    }
+    if (this.accepted !== undefined) {
+      return TRequestState.accepted
+    }
+    if (Date.now() > this.expiration) {
+      return TRequestState.expired
+    }
+    return TRequestState.active
+  }
+
+  get expiration (): number {
+    return this.time + this.keepAlive
+  }
+
+  get isActive (): boolean {
+    return this.state === TRequestState.active
+  }
+
+  get isExpired (): boolean {
+    return this.state === TRequestState.expired
+  }
+
+  get isAccepted (): boolean {
+    return this.state === TRequestState.accepted
+  }
+
+  get isCancelled (): boolean {
+    return this.state === TRequestState.cancelled
+  }
+
+  get isDenied (): boolean {
+    return this.state === TRequestState.denied
+  }
+}
+
+/*
+export function RequestBase <AdditionalProps extends { [key: string]: ModelProp<any, any, any> }> (
+  modelName: string,
+  defaultKeepAlive: number,
+  additionalProps?: AdditionalProps
+) {
+  class CustomRequestClass extends Model({
     time: tProp(types.number, () => Date.now()),
     keepAlive: tProp(types.number, defaultKeepAlive),
     accepted: tProp(types.maybe(types.number)),
     denied: tProp(types.maybe(types.number)),
     cancelled: tProp(types.maybe(types.number)),
-    ... additionalProps
+    ...additionalProps
   }) {
     cancel: () => boolean
     accept: () => boolean
     deny: () => boolean
     _state: IComputedValue<TRequestState>
-    onInit () {
+
+    onInit (): void {
       Object.defineProperties(this, {
         accept: modelAction(this, 'accept', {
-          value () {
+          value: () => {
             if (this.isActive) {
               this.cancelled = Date.now()
               return true
@@ -60,7 +139,7 @@ export function RequestBase (modelName: string, defaultKeepAlive: number, additi
           }
         }) as any as PropertyDescriptor,
         cancel: modelAction(this, 'cancel', {
-          value () {
+          value: () => {
             if (this.isActive) {
               this.cancelled = Date.now()
               return true
@@ -69,7 +148,7 @@ export function RequestBase (modelName: string, defaultKeepAlive: number, additi
           }
         }) as any as PropertyDescriptor,
         deny: modelAction(this, 'deny', {
-          value () {
+          value: () => {
             if (this.isActive) {
               this.cancelled = Date.now()
               return true
@@ -94,36 +173,42 @@ export function RequestBase (modelName: string, defaultKeepAlive: number, additi
         return TRequestState.active
       })
       if (this.isActive) {
-        /*
-        TODO: Timeouts need to be handled differently, react-native limitation
-        setTimeout(
-          () => this._state.get(),
-          this.expiration - Date.now()
-        )
-        */
+        // TODO: Timeouts need to be handled differently, react-native limitation
+        // setTimeout(
+        //   () => this._state.get(),
+        //   this.expiration - Date.now()
+        // )
       }
     }
-    get expiration () {
+
+    get expiration (): number {
       return this.time + this.keepAlive
     }
-    get state () {
+
+    get state (): TRequestState {
       return this._state.get()
     }
-    get isActive () {
+
+    get isActive (): boolean {
       return this._state.get() === TRequestState.active
     }
-    get isExpired () {
+
+    get isExpired (): boolean {
       return this._state.get() === TRequestState.expired
     }
-    get isAccepted () {
+
+    get isAccepted (): boolean {
       return this._state.get() === TRequestState.accepted
     }
-    get isCancelled () {
+
+    get isCancelled (): boolean {
       return this._state.get() === TRequestState.cancelled
     }
-    get isDenied () {
+
+    get isDenied (): boolean {
       return this._state.get() === TRequestState.denied
     }
-  })
-  return m
+  }
+  return model(modelName)(CustomRequestClass)
 }
+*/

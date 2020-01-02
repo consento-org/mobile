@@ -14,13 +14,13 @@ import { TouchableOpacity } from 'react-native-gesture-handler'
 
 const AddButton = Asset.buttonAddRound().component
 
-function RelationListEntry ({ relation }: { relation: Relation }): JSX.Element {
-  return <TouchableOpacity style={{ height: elementRelationListItem.height }}>
+const RelationListEntry = withNavigation(observer(({ navigation, relation }: { relation: Relation, navigation: TNavigation }): JSX.Element => {
+  return <TouchableOpacity style={{ height: elementRelationListItem.height }} onPress={() => navigation.navigate('relation', { relation: relation.$modelId })}>
     <elementRelationListItem.label.Render horz='stretch' value={relation.displayName} />
     <elementRelationListItem.forwardIcon.Render horz='end' />
     <elementRelationListItem.avatarBg.Render />
   </TouchableOpacity>
-}
+}))
 
 const RelationsList = observer((): JSX.Element => {
   const { user } = useContext(ConsentoContext)

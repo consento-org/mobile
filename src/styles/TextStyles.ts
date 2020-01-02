@@ -21,6 +21,15 @@ export const H6RobotoMedium18BlackCenter: TextStyle = Object.freeze({
   textAlignVertical: 'center'
 })
 
+export const H6RobotoMedium18BlackLeft: TextStyle = Object.freeze({
+  color: Color.black,
+  fontFamily: Font.RobotoMedium,
+  fontSize: 18,
+  textAlign: 'left',
+  textTransform: 'none',
+  textAlignVertical: 'center'
+})
+
 export const TimestampRobotoSmallCapRegular10BlackLeft: TextStyle = Object.freeze({
   color: Color.veryDarkGrey,
   fontFamily: Font.RobotoRegular,
@@ -201,9 +210,19 @@ export const waiting: TextStyle = Object.freeze({
   textAlignVertical: 'center'
 })
 
+export const LineDivider: TextStyle = Object.freeze({
+  color: Color.activeGrey,
+  fontFamily: Font.PalanquinDarkMedium,
+  fontSize: 24,
+  textAlign: 'center',
+  textTransform: 'none',
+  textAlignVertical: 'center'
+})
+
 export const TextStyles = {
   H6BlackHighEmphasisCenter,
   H6RobotoMedium18BlackCenter,
+  H6RobotoMedium18BlackLeft,
   TimestampRobotoSmallCapRegular10BlackLeft,
   TimestampRobotoSmallCapRegular10RedCenter,
   TITLERobotoSmallCapRegular12BlueCenter,
@@ -223,5 +242,6 @@ export const TextStyles = {
   BodyRobotoRegular18BlackLeft,
   BodyRobotoRegular18BlackCenter,
   time,
-  waiting
+  waiting,
+  LineDivider
 }

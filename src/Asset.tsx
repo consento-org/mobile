@@ -157,6 +157,9 @@ export const Asset = {
   buttonAddRound () {
     return images.fetch('buttonAddRound', () => require('../assets/button/add/round.png'))
   },
+  elementAvatarIconBg () {
+    return images.fetch('elementAvatarIconBg', () => require('../assets/element/avatar/icon-bg.png'))
+  },
   elementCardVaultBackground () {
     return images.fetch('elementCardVaultBackground', () => require('../assets/element/card/vault/background.png'))
   },
@@ -177,6 +180,9 @@ export const Asset = {
   },
   iconEditGrey () {
     return images.fetch('iconEditGrey', () => require('../assets/icon/edit/grey.png'))
+  },
+  iconForwardGrey () {
+    return images.fetch('iconForwardGrey', () => require('../assets/icon/forward/grey.png'))
   },
   iconLogo () {
     return images.fetch('iconLogo', () => require('../assets/icon/logo.png'))

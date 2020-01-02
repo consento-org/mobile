@@ -16,7 +16,7 @@ const topNav = Object.freeze<ViewStyle>({
 
 export interface ITopNavigationProps {
   title: string
-  back?: boolean
+  back?: string
   navigation: TNavigation
   onEdit?: (text: string) => any
   onDelete?: () => any
@@ -26,8 +26,8 @@ export const TopNavigation = withNavigation((props: ITopNavigationProps) => {
   const [editing, setEditing] = useState(false)
   const textEdit = createRef<TextInput>()
   return <View style={topNav}>
-    {props.back
-      ? <elementTopNavItem.back.Render onPress={() => props.navigation.goBack()} />
+    {exists(props.back)
+      ? <elementTopNavItem.back.Render onPress={() => props.navigation.navigate(props.back)} />
       : <elementTopNavEmpty.logo.Render />}
     {editing
       ? <View>

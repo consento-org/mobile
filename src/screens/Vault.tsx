@@ -42,7 +42,7 @@ function LockButton (props: { onPress?: () => any }): JSX.Element {
 export const VaultRouter = VaultNavigator.router
 export const Vault = withNavigation(({ navigation, vault }: { navigation: TNavigation, vault: VaultModel }): JSX.Element => {
   return <View style={styles.screen}>
-    <TopNavigation title={vault.name} back onEdit={vault.isOpen ? text => console.log(`changed text: ${text}`) : undefined} onDelete={noop} />
+    <TopNavigation title={vault.name} back='vaults' onEdit={vault.isOpen ? text => console.log(`changed text: ${text}`) : undefined} onDelete={noop} />
     {
       vault.isOpen ? [
         <LockButton key='lock' />,

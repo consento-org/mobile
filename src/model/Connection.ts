@@ -6,7 +6,7 @@ import { IConsentoCrypto, IReceiver, IConnection, ISender } from '@consento/api'
 export class Receiver extends Model({
   receiveKey: tProp(types.string)
 }) {
-  @computed receiver (crypto: IConsentoCrypto): IReceiver {
+  receiver (crypto: IConsentoCrypto): IReceiver {
     return new crypto.Receiver({ receiveKey: this.receiveKey })
   }
 }
@@ -15,7 +15,7 @@ export class Receiver extends Model({
 export class Sender extends Model({
   sendKey: tProp(types.string)
 }) {
-  @computed sender (crypto: IConsentoCrypto): ISender {
+  sender (crypto: IConsentoCrypto): ISender {
     return new crypto.Sender({ sendKey: this.sendKey })
   }
 }
@@ -31,7 +31,7 @@ export class Connection extends Model({
   sendKey: tProp(types.string),
   receiveKey: tProp(types.string)
 }) {
-  @computed connection (crypto: IConsentoCrypto): IConnection {
+  connection (crypto: IConsentoCrypto): IConnection {
     return {
       sender: new crypto.Sender({ sendKey: this.sendKey }),
       receiver: new crypto.Receiver({ receiveKey: this.receiveKey })

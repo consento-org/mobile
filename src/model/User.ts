@@ -2,15 +2,15 @@ import { model, modelAction, Model, prop, tProp, arraySet, Ref, types } from 'mo
 import { Vault } from './Vault'
 import { Relation } from './Relation'
 import { Consento } from './Consento'
+import { computed } from 'mobx'
 
 @model('consento/User')
 export class User extends Model({
   vaults: prop(() => arraySet<Vault>()),
   relations: prop(() => arraySet<Relation>()),
-  consentos: prop(() => arraySet<Consento>()),
-  test: tProp(types.maybe(types.ref<Relation>()))
+  consentos: prop(() => arraySet<Consento>())
 }) {
-  @modelAction setTest (rel: Ref<Relation>): void {
-    this.test = rel
+  @computed get relationsSorted (): Relation[] {
+    return Array.from(this.relations.values()).sort((a, b): number => a.displayName.toLowerCase().localeCompare(b.displayName.toLowerCase(), 'en-co-phonebk'))
   }
 }

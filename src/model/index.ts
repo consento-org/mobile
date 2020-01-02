@@ -36,7 +36,7 @@ export function setupUsers (): ArraySet<User> {
       })
     )
   })
-  ;['frank'].forEach(name => {
+  ;['frank', 'abcd', 'good', 'hello', 'Better'].forEach(name => {
     user.relations.add(new RelationModel({
       name,
       connection: new Connection({

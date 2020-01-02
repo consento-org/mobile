@@ -1,4 +1,3 @@
-import { computed } from 'mobx'
 import { model, Model, tProp, types } from 'mobx-keystone'
 import { IConsentoCrypto, IReceiver, IConnection, ISender } from '@consento/api'
 

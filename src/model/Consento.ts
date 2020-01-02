@@ -19,4 +19,4 @@ export class ConsentoUnlockVault extends ExtendedModel(RequestBase, {
   static KEEP_ALIVE: number = 5000
 }
 
-export type Consento = typeof ConsentoUnlockVault | typeof ConsentoBecomeLockee
+export type Consento = ConsentoUnlockVault | ConsentoBecomeLockee

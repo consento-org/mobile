@@ -1,7 +1,6 @@
-import { customRef, findParent } from 'mobx-keystone'
+import { customRef, findParent, Ref } from 'mobx-keystone'
 import { Relation, MODEL } from './Relation'
 import { User } from './User'
-import { Ref } from 'react'
 import { find } from '../util/find'
 
 export function findRelation (user: User, id: string): Relation {

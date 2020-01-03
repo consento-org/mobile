@@ -47,6 +47,7 @@ export interface IBaseProps<T extends React.Component, TStyle extends FlexStyle>
 interface ITextBaseProps extends IBaseProps<NativeText | TextInput, TextStyle> {
   value?: string
   onEdit?: (text: string) => any
+  onInstantEdit?: (text: string) => any
   onBlur?: () => any
 }
 
@@ -101,6 +102,7 @@ export class Component {
         value: props.value,
         style: applyRenderOptions(props, props.prototype.place, style),
         onEdit: props.onEdit,
+        onInstantEdit: props.onInstantEdit,
         ref,
         onBlur: props.onBlur
       })
@@ -217,7 +219,7 @@ export class Component {
       renderCache[vertKey] = vertStyle
     }
     if (onPress !== null && onPress !== undefined) {
-      item = <TouchableOpacity onLayout={onLayout} onPress={onPress}>{item}</TouchableOpacity>
+      item = <TouchableOpacity onLayout={onLayout} onPress={onPress} style={{ width: horz === 'stretch' ? '100%' : place.width, height: vert === 'stretch' ? '100%' : place.height }}>{item}</TouchableOpacity>
     }
     return <View onLayout={onLayout} style={horzStyle}><View style={vertStyle}>{item}</View></View>
   }
@@ -606,7 +608,11 @@ export interface ITextRenderOptions {
   onLayout?: () => any
   onBlur?: () => any
   onEdit?: (text: string) => any
+  onInstantEdit?: (text: string) => any
 }
+
+// eslint-disable-next-line @typescript-eslint/no-empty-function
+const noop = (): void => {}
 
 export class Text {
   text: string
@@ -636,16 +642,22 @@ export class Text {
     })
   }
 
-  render ({ value, style, onEdit, ref, onLayout, onBlur }: ITextRenderOptions): JSX.Element {
-    if (value !== undefined) {
-      value = String(value)
-    } else {
-      value = this.text
-    }
+  render ({ value, style, onEdit, onInstantEdit, ref, onLayout, onBlur }: ITextRenderOptions): JSX.Element {
+    value = String(useDefault(value, this.text))
     const originalValue = value
-    if (onEdit !== undefined) {
+    if (exists(onEdit) || exists(onInstantEdit)) {
+      onInstantEdit = useDefault(onInstantEdit, noop)
+      onEdit = useDefault(onEdit, noop)
       return <TextInput
-        onChangeText={text => { value = text }} onSubmitEditing={() => originalValue !== value ? onEdit(value) : null} onLayout={onLayout} onBlur={onBlur} ref={ref as React.RefObject<TextInput>} style={{
+        onChangeText={text => {
+          onInstantEdit(value = text)
+        }}
+        onSubmitEditing={() => {
+          if (originalValue !== value) {
+            onEdit(value)
+          }
+        }}
+        onLayout={onLayout} onBlur={onBlur} ref={ref as React.RefObject<TextInput>} style={{
           ...this.style,
           ...style
         }}>{value}</TextInput>

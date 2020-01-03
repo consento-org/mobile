@@ -8,7 +8,10 @@ import { Asset } from '../../Asset'
 /* eslint-disable lines-between-class-members */
 export class ElementConsentosLockeeIdleClass extends Component {
   card: Polygon
-  state = new Link(elementConsentosBaseIdle, { x: 0, y: 252, w: 340, h: 114 }, {})
+  state = new Link(elementConsentosBaseIdle, { x: 0, y: 252, w: 340, h: 114 }, {
+    allowButtonLabel: 'allow',
+    deleteButtonLabel: 'deny'
+  })
   lastAccess: Text
   outline: Polygon
   mask: Polygon

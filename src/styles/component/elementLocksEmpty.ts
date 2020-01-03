@@ -2,8 +2,7 @@
 import { Component, Text, ImagePlacement, Link } from '../Component'
 import { TextStyles } from '../TextStyles'
 import { Asset } from '../../Asset'
-import { elementBottomFadeout } from './elementBottomFadeout'
-import { buttonContainerLight } from './buttonContainerLight'
+import { elementBottomButton } from './elementBottomButton'
 import { Color } from '../Color'
 
 /* eslint-disable lines-between-class-members */
@@ -11,9 +10,8 @@ export class ElementLocksEmptyClass extends Component {
   description: Text
   title: Text
   illustration: ImagePlacement
-  bottomArea = new Link(elementBottomFadeout, { x: 0, y: 870, w: 375, h: 100 }, {})
-  addButton = new Link(buttonContainerLight, { x: 52.5, y: 902, w: 270, h: 36 }, {
-    label: '+'
+  bottomButton = new Link(elementBottomButton, { x: 0, y: 870, w: 375, h: 100 }, {
+    buttonLabel: 'ADD'
   })
   constructor () {
     super('elementLocksEmpty', 375.0000000000001, 970, Color.lightGrey)

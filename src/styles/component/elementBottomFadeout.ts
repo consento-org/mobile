@@ -8,7 +8,7 @@ export class ElementBottomFadeoutClass extends Component {
   constructor () {
     super('elementBottomFadeout', 375, 100)
     this.shape = new Polygon({ x: 0, y: 0, w: 375, h: 100 }, {
-        gradient: {
+      gradient: {
         type: GradientType.linear,
         stops: [{
           color: Color.lightGrey,

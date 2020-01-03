@@ -12,6 +12,7 @@ export enum Color {
   red = '#d53001ff',
   green = '#00ac7dff',
   black = '#000000ff',
+  iconGrey = '#6f6f6fff',
   borderDark = '#0000001f',
   activeGrey = '#454545ff'
 }

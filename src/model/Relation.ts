@@ -1,5 +1,5 @@
 import { computed } from 'mobx'
-import { model, tProp, Model, types } from 'mobx-keystone'
+import { model, tProp, Model, types, modelAction } from 'mobx-keystone'
 import { IConsentoCrypto, IReceiver, ISender, IConnection } from '@consento/api'
 import { Connection, fromIConnection } from './Connection'
 import { Buffer } from 'buffer'
@@ -34,6 +34,10 @@ export class Relation extends Model({
     const send = Buffer.from(this.connection.sendKey, 'base64')
     const receive = Buffer.from(this.connection.receiveKey, 'base64')
     return `${send.readUInt16BE(0).toString(16)}-${send.readUInt16BE(1).toString(16)}-${receive.readUInt16BE(0).toString(16)}-${receive.readUInt16BE(1).toString(16)}`.toUpperCase()
+  }
+
+  @modelAction setName (name: string): void {
+    this.name = name
   }
 
   receiver (crypto: IConsentoCrypto): IReceiver | null {

@@ -4,7 +4,7 @@ import { elementTopNavEmpty } from '../../styles/component/elementTopNavEmpty'
 import { elementTopNavItem } from '../../styles/component/elementTopNavItem'
 import { elementTopNavEdit } from '../../styles/component/elementTopNavEdit'
 import { withNavigation, TNavigation } from '../navigation'
-import { exists, anyExists } from '../../util/exists'
+import { exists } from '../../util/exists'
 
 const topNav = Object.freeze<ViewStyle>({
   backfaceVisibility: 'visible',
@@ -14,9 +14,11 @@ const topNav = Object.freeze<ViewStyle>({
   height: elementTopNavEmpty.height
 })
 
+export type THandler = () => any
+
 export interface ITopNavigationProps {
   title: string
-  back?: string
+  back?: string | THandler
   navigation: TNavigation
   onEdit?: (text: string) => any
   onDelete?: () => any
@@ -27,7 +29,13 @@ export const TopNavigation = withNavigation((props: ITopNavigationProps) => {
   const textEdit = createRef<TextInput>()
   return <View style={topNav}>
     {exists(props.back)
-      ? <elementTopNavItem.back.Render onPress={() => props.navigation.navigate(props.back)} />
+      ? <elementTopNavItem.back.Render onPress={() => {
+        if (typeof props.back === 'string') {
+          props.navigation.navigate(props.back)
+        } else {
+          props.back()
+        }
+      }} />
       : <elementTopNavEmpty.logo.Render />}
     {editing
       ? <View>
@@ -53,7 +61,7 @@ export const TopNavigation = withNavigation((props: ITopNavigationProps) => {
           onLayout={() => { if (exists(textEdit.current)) textEdit.current.focus() }}
           onBlur={() => setEditing(false)} />
       </View>
-      : anyExists(props.onEdit, props.onDelete)
+      : exists(props.onEdit)
         ? <elementTopNavItem.title.Render horz='stretch' value={props.title} onPress={() => { if (exists(props.onEdit)) setEditing(true) }} />
         : <elementTopNavEmpty.title.Render horz='stretch' value={props.title} />}
     {(exists(props.onEdit) && !editing) ? <elementTopNavItem.edit.Render horz='end' onPress={() => setEditing(true)} /> : null}

@@ -31,11 +31,11 @@ const RelationsList = observer((): JSX.Element => {
   </ScrollView>
 })
 
-export const RelationsScreen = withNavigation(({ navigation }: { navigation: TNavigation }) => {
+export const RelationsScreen = withNavigation(observer(({ navigation }: { navigation: TNavigation }) => {
   const { user: { relations } } = useContext(ConsentoContext)
   return <View style={{ ...styles.screen }}>
     <TopNavigation title='Relations' />
     {relations.size === 0 ? <EmptyView prototype={elementRelationsEmpty} /> : <RelationsList />}
     <AddButton style={{ position: 'absolute', right: 10, bottom: 10 }} onPress={() => navigation.navigate('newRelation', { timestamp: Date.now() })} />
   </View>
-})
+}))

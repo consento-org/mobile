@@ -40,8 +40,8 @@ export function setupUsers (): ArraySet<User> {
     user.relations.add(new RelationModel({
       name,
       connection: new Connection({
-        sendKey: 'abcd',
-        receiveKey: 'def'
+        sendKey: 'abcd12346sdfasdf',
+        receiveKey: '7as8fafas9d7fasd7fa'
       })
     }))
   })

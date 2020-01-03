@@ -13,7 +13,7 @@ export class ElementConsentosEmptyClass extends Component {
   constructor () {
     super('elementConsentosEmpty', 375.0000000000001, 970, Color.lightGrey)
     this.lastUpdate = new Text('Last update: 2 seconds ago', {
-      ... TextStyles.H6BlackHighEmphasisCenter,
+      ...TextStyles.H6BlackHighEmphasisCenter,
       color: '#7c8792ff',
       fontSize: 13,
       textAlignVertical: 'center'

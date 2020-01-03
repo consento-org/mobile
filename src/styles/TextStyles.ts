@@ -219,6 +219,24 @@ export const LineDivider: TextStyle = Object.freeze({
   textAlignVertical: 'center'
 })
 
+export const Subtitle1SelectedOnSurfaceHighEmphasisLeft: TextStyle = Object.freeze({
+  color: '#000000de',
+  fontFamily: Font.RobotoMediumItalic,
+  fontSize: 16.16,
+  textAlign: 'left',
+  textTransform: 'none',
+  textAlignVertical: 'top'
+})
+
+export const CaptionPrimaryOnSurfaceLeft: TextStyle = Object.freeze({
+  color: '#546e7aff',
+  fontFamily: Font.RobotoMediumItalic,
+  fontSize: 12.12,
+  textAlign: 'left',
+  textTransform: 'none',
+  textAlignVertical: 'top'
+})
+
 export const TextStyles = {
   H6BlackHighEmphasisCenter,
   H6RobotoMedium18BlackCenter,
@@ -243,5 +261,7 @@ export const TextStyles = {
   BodyRobotoRegular18BlackCenter,
   time,
   waiting,
-  LineDivider
+  LineDivider,
+  Subtitle1SelectedOnSurfaceHighEmphasisLeft,
+  CaptionPrimaryOnSurfaceLeft
 }

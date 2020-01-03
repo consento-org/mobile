@@ -55,6 +55,10 @@ export interface ITextProps extends ITextBaseProps {
   prototype: Text
 }
 
+export interface IPolygonProps extends IBaseProps<View, ViewStyle> {
+  prototype: Polygon
+}
+
 export interface IImageProps extends IBaseProps<Image, ImageStyle> {
   prototype: ImagePlacement
 }
@@ -104,6 +108,19 @@ export class Component {
     return this.Render(renderProps)
   }
 
+  Polygon (props: IPolygonProps): JSX.Element {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+    const renderProps = {
+      ...props,
+      place: props.prototype.place,
+      item: ({ ref, style }) => props.prototype.RenderRect({
+        style: applyRenderOptions(props, props.prototype.place, style),
+        ref
+      })
+    } as IRenderProps<NativeText, TextStyle>
+    return this.Render(renderProps)
+  }
+
   Image (props: IImageProps): JSX.Element {
     const { prototype } = props
     // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
@@ -141,6 +158,11 @@ export class Component {
   renderText ({ text, opts, value, style, onEdit, ref, onLayout, onBlur }: { text: Text, opts?: IRenderOptions, value?: string, style?: TextStyle, onEdit?: (text: string) => any, ref?: React.RefObject<TextInput>, onLayout?: () => any, onBlur?: () => any }): JSX.Element {
     style = applyRenderOptions(opts, text.place, style)
     return this._renderItem(text.render({ value, style, onEdit, ref, onLayout, onBlur }), text.place, opts)
+  }
+
+  renderPolygon (polygon: Polygon, opts?: IRenderOptions, style?: ViewStyle): JSX.Element {
+    style = applyRenderOptions(opts, polygon.place, style)
+    return this._renderItem(polygon.RenderRect({ style }), polygon.place, opts)
   }
 
   renderImage (asset: ImagePlacement, opts?: IRenderOptions, style?: ImageStyle, ref?: React.RefObject<Image>, onLayout?: () => any): JSX.Element {
@@ -520,18 +542,34 @@ export class Polygon {
   borderRadius: number
   border: Border
   shadows: Shadow[]
+  parent: Component
 
-  constructor (frame: IFrameData, fill: TFillData | null, border: TBorderData | null, shadows: TShadowData[]) {
+  constructor (frame: IFrameData, fill: TFillData | null, border: TBorderData | null, shadows: TShadowData[], parent: Component) {
     this.place = new Placement(frame)
     this.fill = new Fill(fill)
     this.border = new Border(border)
     this.borderRadius = this.border.radius
     this.shadows = shadows.map(data => new Shadow(data))
+    this.parent = parent
+    this.Render = this.Render.bind(this)
     this.RenderRect = this.RenderRect.bind(this)
+  }
+
+  Render (props: IBaseProps<Image, ImageStyle>): JSX.Element {
+    return this.parent.Polygon({
+      ...props,
+      prototype: this
+    })
   }
 
   RenderRect ({ style, ref, onLayout }: { style?: ViewStyle, ref?: React.RefObject<any>, onLayout?: () => any } = {}): JSX.Element {
     const data = this.fill.data
+    if (data === null) {
+      return <View style={{
+        ...style,
+        ...this.borderStyle()
+      }} />
+    }
     if (typeof data === 'string') {
       return <View style={{
         ...style,

@@ -175,6 +175,9 @@ export const Asset = {
   iconConsentoIdle () {
     return images.fetch('iconConsentoIdle', () => require('../assets/icon/consento/idle.png'))
   },
+  iconCrossGrey () {
+    return images.fetch('iconCrossGrey', () => require('../assets/icon/cross/grey.png'))
+  },
   iconDeleteGrey () {
     return images.fetch('iconDeleteGrey', () => require('../assets/icon/delete/grey.png'))
   },

@@ -10,37 +10,11 @@ export interface IWaitingProps {
   onDone?: () => any
 }
 
-export type TLineMode = 'center' | 'inside' | 'outside'
-
-function adjustPath (size: number, mode: TLineMode, thickness: number): number {
-  if (mode === 'center') {
-    return size
-  }
-  if (mode === 'outside') {
-    return size + thickness
-  }
-  return size - thickness
-}
-
-function adjustBox (size: number, mode: TLineMode, thickness: number): number {
-  if (mode === 'center') {
-    return size + thickness
-  }
-  if (mode === 'outside') {
-    return size + thickness * 2
-  }
-  return size
-}
-
 const thickness = elementVaultUnlock.active.border.thickness
 const width = elementVaultUnlock.active.place.width
 const height = elementVaultUnlock.active.place.height
 const radius = elementVaultUnlock.inactive.borderRadius
-const mode: TLineMode = 'inside'
-const box = createBoxOutline(adjustPath(width, mode, thickness), adjustPath(height, mode, thickness), radius)
-
-const outWidth = adjustBox(width, mode, thickness)
-const outHeight = adjustBox(height, mode, thickness)
+const { box, width: outWidth, height: outHeight } = createBoxOutline(width, height, radius, 'inside', thickness)
 const adjust = -thickness / 2
 const viewBox = `${adjust} ${adjust} ${outWidth} ${outHeight}`
 const textStyle: TextStyle = {

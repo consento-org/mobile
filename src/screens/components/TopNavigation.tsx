@@ -62,7 +62,7 @@ export const TopNavigation = withNavigation((props: ITopNavigationProps) => {
           onBlur={() => setEditing(false)} />
       </View>
       : exists(props.onEdit)
-        ? <elementTopNavItem.title.Render horz='stretch' value={props.title} onPress={() => { if (exists(props.onEdit)) setEditing(true) }} />
+        ? <elementTopNavItem.title.Render horz='stretch' value={props.title} onPress={() => { setEditing(true) }} />
         : <elementTopNavEmpty.title.Render horz='stretch' value={props.title} />}
     {(exists(props.onEdit) && !editing) ? <elementTopNavItem.edit.Render horz='end' onPress={() => setEditing(true)} /> : null}
     {exists(props.onDelete) ? <elementTopNavItem.delete.Render horz='end' onPress={props.onDelete} /> : null}

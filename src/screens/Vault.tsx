@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import { View, ViewStyle } from 'react-native'
 import { TopNavigation } from './components/TopNavigation'
 import { createTabBar } from './components/createTabBar'
@@ -11,9 +11,10 @@ import { elementLocksEmpty } from '../styles/component/elementLocksEmpty'
 import { ConsentoButton } from './components/ConsentoButton'
 import { EmptyView } from './components/EmptyView'
 import { Logs } from './Logs'
-import { Vault as VaultModel } from '../model/Vault'
 import { Waiting } from './components/Waiting'
 import { withNavigation } from 'react-navigation'
+import { observer } from 'mobx-react'
+import { VaultContext } from '../model/VaultContext'
 
 const lockStyle: ViewStyle = {
   height: elementSealVaultActive.height,
@@ -40,9 +41,10 @@ function LockButton (props: { onPress?: () => any }): JSX.Element {
 }
 
 export const VaultRouter = VaultNavigator.router
-export const Vault = withNavigation(({ navigation, vault }: { navigation: TNavigation, vault: VaultModel }): JSX.Element => {
+export const Vault = withNavigation(observer(({ navigation }: { navigation: TNavigation }): JSX.Element => {
+  const { vault } = useContext(VaultContext)
   return <View style={styles.screen}>
-    <TopNavigation title={vault.name} back='vaults' onEdit={vault.isOpen ? text => console.log(`changed text: ${text}`) : undefined} onDelete={noop} />
+    <TopNavigation title={vault.name} back='vaults' onEdit={vault.isOpen ? newName => vault.setName(newName) : undefined} onDelete={noop} />
     {
       vault.isOpen ? [
         <LockButton key='lock' />,
@@ -50,4 +52,4 @@ export const Vault = withNavigation(({ navigation, vault }: { navigation: TNavig
       ] : <Waiting />
     }
   </View>
-})
+}))

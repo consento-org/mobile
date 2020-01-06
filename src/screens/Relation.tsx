@@ -9,6 +9,7 @@ import { User } from '../model/User'
 import { withNavigation, TNavigation } from './navigation'
 import { elementRelationName } from '../styles/component/elementRelationName'
 import { BottomButtonView } from './components/BottomButtonView'
+import { RelationContext } from '../model/RelationContext'
 
 function confirmAlert (title: string, message: string, onOk: () => void): void {
   Alert.alert(
@@ -47,7 +48,8 @@ const RelationName = ({ name, defaultName, onEdit }: { name: string, defaultName
   </View>
 }
 
-export const Relation = observer(withNavigation(({ relation, navigation }: { relation: RelationModel, navigation: TNavigation }): JSX.Element => {
+export const Relation = observer(withNavigation(({ navigation }: { navigation: TNavigation }): JSX.Element => {
+  const { relation } = useContext(RelationContext)
   const { user } = useContext(ConsentoContext)
   const [name, setName] = useState<string>(relation.name)
   const [hasChanged, setHasChanged] = useState<boolean>(false)

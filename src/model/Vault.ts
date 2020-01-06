@@ -57,6 +57,10 @@ export class Vault extends Model({
     return this.connections.length > 0
   }
 
+  @modelAction setName (name: string): void {
+    this.name = name
+  }
+
   @modelAction requestUnlock (): void {
     if (!this.isClosable) {
       throw new Error('not-closable')

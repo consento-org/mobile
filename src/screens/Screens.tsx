@@ -15,6 +15,8 @@ import { findRelation } from '../model/RelationRef'
 import { Vault as VaultModel } from '../model/Vault'
 import { Relation as RelationModel } from '../model/Relation'
 import { ConsentoContext } from '../model/ConsentoContext'
+import { RelationContext } from '../model/RelationContext'
+import { VaultContext } from '../model/VaultContext'
 
 let Container
 
@@ -39,10 +41,11 @@ export function Screens (): JSX.Element {
             const vaultKey = navigation.state.params.vault
             const vault = findVault(user, vaultKey)
             if (vault instanceof VaultModel) {
-              // TODO!
-              return <Vault vault={vault} />
+              return <VaultContext.Provider value={{ vault }}>
+                <Vault />
+              </VaultContext.Provider>
             }
-            return <View />
+            return <View /> // TODO: Return 404?
           }
         })
       },
@@ -55,10 +58,11 @@ export function Screens (): JSX.Element {
             const relationKey = navigation.state.params.relation
             const relation = findRelation(user, relationKey)
             if (relation instanceof RelationModel) {
-              // TODO!
-              return <Relation relation={relation} />
+              return <RelationContext.Provider value={{ relation }}>
+                <Relation />
+              </RelationContext.Provider>
             }
-            return <View />
+            return <View /> // TODO: Return 404?
           }
         })
       },

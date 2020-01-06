@@ -59,7 +59,7 @@ export const Relation = observer(withNavigation(({ relation, navigation }: { rel
     if (!hasChanged) {
       return next()
     }
-    Alert.alert('Unsaved Changes', 'Leaving this page will discard any changes, is that okay with you?', [
+    Alert.alert('Unsaved Changes', 'Leaving this page will discard any changes!', [
       {
         text: 'Save & Close',
         onPress: () => {

@@ -2,6 +2,8 @@ import { computed } from 'mobx'
 import { model, modelAction, Model, prop, tProp, types, ExtendedModel } from 'mobx-keystone'
 import { Connection } from './Connection'
 import { RequestBase } from './RequestBase'
+import { Buffer } from 'buffer'
+import randomBytes from '@consento/sync-randombytes'
 
 export enum TVaultState {
   open = 'open',
@@ -43,7 +45,7 @@ export const MODEL = 'consento/Vault'
 
 @model(MODEL)
 export class Vault extends Model({
-  name: tProp(types.maybeNull(types.string)),
+  name: tProp(types.maybeNull(types.string), () => randomBytes(Buffer.alloc(4)).toString('hex')),
   connections: prop<Connection[]>(),
   accessLog: prop<VaultAccessEntry[]>(() => [])
 }) {

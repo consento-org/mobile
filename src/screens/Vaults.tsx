@@ -7,6 +7,8 @@ import { Asset } from '../Asset'
 import { ConsentoContext } from '../model/ConsentoContext'
 import { observer } from 'mobx-react'
 import { map } from '../util/map'
+import { Vault } from '../model/Vault'
+import { withNavigation, TNavigation } from './navigation'
 
 const listStyle: ViewStyle = {
   display: 'flex',
@@ -19,23 +21,8 @@ const listStyle: ViewStyle = {
 
 const AddButton = Asset.buttonAddHexagonal().component
 
-// eslint-disable-next-line @typescript-eslint/no-empty-function
-const noop = (): void => {}
-
-export const VaultsScreen = observer(() => {
+export const VaultsScreen = withNavigation(observer(({ navigation }: { navigation: TNavigation }) => {
   const { user: { vaults } } = useContext(ConsentoContext)
-  /*
-  useEffect(() => {
-    setTimeout(() => {
-      vaults.push({
-        key: 'abcd' + Date.now(),
-        name: 'alfalfa',
-        state: TVaultState.open
-      })
-      setState(Date.now())
-    }, 2000)
-  }, [false])
-  */
   return <View style={styles.screen}>
     <TopNavigation title='Vaults' />
     <ScrollView centerContent>
@@ -45,6 +32,13 @@ export const VaultsScreen = observer(() => {
         }
       </View>
     </ScrollView>
-    <AddButton style={{ position: 'absolute', right: 10, bottom: 10 }} onPress={noop} />
+    <AddButton
+      style={{ position: 'absolute', right: 10, bottom: 10 }}
+      onPress={() => {
+        const vault = new Vault({})
+        vaults.add(vault)
+        navigation.navigate('vault', { vault: vault.$modelId })
+      }}
+    />
   </View>
-})
+}))

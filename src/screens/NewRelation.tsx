@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react'
-import { View, Text, ViewStyle, TouchableOpacity, Alert } from 'react-native'
+import { View, Text, ViewStyle, TouchableOpacity } from 'react-native'
 import { Camera } from 'expo-camera'
 import { BarCodeScanningResult } from 'expo-camera/build/Camera.types'
 import { screen09ScanQRCode } from '../styles/component/screen09ScanQRCode'

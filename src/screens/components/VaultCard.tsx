@@ -6,6 +6,7 @@ import { elementCardVaultOpen } from '../../styles/component/elementCardVaultOpe
 import { Text, ImagePlacement } from '../../styles/Component'
 import { withNavigation, TNavigation } from '../navigation'
 import { TVaultState, Vault as VaultModel } from '../../model/Vault'
+import { observer } from 'mobx-react'
 
 const cardStyle: ViewStyle = {
   width: elementCardVaultClose.width,
@@ -32,7 +33,7 @@ function getPrototype (state: TVaultState): IVaultPrototype {
   return elementCardVaultClose
 }
 
-export const VaultCard = withNavigation(({ vault, navigation }: { vault: VaultModel, navigation: TNavigation }) => {
+export const VaultCard = withNavigation(observer(({ vault, navigation }: { vault: VaultModel, navigation: TNavigation }) => {
   const proto = getPrototype(vault.state)
   const onPress = (): void => {
     navigation.navigate('vault', { vault: vault.$modelId })
@@ -45,4 +46,4 @@ export const VaultCard = withNavigation(({ vault, navigation }: { vault: VaultMo
     <proto.icon.Render style={{ position: 'absolute' }} />
     <proto.status.Render style={{ position: 'absolute' }} />
   </TouchableOpacity>
-})
+}))

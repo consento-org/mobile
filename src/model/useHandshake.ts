@@ -1,6 +1,6 @@
 import { useContext } from 'react'
 import { Buffer } from 'buffer'
-import { IAPI, IConnection, IEncodable, IHandshakeAcceptMessage, IHandshakeConfirmation, cancelable, CancelError, ICancelable } from '@consento/api'
+import { IAPI, IConnection, IEncodable, IHandshakeAcceptMessage, IHandshakeConfirmation, cancelable, CancelError, ICancelable, IHandshakeInit, IHandshakeAccept } from '@consento/api'
 import { bufferToString } from '@consento/crypto/util/buffer'
 import { ConsentoContext } from './ConsentoContext'
 import { useStateMachine, IStateMachine, IState } from '../util/useStateMachine'
@@ -53,15 +53,14 @@ function incomingMachine (
   [onHandshake, { crypto, notifications }]: InitData
 ): IStateMachine<IncomingState, any> {
   const incoming = cancelable<IHandshakeConfirmation>(function * (child) {
-    const incoming = new crypto.HandshakeInit()
-    const data = (yield incoming.initMessage()) as unknown as Uint8Array
+    const incoming = (yield crypto.initHandshake()) as IHandshakeInit
     const { afterSubscribe: receive } = (yield child(notifications.receive(incoming.receiver, isAcceptMessage))) as { afterSubscribe: ICancelable<IHandshakeAcceptMessage> }
-    const link = `consento://connect:${bufferToString(data, 'base64')}`
+    const link = `consento://connect:${bufferToString(incoming.firstMessage, 'base64')}`
     updateState(IncomingState.ready, link)
     const acceptMessage: IHandshakeAcceptMessage = yield child(receive)
     updateState(IncomingState.confirming, link)
     const confirmation: IHandshakeConfirmation = yield child(incoming.confirm(acceptMessage))
-    yield notifications.send(confirmation.sender, confirmation.finalMessage)
+    yield notifications.send(confirmation.connection.sender, confirmation.finalMessage)
     return confirmation
   }).then(
     onHandshake,
@@ -115,10 +114,9 @@ function outgoingMachine (
         close()
         formerAcceptLink = acceptLink
         const thisOutgoing = cancelable<IConnection>(function * (child) {
-          const accept = new crypto.HandshakeAccept(initMessage)
-          const msg = (yield accept.acceptMessage()) as unknown as IHandshakeAcceptMessage
+          const accept = (yield crypto.acceptHandshake(initMessage)) as IHandshakeAccept
           const { afterSubscribe: receive } = (yield child(notifications.receive(accept.receiver))) as { afterSubscribe: ICancelable<IEncodable>}
-          yield notifications.send(accept.sender, msg)
+          yield notifications.send(accept.sender, accept.acceptMessage)
           updateState(OutgoingState.confirming)
           const finalMessage = yield child(receive)
           if (!isUint8Array(finalMessage)) {

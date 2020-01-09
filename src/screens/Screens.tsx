@@ -17,6 +17,7 @@ import { Relation as RelationModel } from '../model/Relation'
 import { ConsentoContext } from '../model/ConsentoContext'
 import { RelationContext } from '../model/RelationContext'
 import { VaultContext } from '../model/VaultContext'
+import { Config } from './Config'
 
 let Container
 
@@ -69,6 +70,10 @@ export function Screens (): JSX.Element {
       newRelation: {
         path: 'newRelation',
         screen: () => <NewRelation />
+      },
+      config: {
+        path: 'config',
+        screen: () => <Config />
       }
     }, {
       headerMode: 'none',

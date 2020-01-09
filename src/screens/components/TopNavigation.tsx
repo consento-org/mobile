@@ -36,7 +36,7 @@ export const TopNavigation = withNavigation((props: ITopNavigationProps) => {
           props.back()
         }
       }} />
-      : <elementTopNavEmpty.logo.Render />}
+      : <elementTopNavEmpty.logo.Render onPress={() => props.navigation.navigate('config')} />}
     {editing
       ? <View>
         <elementTopNavEdit.Render

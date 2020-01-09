@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react'
-import Constants from 'expo-constants'
 import { AppState, AppStateStatus } from 'react-native'
 import { ConsentoContext } from './model/ConsentoContext'
 import { setup, IAPI } from '@consento/api'
@@ -10,17 +9,33 @@ import { setupUsers } from './model/index'
 import { Screens } from './screens/Screens'
 import { ArraySet } from 'mobx-keystone'
 import { User } from './model/User'
+import { useConfig } from './util/useConfig'
+import { Loading } from './screens/Loading'
+import isURL from 'is-url-superb'
 
 export function ConsentoApp (): JSX.Element {
   const [api, setAPI] = useState<IAPI>()
+  const [config] = useConfig()
   const [users] = useState<ArraySet<User>>(setupUsers)
+
+  if (config === null) {
+    return <Loading />
+  }
+
+  const { address } = config
+
   useEffect(() => {
-    const address = Constants.isDevice ? 'http://192.168.11.11:3000' : 'http://10.0.2.2:3000'
+    let address = config.address
+    if (!isURL(address)) {
+      address = 'https://expo.consento.org'
+    }
+    if (/^\/\//.test(address)) {
+      address = `http://${address}`
+    }
     const transport = new ExpoTransport({
       address,
       getToken: getExpoToken
     })
-    console.log({ address })
     transport.on('error', (error) => {
       console.log({ transportError: error })
     })
@@ -51,7 +66,7 @@ export function ConsentoApp (): JSX.Element {
       AppState.removeEventListener('change', stateChange)
       stateChange('inactive')
     }
-  }, [])
+  }, [address])
   const ctx = { user: users.items[0], api }
   return <ConsentoContext.Provider value={ctx}>
     <Screens />

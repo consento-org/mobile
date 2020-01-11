@@ -6,13 +6,14 @@ export function createGlobalEffect <T> ({ update, init, exit }: {
   exit (handler: () => any): void
 }): () => T {
   const listeners = new Set<(lastUpdate: number) => any>()
-  const output: T = update()
+  let output: T = update()
   let globalLastUpdate: number
   function updateOutput (): void {
     const newOutput = update()
     if (newOutput === undefined) {
       return
     }
+    output = newOutput
     globalLastUpdate = Date.now()
     for (const update of listeners) {
       update(globalLastUpdate)

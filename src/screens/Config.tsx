@@ -21,7 +21,7 @@ export const Config = withNavigation(
       })
     })
     return <View style={{ ...styles.screen, display: 'flex' }}>
-      <TopNavigation title='Consento' back='vaults' back={() => leave(() => navigation.navigate('vaults'))} />
+      <TopNavigation title='Consento' back={() => leave(() => navigation.navigate('vaults'))} />
       <BottomButtonView prototype={elementConfig} onPress={save}>
         <InputField
           proto={elementConfig.host}

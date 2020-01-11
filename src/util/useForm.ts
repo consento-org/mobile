@@ -37,7 +37,7 @@ export function useForm (navigation: TNavigation, save: () => any): {
   isDirty: boolean
   isInvalid: boolean
   isSaving: boolean
-  setDirty: (dirty: boolean) => void
+  setDirty: (dirty: boolean, invalid?: boolean) => void
 } {
   const [isDirty, _setDirty] = useState<boolean>(false)
   const [isInvalid, setInvalid] = useState<boolean>(false)

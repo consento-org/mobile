@@ -3,12 +3,13 @@
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
     "downlevelIteration": true,
-    "target": "es2015",
+    "target": "ESNext",
     "jsx": "react-native",
-    "lib": ["dom", "esnext", "ES2015.Collection"],
+    "lib": ["dom", "ESNext"],
     "moduleResolution": "node",
     "noEmit": true,
     "skipLibCheck": true,
-    "resolveJsonModule": true
+    "types": ["jest"],
+    "declaration": true
   }
 }

@@ -1,5 +1,5 @@
-import React, { useContext, useEffect, useState } from 'react'
-import { View, Alert, BackHandler } from 'react-native'
+import React, { useContext, useState } from 'react'
+import { View, Alert } from 'react-native'
 import { TopNavigation } from './components/TopNavigation'
 import { styles } from '../styles'
 import { Relation as RelationModel } from '../model/Relation'

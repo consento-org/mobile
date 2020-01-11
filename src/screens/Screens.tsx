@@ -1,6 +1,6 @@
 import React, { useContext } from 'react'
 import { View } from 'react-native'
-import { createAppContainer, withNavigation } from 'react-navigation'
+import { createAppContainer, withNavigation, NavigationContainer } from 'react-navigation'
 import { createStackNavigator } from 'react-navigation-stack'
 import { createBottomTabBar } from './components/createBottomTabBar'
 import { VaultsScreen } from './Vaults'
@@ -10,16 +10,14 @@ import { Vault, VaultRouter } from './Vault'
 import { Relation } from './Relation'
 import { TNavigation } from './navigation'
 import { NewRelation } from './NewRelation'
-import { findVault } from '../model/VaultRef'
-import { findRelation } from '../model/RelationRef'
-import { Vault as VaultModel } from '../model/Vault'
-import { Relation as RelationModel } from '../model/Relation'
+import { Vault as VaultModel, findVault } from '../model/Vault'
+import { Relation as RelationModel, findRelation } from '../model/Relation'
 import { ConsentoContext } from '../model/ConsentoContext'
 import { RelationContext } from '../model/RelationContext'
 import { VaultContext } from '../model/VaultContext'
 import { Config } from './Config'
 
-let Container
+let Container: NavigationContainer
 
 export function Screens (): JSX.Element {
   const { user } = useContext(ConsentoContext)

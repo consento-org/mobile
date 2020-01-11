@@ -1,5 +1,5 @@
 import React from 'react'
-import { FlatList, View, Text } from 'react-native'
+import { FlatList, View, Text, ViewStyle } from 'react-native'
 import { elementLogLine } from '../styles/component/elementLogLine'
 
 interface LogEntry {
@@ -40,6 +40,10 @@ const LogEntry = ({ item }: { item: LogEntry }): JSX.Element =>
     }}>{item.data}</Text>
   </View>
 
-export const Logs = (): JSX.Element => {
-  return <FlatList style={{ backgroundColor: elementLogLine.backgroundColor }} renderItem={(item: any) => <LogEntry item={item.item as LogEntry} />} data={sampleData} />
+const renderItem = (item: any): JSX.Element => <LogEntry item={item.item as LogEntry} />
+
+const style: ViewStyle = {
+  backgroundColor: elementLogLine.backgroundColor
 }
+
+export const Logs = (): JSX.Element => <FlatList style={style} renderItem={renderItem} data={sampleData} />

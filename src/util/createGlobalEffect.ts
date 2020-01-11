@@ -14,14 +14,9 @@ export function createGlobalEffect <T> ({ update, init, exit }: {
       return
     }
     globalLastUpdate = Date.now()
-    const iter = listeners.values()
-    do {
-      const update = iter.next()
-      if (update.done) {
-        return
-      }
-      update.value(globalLastUpdate)
-    } while (true)
+    for (const update of listeners) {
+      update(globalLastUpdate)
+    }
   }
   return () => {
     const setLastUpdate = useState<number>(globalLastUpdate)[1]

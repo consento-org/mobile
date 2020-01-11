@@ -1,5 +1,5 @@
 import React from 'react'
-import { ViewStyle, TouchableOpacity, Text } from 'react-native'
+import { ViewStyle, TouchableOpacity, Text, TextStyle } from 'react-native'
 import { shadow } from '../../styles'
 import { buttonContainerDisabled } from '../../styles/component/buttonContainerDisabled'
 import { buttonContainerEnabled } from '../../styles/component/buttonContainerEnabled'
@@ -63,7 +63,7 @@ export function ConsentoButton (props: IButtonProps): JSX.Element {
     width: props.style !== undefined ? props.style.width : undefined,
     height: props.style !== undefined ? props.style.height : undefined
   }
-  const style: ViewStyle = {
+  const style: TextStyle = {
     ...props.light ? lightStyle : props.thin ? disabledStyle : activeStyle,
     ...props.style,
     left: undefined,

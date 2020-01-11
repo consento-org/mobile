@@ -6,7 +6,7 @@ import { ExpoTransport } from '@consento/notification-server'
 import { getExpoToken } from './util/getExpoToken'
 import { Screens } from './screens/Screens'
 import { ArraySet, registerRootStore, ObjectMap } from 'mobx-keystone'
-import { User } from './model/User'
+import { User, createDefaultUser } from './model/User'
 import { useConfig } from './util/useConfig'
 import { Loading } from './screens/Loading'
 import { cryptoCore } from './cryptoCore'
@@ -18,7 +18,7 @@ export const ConsentoApp = observer((): JSX.Element => {
   const [config] = useConfig()
   const [users] = useState<ArraySet<User>>(() => {
     const users = new ArraySet<User>({})
-    users.add(new User({ name: 'first-user' }))
+    users.add(createDefaultUser())
     registerRootStore(new ObjectMap({
       items: {
         users: users
@@ -81,7 +81,7 @@ export const ConsentoApp = observer((): JSX.Element => {
     return <Loading />
   }
 
-  const ctx = { user, api }
+  const ctx = { user, api, users }
   return <ConsentoContext.Provider value={ctx}>
     <Screens />
   </ConsentoContext.Provider>

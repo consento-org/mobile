@@ -1,6 +1,6 @@
 import React, { useContext } from 'react'
 import { View } from 'react-native'
-import { createAppContainer, withNavigation, NavigationContainer } from 'react-navigation'
+import { createAppContainer, withNavigation } from 'react-navigation'
 import { createStackNavigator } from 'react-navigation-stack'
 import { createBottomTabBar } from './components/createBottomTabBar'
 import { VaultsScreen } from './Vaults'
@@ -16,12 +16,11 @@ import { ConsentoContext } from '../model/ConsentoContext'
 import { RelationContext } from '../model/RelationContext'
 import { VaultContext } from '../model/VaultContext'
 import { Config } from './Config'
+import { observer } from 'mobx-react'
 
-let Container: NavigationContainer
-
-export function Screens (): JSX.Element {
+export const Screens = observer((): JSX.Element => {
   const { user } = useContext(ConsentoContext)
-  if (Container === undefined) {
+  const Container = (() => {
     const AppNavigator = createStackNavigator({
       main: {
         path: '',
@@ -77,8 +76,7 @@ export function Screens (): JSX.Element {
       headerMode: 'none',
       initialRouteKey: 'vaults'
     })
-
-    Container = createAppContainer(AppNavigator)
-  }
+    return createAppContainer(AppNavigator)
+  })()
   return <Container />
-}
+})

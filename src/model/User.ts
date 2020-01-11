@@ -152,3 +152,7 @@ export class User extends Model({
     return find(this.vaults, (vault): vault is Vault => vault.$modelId === vaultId)
   }
 }
+
+export function createDefaultUser (): User {
+  return new User({ name: 'first-user' })
+}

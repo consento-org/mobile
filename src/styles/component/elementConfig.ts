@@ -2,6 +2,8 @@
 import { Component, Link } from '../Component'
 import { elementBottomButton } from './elementBottomButton'
 import { elementFormInputField } from './elementFormInputField'
+import { buttonContainerDisabled } from './buttonContainerDisabled'
+import { buttonContainerEnabled } from './buttonContainerEnabled'
 import { Color } from '../Color'
 
 /* eslint-disable lines-between-class-members */
@@ -13,6 +15,12 @@ export class ElementConfigClass extends Component {
     active: 'https://192.168.11.11',
     label: 'host',
     caption: 'during beta we need to connect to a server.'
+  })
+  reset1 = new Link(buttonContainerDisabled, { x: 25, y: 128, w: 180, h: 36 }, {
+    label: 'reset'
+  })
+  reset2 = new Link(buttonContainerEnabled, { x: 25, y: 128, w: 180, h: 36 }, {
+    label: 'RESET'
   })
   constructor () {
     super('elementConfig', 375, 970, Color.white)

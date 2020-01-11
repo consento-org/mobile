@@ -12,7 +12,7 @@ export interface IBottomButtonProto {
   }>
 }
 
-export function BottomButtonView ({ prototype: proto, children, onPress }: { prototype: IBottomButtonProto, children?: React.ReactChild, onPress?: () => any}): JSX.Element {
+export function BottomButtonView ({ prototype: proto, children, onPress }: { prototype: IBottomButtonProto, children?: React.ReactChild | React.ReactChild[], onPress?: () => any}): JSX.Element {
   const { bottomButton, backgroundColor } = proto
   const hasBottomButton = exists(bottomButton) && exists(onPress)
   return <View style={{ flexGrow: 1, display: 'flex', position: 'relative' }}>

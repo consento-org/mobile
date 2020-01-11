@@ -1,11 +1,14 @@
 import React from 'react'
 import { ViewStyle, TouchableOpacity, Text, TextStyle } from 'react-native'
 import { shadow } from '../../styles'
-import { buttonContainerDisabled } from '../../styles/component/buttonContainerDisabled'
-import { buttonContainerEnabled } from '../../styles/component/buttonContainerEnabled'
-import { buttonContainerLight } from '../../styles/component/buttonContainerLight'
+import { buttonContainerDisabled, ButtonContainerDisabledClass } from '../../styles/component/buttonContainerDisabled'
+import { buttonContainerEnabled, ButtonContainerEnabledClass } from '../../styles/component/buttonContainerEnabled'
+import { buttonContainerLight, ButtonContainerLightClass } from '../../styles/component/buttonContainerLight'
+import { Link } from '../../styles/Component'
 
 const disabledStyle = {
+  top: 0,
+  left: 0,
   ...buttonContainerDisabled.label.style,
   ...buttonContainerDisabled.shape.borderStyle(),
   width: buttonContainerDisabled.width,
@@ -13,6 +16,8 @@ const disabledStyle = {
 }
 
 const activeStyle = {
+  top: 0,
+  left: 0,
   backgroundColor: buttonContainerEnabled.shape.fill.color,
   borderRadius: buttonContainerEnabled.shape.borderRadius,
   width: buttonContainerEnabled.width,
@@ -22,6 +27,8 @@ const activeStyle = {
 }
 
 const lightStyle = {
+  top: 0,
+  left: 0,
   backgroundColor: buttonContainerLight.shape.fill.color,
   borderRadius: buttonContainerLight.shape.borderRadius,
   width: buttonContainerLight.width,
@@ -36,45 +43,43 @@ export interface IButtonStyle extends ViewStyle {
 }
 
 export interface IButtonProps {
-  title: string
+  title?: string
   enabled?: boolean
   disabled?: boolean
   light?: boolean
   thin?: boolean
   style?: IButtonStyle
   styleDisabled?: IButtonStyle
+  proto?: Link<ButtonContainerDisabledClass | ButtonContainerEnabledClass | ButtonContainerLightClass, { label: string }>
   onPress?: () => void
 }
 
 export function ConsentoButton (props: IButtonProps): JSX.Element {
-  if (props.onPress === undefined || props.enabled === false || props.disabled === true) {
+  const isDisabled = props.onPress === undefined || props.enabled === false || props.disabled === true
+  if (isDisabled) {
     return <Text style={{
       ...disabledStyle,
-      ...(props.styleDisabled !== undefined ? props.styleDisabled : props.style)
+      ...props.proto?.place.style(),
+      ...(props.styleDisabled ?? props.style)
     }}>
       {props.title}
     </Text>
   }
   const parentStyle: ViewStyle = {
     display: 'flex',
-    top: props.style !== undefined ? props.style.top : 0,
-    left: props.style !== undefined ? props.style.left : 0,
-    position: props.style !== undefined ? props.style.position : undefined,
-    width: props.style !== undefined ? props.style.width : undefined,
-    height: props.style !== undefined ? props.style.height : undefined
+    position: 'absolute',
+    ...props.proto?.place.style(),
+    ...props.style
   }
+  const isLight = props.light || props.proto?.component instanceof ButtonContainerLightClass
+  const isThin = props.thin || props.proto?.component instanceof ButtonContainerDisabledClass
   const style: TextStyle = {
-    ...props.light ? lightStyle : props.thin ? disabledStyle : activeStyle,
+    ...isLight ? lightStyle : isThin ? disabledStyle : activeStyle,
     ...props.style,
     left: undefined,
     top: undefined
   }
-  if (props.style !== undefined) {
-    delete props.style.left
-    delete props.style.top
-    delete props.style.position
-  }
   return <TouchableOpacity style={parentStyle} onPress={props.onPress}>
-    <Text style={style}>{props.title}</Text>
+    <Text style={style}>{props.title ?? props.proto?.text.label ?? '-missing-label-'}</Text>
   </TouchableOpacity>
 }

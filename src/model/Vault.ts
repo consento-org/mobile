@@ -1,9 +1,10 @@
 import { computed } from 'mobx'
-import { model, modelAction, Model, prop, tProp, types, ExtendedModel } from 'mobx-keystone'
+import { model, modelAction, Model, prop, tProp, types, ExtendedModel, Ref, customRef } from 'mobx-keystone'
 import { Connection } from './Connection'
 import { RequestBase } from './RequestBase'
 import { Buffer } from 'buffer'
 import randomBytes from '@consento/sync-randombytes'
+import { findParentUser } from './User'
 
 export enum TVaultState {
   open = 'open',
@@ -41,9 +42,13 @@ export type VaultAccessEntry = typeof VaultOpenRequest | VaultClose | VaultOpen
 export class AccessOperation extends Model({
 }) {}
 
-export const MODEL = 'consento/Vault'
+export const vaultRefInUser = customRef<Vault>('consento/Vault#inUser', {
+  resolve (ref: Ref<Vault>): Vault {
+    return findParentUser(ref)?.findVault(ref.id)
+  }
+})
 
-@model(MODEL)
+@model('consento/Vault')
 export class Vault extends Model({
   name: tProp(types.maybeNull(types.string), () => randomBytes(Buffer.alloc(4)).toString('hex')),
   connections: prop<Connection[]>(),

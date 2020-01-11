@@ -10,14 +10,23 @@ export interface IInputTexts {
   caption?: string
 }
 
-export const InputField = ({ value, defaultValue, onEdit, proto, autoFocus, invalid }: { autoFocus?: boolean, proto?: Link<ElementFormInputFieldClass, IInputTexts>, invalid?: boolean, value: string, defaultValue?: string, onEdit(newValue: string): any }): JSX.Element => {
+export interface IInputFieldProps {
+  autoFocus?: boolean
+  proto?: Link<ElementFormInputFieldClass, IInputTexts>
+  invalid?: boolean
+  value: string
+  defaultValue?: string
+  onEdit(newValue: string): any
+}
+
+export const InputField = ({ value, defaultValue, onEdit, proto, autoFocus, invalid }: IInputFieldProps): JSX.Element => {
   const label = exists(proto) ? proto.text.label : null
   const caption = exists(proto) ? proto.text.caption : null
   if (!exists(defaultValue)) {
     defaultValue = exists(proto) ? proto.text.inactive : null
   }
   const ref = useRef<Text>()
-  return <View style={{ height: elementFormInputField.caption.place.bottom, display: 'flex' }}>
+  return <View style={{ height: elementFormInputField.caption.place.bottom, display: 'flex', top: proto.place.top, left: proto.place.left }}>
     {invalid
       ? <elementFormInputField.invalid.Render horz='stretch' />
       : <elementFormInputField.rectangle.Render horz='stretch' />}

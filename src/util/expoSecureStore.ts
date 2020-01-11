@@ -1,9 +1,22 @@
 import { createSecureStore, ISecureStore, IStore, IEncoding } from './createSecureStore'
 import { getItemAsync, setItemAsync } from 'expo-secure-store'
-import { readAsStringAsync, readDirectoryAsync, writeAsStringAsync, deleteAsync, documentDirectory } from 'expo-file-system'
+import { readAsStringAsync, readDirectoryAsync, writeAsStringAsync, deleteAsync, documentDirectory, getInfoAsync, makeDirectoryAsync } from 'expo-file-system'
 import { exists } from './exists'
 import { Buffer, bufferToString } from '@consento/crypto/util/buffer'
 import { ICryptoCore } from '@consento/crypto/core/types'
+
+async function _write (path: string[], data: Uint8Array): Promise<void> {
+  return writeAsStringAsync([documentDirectory, ...path].join('/'), bufferToString(data, 'base64'))
+}
+
+async function mkdirp (path: string[]): Promise<void> {
+  const pathAsString = [documentDirectory, ...path].join('/')
+  const info = await getInfoAsync(pathAsString)
+  if (!info.exists) {
+    await mkdirp(path.slice(0, path.length - 1))
+    await makeDirectoryAsync(pathAsString)
+  }
+}
 
 export const expoStore: IStore = {
   async read (path: string[]): Promise<Uint8Array> {
@@ -11,13 +24,22 @@ export const expoStore: IStore = {
     return Buffer.from(raw, 'base64')
   },
   async write (path: string[], data: Uint8Array): Promise<void> {
-    await writeAsStringAsync([documentDirectory, ...path].join('/'), bufferToString(data, 'base64'))
+    try {
+      return await _write(path, data)
+    } catch (err) {
+      await mkdirp(path.slice(0, path.length - 1))
+    }
+    return _write(path, data)
   },
   async delete (path: string[]): Promise<void> {
     await deleteAsync([documentDirectory, ...path].join('/'))
   },
   async list (path: string[]): Promise<string[]> {
-    return readDirectoryAsync([documentDirectory, ...path].join('/'))
+    try {
+      return await readDirectoryAsync([documentDirectory, ...path].join('/'))
+    } catch (err) {
+      return []
+    }
   }
 }
 

@@ -54,22 +54,24 @@ describe('basic secure storage', () => {
   it('initial condition', async () => {
     const { store } = await createStore()
     expect(await store.root).not.toBe(null)
-    expect(store.version).toBe(0)
+    expect(await store.version()).toBe(0)
   })
 
   it('storing an entry', async () => {
     const { store, dataStore, secretKey } = await createStore()
     await store.append({ hello: 'world' })
+    expect(await store.version()).toBe(1)
 
     const firstEntry = `${await store.root}/data/1`
     expect(Object.keys(dataStore)).toEqual([firstEntry])
-    expect(bufferToString((await crypto.decrypt(secretKey, dataStore[firstEntry]) as unknown as Uint8Array))).toBe('{"hello":"world"}')
+    expect(bufferToString((await crypto.decrypt(secretKey, dataStore[firstEntry]) as any as Uint8Array))).toBe('{"hello":"world"}')
   })
 
   it('creating an index', async () => {
     const { store, dataStore } = await createStore()
     await store.append({ hello: 'world' })
     await store.append({ hallo: 'welt' })
+    expect(await store.version()).toBe(2)
     const index = store.defineIndex('test', () => ({}), jsonEncoding, (index, entry) => {
       for (const name in entry) {
         index[name] = entry[name]

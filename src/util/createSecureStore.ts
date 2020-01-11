@@ -45,8 +45,8 @@ export interface IIndexer <Index> {
 
 export interface ISecureStore <LogEntry> {
   readonly root: Promise<string>
-  readonly version: number
-  defineIndex <Index> (name: string, init: () => Index, encoding: IEncoding<Index>, merge: (index: Index, logEntry: LogEntry) => void): IIndexer<Index>
+  version (): Promise<number>
+  defineIndex <Index> (name: string, init: () => Index, encoding: IEncoding<Index>, merge: (index: Index, logEntry: LogEntry, version: number) => void): IIndexer<Index>
   append (entry: LogEntry): Promise<void>
   delete (): Promise<void>
 }
@@ -111,142 +111,146 @@ export function createSecureStore <LogEntry> (secretKey: Uint8Array, options: IS
     return crypto.decrypt(secretKey, encrypted) as unknown as Uint8Array
   }
   const indexers: { [name: string]: IInternalIndexer<any, LogEntry> } = {}
-  const secureStore: ISecureStore<LogEntry> = {
-    root,
-    get version () {
-      return version
-    },
-    defineIndex <Index> (indexName: string, init: () => Index, indexEncoding: IEncoding<Index>, merge: (index: Index, entry: LogEntry) => any) {
-      if (indexers[name] !== undefined) {
-        throw new Error(`Indexer ${name} already defined.`)
-      }
-      const processIndex = async (indexVersion: number, data: Index, maxLogVersion: number, logVersions: number[]): Promise<IIndexState<Index>> => {
-        if (logVersions.length === 0) {
-          return {
-            dirty: false,
-            version: indexVersion,
-            data
-          }
-        }
-        for (const logVersion of logVersions) {
-          const logEntry = encoding.fromBuffer(await read(['data', logVersion.toString(10)]))
-          merge(data, logEntry)
-        }
+  const defineIndex = <Index> (indexName: string, init: () => Index, indexEncoding: IEncoding<Index>, merge: (index: Index, entry: LogEntry, version: number) => any): IIndexer<Index> => {
+    if (indexers[indexName] !== undefined) {
+      throw new Error(`Indexer ${indexName} already defined.`)
+    }
+    const processIndex = async (indexVersion: number, data: Index, logVersions: number[]): Promise<IIndexState<Index>> => {
+      if (logVersions.length === 0) {
         return {
-          dirty: true,
-          version: maxLogVersion,
+          dirty: false,
+          version: indexVersion,
           data
         }
       }
-      const readIndex = async (indexVersion: number, maxLogVersion: number): Promise<IIndexState<Index>> => {
-        const logVersions = (await cleanList(['data']))
-          .filter(logVersion => logVersion > indexVersion && logVersion <= maxLogVersion)
+      for (const logVersion of logVersions) {
+        const logEntry = encoding.fromBuffer(await read(['data', logVersion.toString(10)]))
+        merge(data, logEntry, indexVersion)
+        indexVersion += 1
+      }
+      return {
+        dirty: true,
+        version: indexVersion,
+        data
+      }
+    }
+    const readIndex = async (indexVersion: number, maxLogVersion: number): Promise<IIndexState<Index>> => {
+      const logVersions = (await cleanList(['data']))
+        .filter(logVersion => logVersion > indexVersion && logVersion <= maxLogVersion)
 
-        if (logVersions.length !== maxLogVersion - indexVersion) {
-          throw new Error('Can not restore index: missing log entries!')
-        }
+      if (logVersions.length !== maxLogVersion - indexVersion) {
+        throw new Error('Can not restore index: missing log entries!')
+      }
 
-        try {
-          const data = indexEncoding.fromBuffer(await read(['index', indexName, indexVersion.toString(10)]))
-          return processIndex(indexVersion, data, maxLogVersion, logVersions)
-        } catch (error) {
-          console.log('Invalid index found')
-          return null
+      try {
+        const data = indexEncoding.fromBuffer(await read(['index', indexName, indexVersion.toString(10)]))
+        return processIndex(indexVersion, data, logVersions)
+      } catch (error) {
+        console.log('Invalid index found')
+        return null
+      }
+    }
+    let indexLock: Promise<IIndexState<Index>> = (async () => {
+      // The version at the creation of the index is taken as latest
+      const maxLogVersion = version
+      const indexVersions = (await cleanList(['index', indexName])).filter(indexVersion => indexVersion < version)
+      while (indexVersions.length > 0) {
+        const read = await readIndex(indexVersions.pop(), maxLogVersion)
+        if (read !== null) {
+          return read
         }
       }
-      let indexLock: Promise<IIndexState<Index>> = (async () => {
-        // The version at the creation of the index is taken as latest
-        const maxLogVersion = version
-        const indexVersions = (await cleanList(['index', indexName])).filter(indexVersion => indexVersion < version)
-        while (indexVersions.length > 0) {
-          const read = await readIndex(indexVersions.pop(), maxLogVersion)
-          if (read !== null) {
-            return read
-          }
+      const data = init()
+      if (maxLogVersion === 0) {
+        return {
+          dirty: false,
+          version: 0,
+          data
         }
-        const data = init()
-        if (maxLogVersion === 0) {
-          return {
-            dirty: false,
-            version: 0,
-            data
-          }
-        }
-        const logVersions = (await cleanList(['data']))
-          .filter(logVersion => logVersion <= maxLogVersion)
+      }
+      const logVersions = (await cleanList(['data']))
+        .filter(logVersion => logVersion <= maxLogVersion)
 
-        if (logVersions.length !== maxLogVersion) {
-          throw new Error(`Can not restore index: missing log entries! ${maxLogVersion} != ${logVersions.length}`)
-        }
-        return processIndex(0, data, maxLogVersion, logVersions)
-      })()
-      indexLock.catch(noop)
-      const lockIndex = async (): Promise<{ state: IIndexState<Index>, release: (newState: IIndexState<Index>) => void }> => {
-        let myLock
-        let state: IIndexState<Index>
-        while (myLock !== indexLock) {
-          myLock = indexLock
-          state = await myLock
-        }
-        let release: (newState) => void
-        indexLock = new Promise<IIndexState<Index>>(resolve => {
-          release = resolve
+      if (logVersions.length !== maxLogVersion) {
+        throw new Error(`Can not restore index: missing log entries! ${maxLogVersion} != ${logVersions.length}`)
+      }
+      return processIndex(0, data, logVersions)
+    })()
+    indexLock.catch(noop)
+    const lockIndex = async (): Promise<{ state: IIndexState<Index>, release: (newState: IIndexState<Index>) => void }> => {
+      let myLock
+      let state: IIndexState<Index>
+      while (myLock !== indexLock) {
+        myLock = indexLock
+        state = await myLock
+      }
+      let release: (newState) => void
+      indexLock = new Promise<IIndexState<Index>>(resolve => {
+        release = resolve
+      })
+      return { state, release }
+    }
+    const indexer: IInternalIndexer<Index, LogEntry> = {
+      async update (entry: LogEntry) {
+        const { state, release } = await lockIndex()
+        const version = state.version + 1
+        release({
+          dirty: true,
+          version,
+          data: merge(state.data, entry, version)
         })
-        return { state, release }
-      }
-      const indexer: IInternalIndexer<Index, LogEntry> = {
-        async update (entry: LogEntry) {
-          const { state, release } = await lockIndex()
-          release({
-            dirty: true,
-            version: state.version + 1,
-            data: merge(state.data, entry)
-          })
-        },
-        async isDirty () {
-          return (await indexLock).dirty
-        },
-        async read () {
-          return (await indexLock).data
-        },
-        async persist () {
-          const { state, release } = await lockIndex()
-          if (!state.dirty) {
-            release(state)
-            return
-          }
-          await write(['index', indexName, state.version.toString(10)], indexEncoding.toBuffer(state.data))
-          release({
-            dirty: false,
-            version: state.version,
-            data: state.data
-          })
-        },
-        async delete () {
-          const { release } = await lockIndex()
-          const persistedVersions = await cleanList(['index', indexName])
-          for (const version of persistedVersions) {
-            await store.delete(['index', indexName, version.toString(10)])
-          }
-          release({
-            dirty: false,
-            version: 0,
-            data: init()
-          })
+      },
+      async isDirty () {
+        return (await indexLock).dirty
+      },
+      async read () {
+        return (await indexLock).data
+      },
+      async persist () {
+        const { state, release } = await lockIndex()
+        if (!state.dirty) {
+          release(state)
+          return
         }
+        await write(['index', indexName, state.version.toString(10)], indexEncoding.toBuffer(state.data))
+        release({
+          dirty: false,
+          version: state.version,
+          data: state.data
+        })
+      },
+      async delete () {
+        const { release } = await lockIndex()
+        const persistedVersions = await cleanList(['index', indexName])
+        for (const version of persistedVersions) {
+          await store.delete(['index', indexName, version.toString(10)])
+        }
+        release({
+          dirty: false,
+          version: 0,
+          data: init()
+        })
       }
-      indexers[name] = indexer
-      return indexer
+    }
+    indexers[indexName] = indexer
+    return indexer
+  }
+  const secureStore: ISecureStore<LogEntry> = {
+    root,
+    async version (): Promise<number> {
+      await versionLock
+      return version
     },
+    defineIndex,
     async append (entry: LogEntry) {
       const release = await lock()
       const newVersion = version + 1
       await write(['data', newVersion.toString(10)], encoding.toBuffer(entry))
       version = newVersion
+      release()
       await Promise.all(
         Object.values(indexers).map(async indexer => indexer.update(entry))
       )
-      release()
     },
     async delete () {
       const release = await lock()

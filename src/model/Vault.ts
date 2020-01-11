@@ -20,17 +20,17 @@ export class MessageLogEntry extends Model({
 
 export type VaultLogEntry = MessageLogEntry
 
-@model('consento/VaultClose')
+@model('consento/Vault/Close')
 export class VaultClose extends Model({
   time: prop<number>(() => Date.now())
 }) {}
 
-@model('consento/VaultOpen')
+@model('consento/Vault/Open')
 export class VaultOpen extends Model({
   time: prop<number>(() => Date.now())
 }) {}
 
-@model('consento/VaultOpenRequest')
+@model('consento/Vault/OpenRequest')
 export class VaultOpenRequest extends ExtendedModel(RequestBase, {
 }) {
   static KEEP_ALIVE = 5000
@@ -38,7 +38,7 @@ export class VaultOpenRequest extends ExtendedModel(RequestBase, {
 
 export type VaultAccessEntry = typeof VaultOpenRequest | VaultClose | VaultOpen
 
-@model('consento/VaultAccessOperation')
+@model('consento/Vault/AccessOperation')
 export class AccessOperation extends Model({
 }) {}
 
@@ -51,7 +51,7 @@ export const vaultRefInUser = customRef<Vault>('consento/Vault#inUser', {
 @model('consento/Vault')
 export class Vault extends Model({
   name: tProp(types.maybeNull(types.string), () => randomBytes(Buffer.alloc(4)).toString('hex')),
-  connections: prop<Connection[]>(),
+  connections: prop<Connection[]>(() => []),
   accessLog: prop<VaultAccessEntry[]>(() => [])
 }) {
   // root: Folder

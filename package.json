@@ -23,6 +23,7 @@
     "expo-file-system": "^8.0.0",
     "expo-permissions": "~8.0.0",
     "expo-secure-store": "^8.0.0",
+    "fast-json-patch": "^3.0.0-1",
     "fbemitter": "^2.1.1",
     "is-url-superb": "^3.0.0",
     "mobx": "^5.15.1",

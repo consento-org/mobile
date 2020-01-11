@@ -2,29 +2,36 @@ import React, { useEffect, useState } from 'react'
 import { AppState, AppStateStatus } from 'react-native'
 import { ConsentoContext } from './model/ConsentoContext'
 import { setup, IAPI } from '@consento/api'
-import { sodium } from '@consento/crypto/core/sodium'
 import { ExpoTransport } from '@consento/notification-server'
 import { getExpoToken } from './util/getExpoToken'
-import { setupUsers } from './model/index'
 import { Screens } from './screens/Screens'
-import { ArraySet } from 'mobx-keystone'
+import { ArraySet, registerRootStore, ObjectMap } from 'mobx-keystone'
 import { User } from './model/User'
 import { useConfig } from './util/useConfig'
 import { Loading } from './screens/Loading'
+import { cryptoCore } from './cryptoCore'
 import isURL from 'is-url-superb'
+import { observer } from 'mobx-react'
 
-export function ConsentoApp (): JSX.Element {
+export const ConsentoApp = observer((): JSX.Element => {
   const [api, setAPI] = useState<IAPI>()
   const [config] = useConfig()
-  const [users] = useState<ArraySet<User>>(setupUsers)
-
-  if (config === null) {
-    return <Loading />
-  }
-
-  const { address } = config
+  const [users] = useState<ArraySet<User>>(() => {
+    const users = new ArraySet<User>({})
+    users.add(new User({ name: 'first-user' }))
+    registerRootStore(new ObjectMap({
+      items: {
+        users: users
+      }
+    }))
+    return users
+  })
 
   useEffect(() => {
+    if (config === null) {
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      return () => {}
+    }
     let address = config.address
     if (!isURL(address)) {
       address = 'https://expo.consento.org'
@@ -39,7 +46,7 @@ export function ConsentoApp (): JSX.Element {
     transport.on('error', (error) => {
       console.log({ transportError: error })
     })
-    let cancel
+    let cancel: () => void
     const stateChange = (state: AppStateStatus): void => {
       if (state !== 'background') {
         if (cancel === undefined) {
@@ -55,7 +62,7 @@ export function ConsentoApp (): JSX.Element {
     AppState.addEventListener('change', stateChange)
     stateChange(AppState.currentState)
     const api = setup({
-      cryptoCore: sodium,
+      cryptoCore,
       notificationTransport: transport
     })
     api.notifications.reset([]).catch(error => {
@@ -66,11 +73,18 @@ export function ConsentoApp (): JSX.Element {
       AppState.removeEventListener('change', stateChange)
       stateChange('inactive')
     }
-  }, [address])
-  const ctx = { user: users.items[0], api }
+  }, [config])
+
+  const user: User = users.items[0]
+
+  if (config === null || !user.loaded) {
+    return <Loading />
+  }
+
+  const ctx = { user, api }
   return <ConsentoContext.Provider value={ctx}>
     <Screens />
   </ConsentoContext.Provider>
-}
+})
 
 export default ConsentoApp

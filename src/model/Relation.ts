@@ -1,9 +1,8 @@
 import { computed } from 'mobx'
-import { model, tProp, Model, types, modelAction, Ref, customRef } from 'mobx-keystone'
+import { model, tProp, Model, types, modelAction } from 'mobx-keystone'
 import { IConsentoCrypto, IReceiver, ISender, IConnection } from '@consento/api'
 import { Buffer } from '@consento/crypto/util/buffer'
 import { Connection, fromIConnection } from './Connection'
-import { findParentUser } from './User'
 
 // eslint-disable-next-line @typescript-eslint/require-await
 export async function fromConnection (connection: IConnection): Promise<Relation> {
@@ -12,12 +11,6 @@ export async function fromConnection (connection: IConnection): Promise<Relation
     connection: await fromIConnection(connection)
   })
 }
-
-export const relationRefInUser = customRef<Relation>('consento/Relation#inUser', {
-  resolve (ref: Ref<Relation>): Relation {
-    return findParentUser(ref)?.findRelation(ref.id)
-  }
-})
 
 @model('consento/Relation')
 export class Relation extends Model({

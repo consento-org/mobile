@@ -10,8 +10,8 @@ import { Vault, VaultRouter } from './Vault'
 import { Relation } from './Relation'
 import { TNavigation } from './navigation'
 import { NewRelation } from './NewRelation'
-import { Vault as VaultModel, findVault } from '../model/Vault'
-import { Relation as RelationModel, findRelation } from '../model/Relation'
+import { Vault as VaultModel } from '../model/Vault'
+import { Relation as RelationModel } from '../model/Relation'
 import { ConsentoContext } from '../model/ConsentoContext'
 import { RelationContext } from '../model/RelationContext'
 import { VaultContext } from '../model/VaultContext'
@@ -38,7 +38,7 @@ export function Screens (): JSX.Element {
           render (): JSX.Element {
             const { navigation } = this.props
             const vaultKey = navigation.state.params.vault
-            const vault = findVault(user, vaultKey)
+            const vault = user.findVault(vaultKey)
             if (vault instanceof VaultModel) {
               return <VaultContext.Provider value={{ vault }}>
                 <Vault />
@@ -55,7 +55,7 @@ export function Screens (): JSX.Element {
           render (): JSX.Element {
             const { navigation } = this.props
             const relationKey = navigation.state.params.relation
-            const relation = findRelation(user, relationKey)
+            const relation = user.findRelation(relationKey)
             if (relation instanceof RelationModel) {
               return <RelationContext.Provider value={{ relation }}>
                 <Relation />

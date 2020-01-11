@@ -1,4 +1,4 @@
-import { model, Model, prop, arraySet, Ref, findParent, tProp, types, onPatches, Patch, modelAction, applySnapshot, getSnapshot } from 'mobx-keystone'
+import { model, Model, prop, arraySet, Ref, findParent, tProp, types, onPatches, Patch, modelAction, applySnapshot, getSnapshot, customRef } from 'mobx-keystone'
 import { Vault } from './Vault'
 import { Relation } from './Relation'
 import { Consento } from './Consento'
@@ -57,6 +57,18 @@ function initUser (user: User): void {
 
 export const findParentUser = (ref: Ref<any>): User => findParent(ref, n => n instanceof User)
 
+export const relationRefInUser = customRef<Relation>('consento/Relation#inUser', {
+  resolve (ref: Ref<Relation>): Relation {
+    return findParentUser(ref)?.findRelation(ref.id)
+  }
+})
+
+export const vaultRefInUser = customRef<Vault>('consento/Vault#inUser', {
+  resolve (ref: Ref<Vault>): Vault {
+    return findParentUser(ref)?.findVault(ref.id)
+  }
+})
+
 @model('consento/User')
 export class User extends Model({
   name: tProp(types.string),
@@ -87,7 +99,6 @@ export class User extends Model({
           if (snapshot === null) {
             return patches
           }
-          console.log({ patches })
           const { newDocument } = patcher.applyPatch(
             snapshot,
             patches
@@ -103,10 +114,6 @@ export class User extends Model({
           snapshot.consentos.$modelId = this.consentos.$modelId
           snapshot.vaults.$modelId = this.vaults.$modelId
           snapshotLock = true
-          console.log({
-            snapshot,
-            testShot: getSnapshot(this)
-          })
           applySnapshot(this, snapshot)
           snapshotLock = false
         } else {

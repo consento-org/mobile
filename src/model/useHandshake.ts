@@ -52,7 +52,7 @@ function incomingMachine (
   reset: () => void,
   [onHandshake, { crypto, notifications }]: InitData
 ): IStateMachine<IncomingState, any> {
-  const incoming = cancelable<IHandshakeConfirmation>(function * (child) {
+  const incoming = cancelable<IConnection>(function * (child) {
     const incoming = (yield crypto.initHandshake()) as IHandshakeInit
     const { afterSubscribe: receive } = (yield child(notifications.receive(incoming.receiver, isAcceptMessage))) as { afterSubscribe: ICancelable<IHandshakeAcceptMessage> }
     const link = `consento://connect:${bufferToString(incoming.firstMessage, 'base64')}`
@@ -61,7 +61,7 @@ function incomingMachine (
     updateState(IncomingState.confirming, link)
     const confirmation: IHandshakeConfirmation = yield child(incoming.confirm(acceptMessage))
     yield notifications.send(confirmation.connection.sender, confirmation.finalMessage)
-    return confirmation
+    return confirmation.connection
   }).then(
     onHandshake,
     (error: Error) => {

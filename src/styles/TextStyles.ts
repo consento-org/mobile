@@ -93,6 +93,15 @@ export const SubtitleRobotoRegular13BlackCenter: TextStyle = Object.freeze({
   textAlignVertical: 'top'
 })
 
+export const SubtitleRobotoRegular13GreyCenter: TextStyle = Object.freeze({
+  color: Color.darkGrey,
+  fontFamily: Font.RobotoRegular,
+  fontSize: 13,
+  textAlign: 'center',
+  textTransform: 'none',
+  textAlignVertical: 'top'
+})
+
 export const SubtitleRobotoBold13BlackCenter: TextStyle = Object.freeze({
   color: Color.black,
   fontFamily: Font.RobotoBold,
@@ -266,6 +275,7 @@ export const TextStyles = {
   TITLERobotoSmallCapRegular12RedCenter,
   TITLERobotoSmallCapRegular12GreyCenter,
   SubtitleRobotoRegular13BlackCenter,
+  SubtitleRobotoRegular13GreyCenter,
   SubtitleRobotoBold13BlackCenter,
   H5RobotoRegular24BlackCenter,
   H5RobotoRegular24BlackLeft,

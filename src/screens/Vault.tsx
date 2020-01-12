@@ -15,6 +15,8 @@ import { Waiting } from './components/Waiting'
 import { withNavigation } from 'react-navigation'
 import { observer } from 'mobx-react'
 import { VaultContext } from '../model/VaultContext'
+import { PopupMenu, IPopupMenuItem, PopupContext } from './components/PopupMenu'
+import { elementPopUpMenu } from '../styles/component/elementPopUpMenu'
 
 const lockStyle: ViewStyle = {
   height: elementSealVaultActive.height,
@@ -28,9 +30,10 @@ const lockStyle: ViewStyle = {
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 const noop = (): void => {}
 
-const VaultData = withNavigation(({ navigation }: { navigation: TNavigation }) => {
-  return <EmptyView prototype={elementVaultEmpty} onAdd={() => navigation.navigate('textEditor')} />
-})
+const VaultData = (): JSX.Element => {
+  const { open } = useContext(PopupContext)
+  return <EmptyView prototype={elementVaultEmpty} onAdd={open} />
+}
 
 const VaultNavigator = createTabBar({
   vaultData: () => <VaultData />,
@@ -47,13 +50,19 @@ function LockButton (props: { onPress?: () => any }): JSX.Element {
 export const VaultRouter = VaultNavigator.router
 export const Vault = withNavigation(observer(({ navigation }: { navigation: TNavigation }): JSX.Element => {
   const { vault } = useContext(VaultContext)
-  return <View style={styles.screen}>
-    <TopNavigation title={vault.name} back='vaults' onEdit={vault.isOpen ? newName => vault.setName(newName) : undefined} onDelete={noop} />
-    {
-      vault.isOpen ? [
-        <LockButton key='lock' />,
-        <VaultNavigator key='vault' navigation={navigation} />
-      ] : <Waiting />
-    }
-  </View>
+  const popupItems: IPopupMenuItem[] = [
+    { name: elementPopUpMenu.takePicture.text, action: () => navigation.navigate('camera') },
+    { name: elementPopUpMenu.createText.text, action: () => navigation.navigate('textEditor') }
+  ]
+  return <PopupMenu items={popupItems}>
+    <View style={{ ...styles.screen, position: 'absolute', width: '100%', height: '100%' }}>
+      <TopNavigation title={vault.name} back='vaults' onEdit={vault.isOpen ? newName => vault.setName(newName) : undefined} onDelete={noop} />
+      {
+        vault.isOpen ? [
+          <LockButton key='lock' />,
+          <VaultNavigator key='vault' navigation={navigation} />
+        ] : <Waiting />
+      }
+    </View>
+  </PopupMenu>
 }))

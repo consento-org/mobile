@@ -39,7 +39,7 @@ export class ImageAsset {
     }
   }
 
-  img (style?: FlexStyle, ref?: React.RefObject<Image>, onLayout?: () => any): JSX.Element {
+  img (style?: FlexStyle, ref?: React.Ref<Image>, onLayout?: () => any): JSX.Element {
     const imgStyle = style as ImageStyle
     if (exists(imgStyle) && imgStyle.resizeMode === 'stretch') {
       return <Image ref={ref} onLayout={onLayout} source={this.source} style={imgStyle} fadeDuration={0} />
@@ -119,7 +119,7 @@ export class Slice9 {
     this._slices = slices
   }
 
-  render (style?: ViewStyle, ref?: React.RefObject<View>, onLayout?: () => any): JSX.Element {
+  render (style?: ViewStyle, ref?: React.Ref<View>, onLayout?: () => any): JSX.Element {
     if (style === null || style === undefined) {
       style = this._columsStyle
     } else {

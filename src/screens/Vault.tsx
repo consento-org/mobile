@@ -29,7 +29,7 @@ const lockStyle: ViewStyle = {
 const noop = (): void => {}
 
 const VaultData = withNavigation(({ navigation }: { navigation: TNavigation }) => {
-  return <EmptyView prototype={elementVaultEmpty} onAdd={() => navigation.navigate('camera')} />
+  return <EmptyView prototype={elementVaultEmpty} onAdd={() => navigation.navigate('textEditor')} />
 })
 
 const VaultNavigator = createTabBar({

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import 'react-native-gesture-handler' // Imported to fix gesture error in tab navigation
+import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { Text } from 'react-native'
 import { Loading } from './src/screens/Loading'
 import { loadFonts } from './src/styles/Font'
@@ -26,7 +27,7 @@ export default function App (): JSX.Element {
   }
   if (loaded !== undefined) {
     try {
-      return <loaded.ConsentoApp />
+      return <SafeAreaProvider><loaded.ConsentoApp /></SafeAreaProvider>
     // eslint-disable-next-line no-unreachable
     } catch (err) {
       return <Text>{`Error: ${err}`}</Text>

@@ -18,6 +18,7 @@ import { RelationContext } from '../model/RelationContext'
 import { VaultContext } from '../model/VaultContext'
 import { Config } from './Config'
 import { Camera } from './Camera'
+import { TextEditor } from './TextEditor'
 
 export const Screens = observer((): JSX.Element => {
   const { user } = useContext(ConsentoContext)
@@ -76,6 +77,10 @@ export const Screens = observer((): JSX.Element => {
       camera: {
         path: 'camera',
         screen: () => <Camera />
+      },
+      textEditor: {
+        path: 'textEditor',
+        screen: () => <TextEditor />
       }
     }, {
       headerMode: 'none',

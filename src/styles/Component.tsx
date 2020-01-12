@@ -36,7 +36,7 @@ function useDefault <T> (value: T | null | undefined, defaultValue: T): T {
 const renderCache: { [key: string]: ViewStyle } = {}
 
 export interface IBaseProps<T extends React.Component, TStyle extends FlexStyle> {
-  targetRef?: React.RefObject<T>
+  targetRef?: React.Ref<T>
   vert?: TRenderGravity
   horz?: TRenderGravity
   style?: TStyle
@@ -46,6 +46,7 @@ export interface IBaseProps<T extends React.Component, TStyle extends FlexStyle>
 
 interface ITextBaseProps extends IBaseProps<NativeText | TextInput, TextStyle> {
   value?: string
+  selectable?: boolean
   onEdit?: (text: string) => any
   onInstantEdit?: (text: string) => any
   onBlur?: () => any
@@ -71,7 +72,7 @@ export interface ISlice9Props extends IBaseProps<View, ViewStyle> {
 export interface IRenderProps<T extends React.Component, TStyle extends FlexStyle> extends IBaseProps<T, TStyle> {
   place: Placement
   item: (opts: {
-    ref?: React.RefObject<T>
+    ref?: React.Ref<T>
     style?: TStyle
   }) => JSX.Element
 }
@@ -103,6 +104,7 @@ export class Component {
         style: applyRenderOptions(props, props.prototype.place, style),
         onEdit: props.onEdit,
         onInstantEdit: props.onInstantEdit,
+        selectable: props.selectable,
         ref,
         onBlur: props.onBlur
       })
@@ -157,7 +159,7 @@ export class Component {
     })
   }
 
-  renderText ({ text, opts, value, style, onEdit, ref, onLayout, onBlur }: { text: Text, opts?: IRenderOptions, value?: string, style?: TextStyle, onEdit?: (text: string) => any, ref?: React.RefObject<TextInput>, onLayout?: () => any, onBlur?: () => any }): JSX.Element {
+  renderText ({ text, opts, value, style, onEdit, ref, onLayout, onBlur }: { text: Text, opts?: IRenderOptions, value?: string, style?: TextStyle, onEdit?: (text: string) => any, ref?: React.Ref<TextInput>, onLayout?: () => any, onBlur?: () => any }): JSX.Element {
     style = applyRenderOptions(opts, text.place, style)
     return this._renderItem(text.render({ value, style, onEdit, ref, onLayout, onBlur }), text.place, opts)
   }
@@ -167,7 +169,7 @@ export class Component {
     return this._renderItem(polygon.RenderRect({ style }), polygon.place, opts)
   }
 
-  renderImage (asset: ImagePlacement, opts?: IRenderOptions, style?: ImageStyle, ref?: React.RefObject<Image>, onLayout?: () => any): JSX.Element {
+  renderImage (asset: ImagePlacement, opts?: IRenderOptions, style?: ImageStyle, ref?: React.Ref<Image>, onLayout?: () => any): JSX.Element {
     style = applyRenderOptions(opts, asset.place, style)
     if (opts.horz === 'stretch' || opts.vert === 'stretch') {
       style.resizeMode = 'stretch'
@@ -322,7 +324,7 @@ export class ImagePlacement {
     })
   }
 
-  img (style?: ImageStyle, ref?: React.RefObject<Image>, onLayout?: () => any): JSX.Element {
+  img (style?: ImageStyle, ref?: React.Ref<Image>, onLayout?: () => any): JSX.Element {
     return this.asset().img(style, ref, onLayout)
   }
 }
@@ -338,7 +340,7 @@ export class Slice9Placement {
     this.parent = parent
   }
 
-  render (style?: ViewStyle, ref?: React.RefObject<View>, onLayout?: () => any): JSX.Element {
+  render (style?: ViewStyle, ref?: React.Ref<View>, onLayout?: () => any): JSX.Element {
     return this.asset().render(style, ref, onLayout)
   }
 }
@@ -564,7 +566,7 @@ export class Polygon {
     })
   }
 
-  RenderRect ({ style, ref, onLayout }: { style?: ViewStyle, ref?: React.RefObject<any>, onLayout?: () => any } = {}): JSX.Element {
+  RenderRect ({ style, ref, onLayout }: { style?: ViewStyle, ref?: React.Ref<any>, onLayout?: () => any } = {}): JSX.Element {
     const data = this.fill.data
     if (data === null) {
       return <View style={{
@@ -604,7 +606,8 @@ export class Polygon {
 export interface ITextRenderOptions {
   value?: string
   style?: TextStyle
-  ref?: React.RefObject<NativeText | TextInput>
+  ref?: React.Ref<NativeText | TextInput>
+  selectable?: boolean
   onLayout?: () => any
   onBlur?: () => any
   onEdit?: (text: string) => any
@@ -642,7 +645,7 @@ export class Text {
     })
   }
 
-  render ({ value, style, onEdit, onInstantEdit, ref, onLayout, onBlur }: ITextRenderOptions): JSX.Element {
+  render ({ value, style, onEdit, onInstantEdit, ref, onLayout, onBlur, selectable }: ITextRenderOptions): JSX.Element {
     value = String(useDefault(value, this.text))
     const originalValue = value
     if (exists(onEdit) || exists(onInstantEdit)) {
@@ -657,7 +660,7 @@ export class Text {
             onEdit(value)
           }
         }}
-        onLayout={onLayout} onBlur={onBlur} ref={ref as React.RefObject<TextInput>} style={{
+        onLayout={onLayout} onBlur={onBlur} ref={ref as React.Ref<TextInput>} style={{
           ...this.style,
           ...style
         }}>{value}</TextInput>
@@ -666,7 +669,7 @@ export class Text {
       onLayout={onLayout} ref={ref} style={{
         ...this.style,
         ...style
-      }}>{value}</NativeText>
+      }} selectable={selectable}>{value}</NativeText>
   }
 
   renderAbsolute (opts: ITextRenderOptions): JSX.Element {

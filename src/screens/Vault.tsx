@@ -28,8 +28,12 @@ const lockStyle: ViewStyle = {
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 const noop = (): void => {}
 
+const VaultData = withNavigation(({ navigation }: { navigation: TNavigation }) => {
+  return <EmptyView prototype={elementVaultEmpty} onAdd={() => navigation.navigate('camera')} />
+})
+
 const VaultNavigator = createTabBar({
-  vaultData: () => <EmptyView prototype={elementVaultEmpty} onAdd={noop} />,
+  vaultData: () => <VaultData />,
   vaultLocks: () => <EmptyView prototype={elementLocksEmpty} />,
   vaultLog: () => <Logs />
 })

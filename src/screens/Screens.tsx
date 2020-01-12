@@ -1,5 +1,6 @@
 import React, { useContext } from 'react'
 import { View } from 'react-native'
+import { observer } from 'mobx-react'
 import { createAppContainer, withNavigation } from 'react-navigation'
 import { createStackNavigator } from 'react-navigation-stack'
 import { createBottomTabBar } from './components/createBottomTabBar'
@@ -16,7 +17,7 @@ import { ConsentoContext } from '../model/ConsentoContext'
 import { RelationContext } from '../model/RelationContext'
 import { VaultContext } from '../model/VaultContext'
 import { Config } from './Config'
-import { observer } from 'mobx-react'
+import { Camera } from './Camera'
 
 export const Screens = observer((): JSX.Element => {
   const { user } = useContext(ConsentoContext)
@@ -71,6 +72,10 @@ export const Screens = observer((): JSX.Element => {
       config: {
         path: 'config',
         screen: () => <Config />
+      },
+      camera: {
+        path: 'camera',
+        screen: () => <Camera />
       }
     }, {
       headerMode: 'none',

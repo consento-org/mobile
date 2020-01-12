@@ -1,95 +1,17 @@
 import React, { useState, useContext } from 'react'
 import { View, Text, ViewStyle, TouchableOpacity } from 'react-native'
-import { Camera } from 'expo-camera'
 import { BarCodeScanningResult } from 'expo-camera/build/Camera.types'
 import { screen09ScanQRCode } from '../styles/component/screen09ScanQRCode'
-import { usePermission, Permissions } from '../util/usePermission'
 import { useVUnits } from '../util/useVUnits'
 import { topPadding } from '../styles'
 import { withNavigation, TNavigation } from './navigation'
 import { useHandshake, isInitLink, IncomingState } from '../model/useHandshake'
-import { ConsentoButton } from './components/ConsentoButton'
+import { CameraContainer } from './components/CameraContainer'
 import { exists } from '../util/exists'
 import QRCode from 'react-native-qrcode-svg'
 import Svg, { Path } from 'react-native-svg'
 import { ConsentoContext } from '../model/ConsentoContext'
 import { fromConnection } from '../model/Relation'
-
-interface ISize {
-  width: number
-  height: number
-  size: string
-  ratio: string
-  space: number
-}
-
-let biggestSize: Promise<ISize>
-
-async function getBiggestSize (camera: Camera): Promise<ISize> {
-  if (biggestSize === undefined) {
-    biggestSize = (async () => {
-      const ratios = await camera.getSupportedRatiosAsync()
-      const sizeLists = (await Promise.all(ratios.map(async ratio => camera
-        .getAvailablePictureSizesAsync(ratio)
-        .then(sizes => ({ ratio, sizes }))
-        .catch(_ => null)
-      ))).reduce((sizeLists, entry) => {
-        if (entry === null) {
-          return sizeLists
-        }
-        const { ratio, sizes } = entry
-        for (const size of sizes) {
-          const [wStr, hStr] = /(\d+)x(\d+)/.exec(size).slice(1)
-          const width = parseInt(wStr, 10)
-          const height = parseInt(hStr, 10)
-          const space = width * height
-          sizeLists.push({ size, ratio, width, height, space })
-        }
-        return sizeLists
-      }, [] as ISize[])
-      return sizeLists.sort((a, b) => {
-        if (a.space > b.space) return -1
-        if (a.space < b.space) return 1
-        return 0
-      })[0]
-    })()
-  }
-  return biggestSize
-    .catch(async err => {
-      biggestSize = undefined
-      return Promise.reject(err)
-    })
-}
-
-interface Size {
-  width: number
-  height: number
-}
-
-function calculateCameraSize (space: Size, cameraSize: Size): ViewStyle {
-  const cameraRatio = cameraSize.width / cameraSize.height
-  const spaceRatio = space.width / space.height
-  if (cameraRatio < spaceRatio) {
-    const height = space.width / cameraSize.width * cameraSize.height
-    return {
-      width: space.width,
-      height,
-      top: (space.height - height) / 2
-    }
-  }
-  const width = space.height / cameraSize.height * cameraSize.width
-  return {
-    width,
-    height: space.height,
-    left: (space.width - width) / 2
-  }
-}
-
-function updateCamera (camera: Camera, setSize: (size: ISize) => any): void {
-  getBiggestSize(camera)
-    .then(setSize)
-    .catch(_ => setTimeout(updateCamera, 100, camera, setSize)) // Sometimes the camera is not immediately running, retrying again in 100ms is not a bad plan
-}
 
 const barContainer: ViewStyle = {
   position: 'absolute',
@@ -122,12 +44,8 @@ const retryButtonStyle: ViewStyle = {
 }
 
 export const NewRelation = withNavigation(({ navigation }: { navigation: TNavigation }) => {
-  const { status, reask } = usePermission(Permissions.CAMERA, error => {
-    console.log(`Error while fetching permissions: ${error}`)
-  })
   const { user } = useContext(ConsentoContext)
   const { vw, vh, isHorz, isVert } = useVUnits()
-  const [size, setSize] = useState<ISize>(undefined)
   // eslint-disable-next-line @typescript-eslint/require-await
   const { incoming, outgoing, connect } = useHandshake(async (connection): Promise<void> => {
     try {
@@ -151,7 +69,7 @@ export const NewRelation = withNavigation(({ navigation }: { navigation: TNaviga
     justifyContent: isHorz ? 'flex-end' : 'center'
   }
 
-  const camSpace: Size = {
+  const camSpace = {
     height: isHorz ? vh(100) : vh(100) - qrSpace,
     width: isHorz ? vw(100) - qrSpace : vw(100)
   }
@@ -168,37 +86,6 @@ export const NewRelation = withNavigation(({ navigation }: { navigation: TNaviga
     ...cutOutRect
   }
 
-  let cameraStyle: ViewStyle = {
-    position: 'absolute'
-  }
-
-  const camStyle: ViewStyle = {
-    flexGrow: 1,
-    position: 'relative',
-    backgroundColor: '#000',
-    display: 'flex',
-    flexDirection: 'row',
-    alignContent: 'stretch',
-    ...camSpace
-  }
-
-  if (size !== undefined) {
-    if (isHorz) {
-      cameraStyle = {
-        ...cameraStyle,
-        ...calculateCameraSize(camSpace, size)
-      }
-    } else {
-      cameraStyle = {
-        ...cameraStyle,
-        ...calculateCameraSize(camSpace, {
-          height: size.width,
-          width: size.height
-        })
-      }
-    }
-  }
-
   const cutOutG = `M0 0 L0 ${camSpace.height} L${camSpace.width} ${camSpace.height} L${camSpace.width} 0 z M${cutOut.left} ${cutOut.top} L${cutOut.left} ${cutOutRect.top + cutOutRect.height} L${cutOutRect.left + cutOutRect.width} ${cutOutRect.top + cutOutRect.height} L${cutOutRect.left + cutOutRect.width} ${cutOut.top} z`
 
   function onCode (code: BarCodeScanningResult): void {
@@ -212,38 +99,28 @@ export const NewRelation = withNavigation(({ navigation }: { navigation: TNaviga
 
   return <View style={{ width: '100%', height: '100%', display: 'flex', flexDirection: isHorz ? 'row' : 'column', backgroundColor: screen09ScanQRCode.backgroundColor }}>
     <Text style={{ position: 'absolute', borderRadius: 20, top: topPadding, padding: 10, backgroundColor: '#fff', color: '#000', zIndex: 10 }}>{String(exists(outgoing) ? outgoing.state : '')}</Text>
-    <View style={camStyle}>
-      <View style={{ position: 'absolute', ...camSpace, overflow: 'hidden' }}>
-        {status === 'granted'
-          ? <View>
-            <Camera ref={camera => updateCamera(camera, setSize)} ratio={size !== undefined ? size.ratio : undefined} style={cameraStyle} onBarCodeScanned={onCode} />
-            <Svg viewBox={`0 0 ${camSpace.width} ${camSpace.height}`} style={{ ...camSpace, position: 'absolute' }}>
-              <Path fill={screen09ScanQRCode.shadow.fill.color} d={cutOutG} fillRule='evenodd' />
-            </Svg>
-            <View style={cutOutContainer}>
-              <View style={cutOut}>
-                <View style={{ ...barContainer, alignItems: 'flex-start' }}>
-                  {screen09ScanQRCode.topLeft.img()}
-                  {screen09ScanQRCode.topRight.img()}
-                </View>
-                <View style={{ ...barContainer, top: '50%', alignItems: 'flex-end' }}>
-                  {screen09ScanQRCode.bottomLeft.img()}
-                  {screen09ScanQRCode.bottomRight.img()}
-                </View>
-              </View>
-            </View>
+    <CameraContainer style={camSpace} onCode={onCode}>
+      <Svg viewBox={`0 0 ${camSpace.width} ${camSpace.height}`} style={{ ...camSpace, position: 'absolute' }}>
+        <Path fill={screen09ScanQRCode.shadow.fill.color} d={cutOutG} fillRule='evenodd' />
+      </Svg>
+      <View style={cutOutContainer}>
+        <View style={cutOut}>
+          <View style={{ ...barContainer, alignItems: 'flex-start' }}>
+            {screen09ScanQRCode.topLeft.img()}
+            {screen09ScanQRCode.topRight.img()}
           </View>
-          : <View style={{ paddingTop: topPadding + 50, display: 'flex', alignContent: 'center', justifyContent: 'center', alignItems: 'center', width: '100%', height: '100%' }}>
-            <Text style={{ ...screen09ScanQRCode.permission.style, marginBottom: screen09ScanQRCode.retry.place.top - screen09ScanQRCode.permission.place.bottom }}>{screen09ScanQRCode.permission.text}</Text>
-            <ConsentoButton light title={screen09ScanQRCode.retry.text.label} style={screen09ScanQRCode.retry.place.size()} onPress={() => reask()} />
-          </View>}
+          <View style={{ ...barContainer, top: '50%', alignItems: 'flex-end' }}>
+            {screen09ScanQRCode.bottomLeft.img()}
+            {screen09ScanQRCode.bottomRight.img()}
+          </View>
+        </View>
       </View>
       <TouchableOpacity
         style={retryButtonStyle}
         onPress={() => navigation.goBack()}>
         {screen09ScanQRCode.close.img()}
       </TouchableOpacity>
-    </View>
+    </CameraContainer>
     <View style={qrStyle}>
       <View style={{ margin: screen09ScanQRCode.code.place.left }}>
         {

@@ -166,6 +166,30 @@ export const Asset = {
   iconBackGrey () {
     return images.fetch('iconBackGrey', () => require('../assets/icon/back/grey.png'))
   },
+  iconCameraFlashAuto () {
+    return images.fetch('iconCameraFlashAuto', () => require('../assets/icon/camera/flash/auto.png'))
+  },
+  iconCameraFlashOff () {
+    return images.fetch('iconCameraFlashOff', () => require('../assets/icon/camera/flash/off.png'))
+  },
+  iconCameraFlashOn () {
+    return images.fetch('iconCameraFlashOn', () => require('../assets/icon/camera/flash/on.png'))
+  },
+  iconCameraFlip () {
+    return images.fetch('iconCameraFlip', () => require('../assets/icon/camera/flip.png'))
+  },
+  iconCameraShutterActive () {
+    return images.fetch('iconCameraShutterActive', () => require('../assets/icon/camera/shutter/active.png'))
+  },
+  iconCameraShutterNormal () {
+    return images.fetch('iconCameraShutterNormal', () => require('../assets/icon/camera/shutter/normal.png'))
+  },
+  iconCameraZoomMinus () {
+    return images.fetch('iconCameraZoomMinus', () => require('../assets/icon/camera/zoom/minus.png'))
+  },
+  iconCameraZoomPlus () {
+    return images.fetch('iconCameraZoomPlus', () => require('../assets/icon/camera/zoom/plus.png'))
+  },
   iconCloseFilled () {
     return images.fetch('iconCloseFilled', () => require('../assets/icon/close/filled.png'))
   },

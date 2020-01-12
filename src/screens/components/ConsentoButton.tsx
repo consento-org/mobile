@@ -37,19 +37,14 @@ const lightStyle = {
   ...buttonContainerLight.label.style
 }
 
-export interface IButtonStyle extends ViewStyle {
-  width: number
-  height: number
-}
-
 export interface IButtonProps {
   title?: string
   enabled?: boolean
   disabled?: boolean
   light?: boolean
   thin?: boolean
-  style?: IButtonStyle
-  styleDisabled?: IButtonStyle
+  style?: ViewStyle
+  styleDisabled?: ViewStyle
   proto?: Link<ButtonContainerDisabledClass | ButtonContainerEnabledClass | ButtonContainerLightClass, { label: string }>
   onPress?: () => void
 }

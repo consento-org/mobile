@@ -12,6 +12,7 @@ import { Loading } from './screens/Loading'
 import { cryptoCore } from './cryptoCore'
 import isURL from 'is-url-superb'
 import { observer } from 'mobx-react'
+import { ContextMenu } from './screens/components/ContextMenu'
 
 export const ConsentoApp = observer((): JSX.Element => {
   const [api, setAPI] = useState<IAPI>()
@@ -82,9 +83,11 @@ export const ConsentoApp = observer((): JSX.Element => {
   }
 
   const ctx = { user, api, users }
-  return <ConsentoContext.Provider value={ctx}>
-    <Screens />
-  </ConsentoContext.Provider>
+  return <ContextMenu>
+    <ConsentoContext.Provider value={ctx}>
+      <Screens />
+    </ConsentoContext.Provider>
+  </ContextMenu>
 })
 
 export default ConsentoApp

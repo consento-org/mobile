@@ -84,6 +84,15 @@ export const TITLERobotoSmallCapRegular12GreyCenter: TextStyle = Object.freeze({
   textAlignVertical: 'center'
 })
 
+export const TITLERobotoSmallCapRegular12BlackLeft: TextStyle = Object.freeze({
+  color: Color.black,
+  fontFamily: Font.RobotoRegular,
+  fontSize: 12,
+  textAlign: 'center',
+  textTransform: 'uppercase',
+  textAlignVertical: 'center'
+})
+
 export const SubtitleRobotoRegular13BlackCenter: TextStyle = Object.freeze({
   color: Color.black,
   fontFamily: Font.RobotoRegular,
@@ -219,6 +228,15 @@ export const BodyRobotoRegular18BlackCenter: TextStyle = Object.freeze({
   textAlignVertical: 'top'
 })
 
+export const BodyRobotoRegular18RedLeft: TextStyle = Object.freeze({
+  color: Color.red,
+  fontFamily: Font.RobotoRegular,
+  fontSize: 18,
+  textAlign: 'left',
+  textTransform: 'none',
+  textAlignVertical: 'top'
+})
+
 export const time: TextStyle = Object.freeze({
   color: Color.black,
   fontFamily: Font.RobotoRegular,
@@ -274,6 +292,7 @@ export const TextStyles = {
   TITLERobotoSmallCapRegular12BlueCenter,
   TITLERobotoSmallCapRegular12RedCenter,
   TITLERobotoSmallCapRegular12GreyCenter,
+  TITLERobotoSmallCapRegular12BlackLeft,
   SubtitleRobotoRegular13BlackCenter,
   SubtitleRobotoRegular13GreyCenter,
   SubtitleRobotoBold13BlackCenter,
@@ -289,6 +308,7 @@ export const TextStyles = {
   BodyRobotoRegular18BlueLeft,
   BodyRobotoRegular18BlackLeft,
   BodyRobotoRegular18BlackCenter,
+  BodyRobotoRegular18RedLeft,
   time,
   waiting,
   LineDivider,

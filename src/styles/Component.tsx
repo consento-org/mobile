@@ -1,14 +1,14 @@
 // This file has been generated with expo-export, a Sketch plugin.
 import React from 'react'
 import { ImageAsset, Slice9 } from '../Asset'
-import { Image, ImageStyle, TextStyle, TextInput, Text as NativeText, View, ViewStyle, FlexStyle, TouchableOpacity } from 'react-native'
+import { Image, ImageStyle, TextStyle, TextInput, Text as NativeText, View, ViewStyle, FlexStyle, TouchableOpacity, GestureResponderEvent } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 
 export type TRenderGravity = 'start' | 'end' | 'center' | 'stretch'
 export interface IRenderOptions {
   vert?: TRenderGravity
   horz?: TRenderGravity
-  onPress?: () => any
+  onPress?: (event: GestureResponderEvent) => any
   onLayout?: () => any
 }
 
@@ -40,7 +40,7 @@ export interface IBaseProps<T extends React.Component, TStyle extends FlexStyle>
   vert?: TRenderGravity
   horz?: TRenderGravity
   style?: TStyle
-  onPress?: () => any
+  onPress?: (event: GestureResponderEvent) => any
   onLayout?: () => any
 }
 

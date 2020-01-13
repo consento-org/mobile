@@ -1,11 +1,12 @@
-import React, { useState, createContext } from 'react'
-import { View, ViewStyle, Text, TextStyle } from 'react-native'
+import React, { useState, createContext, useEffect } from 'react'
+import { View, ViewStyle, Text, TextStyle, GestureResponderEvent, BackHandler } from 'react-native'
 import { elementPopUpMenu } from '../../styles/component/elementPopUpMenu'
 import { TouchableWithoutFeedback, TouchableOpacity } from 'react-native-gesture-handler'
 
-export interface IPopupMenuItem {
+export interface IPopupMenuItem<T = any> {
   name: string
-  action (): void
+  dangerous?: boolean
+  action (context: T, event: GestureResponderEvent): any
 }
 
 const style: ViewStyle = {
@@ -34,8 +35,8 @@ const itemStyle: TextStyle = {
 
 const { borderRadius } = elementPopUpMenu.buttonBg
 
-interface IPopupContext {
-  open (): void
+export interface IPopupContext {
+  open <T> (actions: Array<IPopupMenuItem<T>>, context?: T, event?: GestureResponderEvent): void
   close (): void
 }
 
@@ -49,30 +50,43 @@ export const PopupContext = createContext<IPopupContext>({
 })
 
 export interface IPopupMenuProps {
-  items: IPopupMenuItem[]
   children?: React.ReactChild | React.ReactChild[]
 }
 
-export const PopupMenu = ({ items, children }: IPopupMenuProps): JSX.Element => {
-  const [visible, setVisible] = useState<boolean>(false)
-  const open = (): void => setVisible(true)
-  const close = (): void => setVisible(false)
+export const PopupMenu = ({ children }: IPopupMenuProps): JSX.Element => {
+  const [active, setActive] = useState<{
+    context: any
+    items: IPopupMenuItem[]
+  }>(null)
+  const open = (items: IPopupMenuItem[], context: any): void => setActive({ context, items })
+  const close = (): void => setActive(null)
+
+  useEffect(() => {
+    if (active === null) return
+    const lockBackHandler = (): boolean => {
+      close()
+      return true
+    }
+    BackHandler.addEventListener('hardwareBackPress', lockBackHandler)
+    return () => BackHandler.removeEventListener('hardwareBackPress', lockBackHandler)
+  }, [active !== null])
+
   return <PopupContext.Provider value={{ open, close }}>
     <View style={{ position: 'absolute', width: '100%', height: '100%' }}>
       {children}
-      {visible ? <PopupMenuDisplay
-        items={items}
-        onItemSelect={item => {
-          setVisible(false)
+      {active !== null ? <PopupMenuDisplay
+        items={active.items}
+        onItemSelect={(item, event) => {
+          setActive(null)
           // eslint-disable-next-line no-unused-expressions
-          item?.action()
-        }} /> : null}
+          item?.action(active.context, event)
+        }} /> : <></>}
     </View>
   </PopupContext.Provider>
 }
 
-export const PopupMenuDisplay = ({ items, onItemSelect }: { items?: IPopupMenuItem[], onItemSelect: (item?: IPopupMenuItem) => any }): JSX.Element => {
-  const cancel = (): void => onItemSelect(null)
+export const PopupMenuDisplay = ({ items, onItemSelect }: { items?: IPopupMenuItem[], onItemSelect: (item: IPopupMenuItem, event: GestureResponderEvent) => void }): JSX.Element => {
+  const cancel = (): void => onItemSelect(null, null)
   return <View style={{
     position: 'absolute',
     width: '100%',
@@ -92,8 +106,8 @@ export const PopupMenuDisplay = ({ items, onItemSelect }: { items?: IPopupMenuIt
         borderTopLeftRadius: borderRadius
       }}>{elementPopUpMenu.description.text}</Text>
       {
-        items?.map(item =>
-          <TouchableOpacity containerStyle={{ width: '100%' }} activeOpacity={0.8} onPress={() => onItemSelect(item)}>
+        items?.map((item, index) =>
+          <TouchableOpacity containerStyle={{ width: '100%' }} key={index} activeOpacity={0.8} onPress={event => onItemSelect(item, event)}>
             <Text style={{
               ...elementPopUpMenu.createText.style,
               ...itemStyle,

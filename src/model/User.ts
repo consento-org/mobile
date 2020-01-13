@@ -30,6 +30,7 @@ const patchToJSONPatch = (patch: Patch): IJSONPatch => {
 
 function displayError (error: Error): void {
   setTimeout(() => {
+    console.log('USER ERROR')
     console.error(error)
   }, 0)
 }

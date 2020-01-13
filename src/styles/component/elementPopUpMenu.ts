@@ -31,7 +31,10 @@ export class ElementPopUpMenuClass extends Component {
       textTransform: 'none',
       textAlignVertical: 'center'
       }, { x: 10, y: 681.05, w: 355, h: 55 }, this)
-    this.createText = new Text('Create text file', TextStyles.BodyRobotoRegular18BlueCenter, { x: 10, y: 624, w: 355, h: 56.55 }, this)
+    this.createText = new Text('Create text file', {
+      ...TextStyles.BodyRobotoRegular18BlueCenter,
+      textAlignVertical: 'center'
+    }, { x: 10, y: 624, w: 355, h: 56.55 }, this)
     this.takePicture = new Text('Take picture', {
       ...TextStyles.BodyRobotoRegular18BlueCenter,
       textAlignVertical: 'center'

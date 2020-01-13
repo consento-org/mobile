@@ -205,6 +205,9 @@ export const Asset = {
   iconDeleteGrey () {
     return images.fetch('iconDeleteGrey', () => require('../assets/icon/delete/grey.png'))
   },
+  iconDotsHorizontal () {
+    return images.fetch('iconDotsHorizontal', () => require('../assets/icon/dots/horizontal.png'))
+  },
   iconEditGrey () {
     return images.fetch('iconEditGrey', () => require('../assets/icon/edit/grey.png'))
   },

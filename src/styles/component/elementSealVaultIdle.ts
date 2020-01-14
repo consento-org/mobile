@@ -1,6 +1,7 @@
 // This file has been generated with expo-export, a Sketch plugin.
 import { Component, Link, Polygon } from '../Component'
 import { buttonContainerDisabled } from './buttonContainerDisabled'
+import { Color } from '../Color'
 
 /* eslint-disable lines-between-class-members */
 export class ElementSealVaultIdleClass extends Component {
@@ -9,7 +10,7 @@ export class ElementSealVaultIdleClass extends Component {
   })
   borderBottom: Polygon
   constructor () {
-    super('elementSealVaultIdle', 360, 60)
+    super('elementSealVaultIdle', 360, 60, Color.grey)
     this.borderBottom = new Polygon({ x: 0, y: 58.25, w: 360, h: 2 }, null, {
       fill: '#d9d9d9ff',
       thickness: 1,

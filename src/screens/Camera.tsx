@@ -134,7 +134,7 @@ export const Camera = ({ onPicture }: ICameraProps): JSX.Element => {
       : Asset.iconCameraFlashOff()
 
   return <View style={containerStyle}>
-    <CameraContainer style={{ width: vw(100), height: vh(100) }} zoom={zoom} type={direction} ref={ref} flashMode={flashMode} onCameraReady={onCameraReady} />
+    <CameraContainer style={{ width: vw(100), height: vh(100) }} zoom={zoom} type={direction} ref={ref} flashMode={flashMode} />
     <flash.component
       style={{
         position: 'absolute',

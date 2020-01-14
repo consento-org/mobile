@@ -70,6 +70,10 @@ export const vaultRefInUser = customRef<Vault>('consento/Vault#inUser', {
   }
 })
 
+function isNotSecretPatch (patch: IJSONPatch): boolean {
+  return !/^\/vaults\/\d+\/dataSecretBase64\//.test(patch.path)
+}
+
 @model('consento/User')
 export class User extends Model({
   name: tProp(types.string),
@@ -126,8 +130,20 @@ export class User extends Model({
     const stopPatches = onPatches(this, patches => {
       if (stopped) return
       if (snapshotLock) return
-      // TODO: How often shoult the snapshotter be persisted? Every 20th patch? Every 10 minutes?
-      store.append(patches.map(patchToJSONPatch)).catch(displayError)
+      const jsonPatches = patches.map(patchToJSONPatch).filter(isNotSecretPatch)
+      const storePatches: IJSONPatch[] = []
+      for (const patch of jsonPatches) {
+        const vaultParts = /^\/vaults\/(\d+)\/data\//.exec(patch.path)
+        if (vaultParts !== null) {
+          console.log({ vaultPatch: patch, vaultParts })
+        } else {
+          storePatches.push(patch)
+        }
+      }
+      if (jsonPatches.length > 0) {
+        // TODO: How often should the snapshotter be persisted? Every 20th patch? Every 10 minutes? A combination?
+        store.append(storePatches).catch(displayError)
+      }
     })
     return () => {
       stopped = true

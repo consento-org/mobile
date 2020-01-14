@@ -4,6 +4,7 @@ import { Connection } from './Connection'
 import { RequestBase } from './RequestBase'
 import { Buffer } from 'buffer'
 import randomBytes from '@consento/sync-randombytes'
+import { VaultData } from './VaultData'
 
 export enum TVaultState {
   open = 'open',
@@ -52,12 +53,14 @@ export interface IImage {
 export class Vault extends Model({
   name: tProp(types.maybeNull(types.string), () => randomBytes(Buffer.alloc(4)).toString('hex')),
   connections: prop<Connection[]>(() => []),
-  accessLog: prop<VaultAccessEntry[]>(() => [])
+  accessLog: prop<VaultAccessEntry[]>(() => []),
+  dataKeyHex: tProp(types.string, () => randomBytes(Buffer.alloc(32)).toString('hex')),
+  dataSecretBase64: tProp(types.maybeNull(types.string), () => null),
+  data: tProp(types.maybeNull(types.model(VaultData)), () => null)
 }) {
   // root: Folder
   log: VaultLogEntry[]
   images: { [key: string]: IImage } = {}
-  _data: null
 
   findImage (imageKey: string): IImage {
     return this.images[imageKey]
@@ -99,10 +102,6 @@ export class Vault extends Model({
     this.accessLog.push(new VaultOpen({}))
   }
 
-  get data (): any {
-    return this._data
-  }
-
   @computed get isOpen (): boolean {
     return this.state === TVaultState.open
   }
@@ -112,13 +111,14 @@ export class Vault extends Model({
   }
 
   @computed get state (): TVaultState {
-    if (this._data !== null) {
-      return TVaultState.open
-    }
-    const entry = this.accessLog[this.accessLog.length - 1]
-    if (entry instanceof VaultOpenRequest && entry.isActive) {
-      return TVaultState.pending
-    }
-    return TVaultState.locked
+    // if (this._data !== null) {
+    //   return TVaultState.open
+    // }
+    // const entry = this.accessLog[this.accessLog.length - 1]
+    // if (entry instanceof VaultOpenRequest && entry.isActive) {
+    //   return TVaultState.pending
+    // }
+    // return TVaultState.locked
+    return TVaultState.open
   }
 }

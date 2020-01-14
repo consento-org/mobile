@@ -51,7 +51,7 @@ export const Config = withNavigation(
           onPress: () => {
             setDeleting(true)
             // eslint-disable-next-line @typescript-eslint/no-floating-promises
-            rimraf('', (state) => console.log(state)).finally(() => {
+            rimraf('').finally(() => {
               const user = users.items[0]
               users.add(createDefaultUser())
               users.delete(user)

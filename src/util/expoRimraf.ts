@@ -5,7 +5,7 @@ export interface IDeleteState {
   current: number
 }
 
-async function _rimraf (folder: string, update: (state: IDeleteState) => void, state: IDeleteState) {
+async function _rimraf (folder: string, update: (state: IDeleteState) => void, state: IDeleteState): Promise<void> {
   const entries = await readDirectoryAsync(folder)
   state.total += entries.length
   await Promise.all(entries.map(async entry => {

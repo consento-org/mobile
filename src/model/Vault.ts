@@ -42,7 +42,7 @@ export class AccessOperation extends Model({
 }) {}
 
 export interface IImage {
-  uri: string
+  secretKey: string | Uint8Array
   width: number
   height: number
   exif: { [key: string]: any }

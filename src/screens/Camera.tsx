@@ -9,6 +9,7 @@ import { Polygon, ImagePlacement } from '../styles/Component'
 import { topPadding } from '../styles'
 import { Asset } from '../Asset'
 import { IImage } from '../model/Vault'
+import { importFile } from '../util/expoSecureBlobStore'
 
 const containerStyle: ViewStyle = {
   backgroundColor: elementCamera.backgroundColor,
@@ -89,16 +90,19 @@ export const Camera = ({ onPicture }: ICameraProps): JSX.Element => {
       console.log('Error while trying to take picture: reference is not properly set!')
       return
     }
-    ref.current.takePictureAsync({
-      exif: true
-    })
-      .then(capture => {
-        // TODO: move to encrypted store
-        onPicture(capture as IImage)
+    (async (): Promise<void> => {
+      const capture = await ref.current.takePictureAsync({
+        quality: 0.4,
+        exif: true
       })
-      .catch(error => {
-        console.error(error)
+      const blob = await importFile(capture.uri)
+      onPicture({
+        secretKey: blob.secretKey,
+        width: capture.width,
+        height: capture.height,
+        exif: capture.exif
       })
+    })().catch(err => console.error(err))
   }
 
   const toggleFlash = (): void => {

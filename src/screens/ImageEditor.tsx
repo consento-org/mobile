@@ -1,7 +1,7 @@
 import React from 'react'
-import { Image } from 'react-native'
 import { Editor } from './components/Editor'
 import { IImage } from '../model/Vault'
+import { SecureImage } from './components/SecureImage'
 
 export interface IImageEditorProps {
   image: IImage
@@ -9,8 +9,8 @@ export interface IImageEditorProps {
 
 export const ImageEditor = ({ image }: IImageEditorProps): JSX.Element => {
   return <Editor>
-    <Image
-      source={{ uri: image.uri }}
+    <SecureImage
+      secretKey={image}
       resizeMode='contain'
       style={{
         width: '100%',

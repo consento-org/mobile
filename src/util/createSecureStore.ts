@@ -24,10 +24,16 @@ export interface IEncoding <Type> {
   fromBuffer: (buffer: Uint8Array) => Type
 }
 
+export interface IStoreEntry {
+  exists: boolean
+  isDirectory: boolean
+}
+
 export interface IStore {
   read: (path: string[]) => Promise<Uint8Array>
   write: (path: string[], part: Uint8Array) => Promise<void>
   delete: (path: string[]) => Promise<void>
+  info: (path: string[]) => Promise<IStoreEntry>
   list: (path: string[]) => Promise<string[]>
 }
 

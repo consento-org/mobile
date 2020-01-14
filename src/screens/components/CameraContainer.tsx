@@ -37,36 +37,41 @@ function calculateCameraSize (space: ISpace, cameraSize: ISpace): ViewStyle {
   }
 }
 
-let biggestSize: Promise<ICameraNativeSize>
+async function getBestSize (camera: Camera, algo: (sizeLists: ICameraNativeSize[]) => ICameraNativeSize): Promise<ICameraNativeSize> {
+  const ratios = await camera.getSupportedRatiosAsync()
+  const sizeLists = (await Promise.all(ratios.map(async ratio => camera
+    .getAvailablePictureSizesAsync(ratio)
+    .then(sizes => ({ ratio, sizes }))
+    .catch(_ => null)
+  ))).reduce((sizeLists, entry) => {
+    if (entry === null) {
+      return sizeLists
+    }
+    const { ratio, sizes } = entry
+    for (const size of sizes) {
+      const [wStr, hStr] = /(\d+)x(\d+)/.exec(size).slice(1)
+      const width = parseInt(wStr, 10)
+      const height = parseInt(hStr, 10)
+      const space = width * height
+      sizeLists.push({ size, ratio, width, height, space })
+    }
+    return sizeLists
+  }, [] as ICameraNativeSize[]).sort((a, b) => {
+    if (a.space > b.space) return -1
+    if (a.space < b.space) return 1
+    return 0
+  })
+  return algo(sizeLists)
+}
 
+/*
+let biggestSize: Promise<ICameraNativeSize>
 async function getBiggestSize (camera: Camera): Promise<ICameraNativeSize> {
   if (biggestSize === undefined) {
-    biggestSize = (async () => {
-      const ratios = await camera.getSupportedRatiosAsync()
-      const sizeLists = (await Promise.all(ratios.map(async ratio => camera
-        .getAvailablePictureSizesAsync(ratio)
-        .then(sizes => ({ ratio, sizes }))
-        .catch(_ => null)
-      ))).reduce((sizeLists, entry) => {
-        if (entry === null) {
-          return sizeLists
-        }
-        const { ratio, sizes } = entry
-        for (const size of sizes) {
-          const [wStr, hStr] = /(\d+)x(\d+)/.exec(size).slice(1)
-          const width = parseInt(wStr, 10)
-          const height = parseInt(hStr, 10)
-          const space = width * height
-          sizeLists.push({ size, ratio, width, height, space })
-        }
-        return sizeLists
-      }, [] as ICameraNativeSize[])
-      return sizeLists.sort((a, b) => {
-        if (a.space > b.space) return -1
-        if (a.space < b.space) return 1
-        return 0
-      })[0]
-    })()
+    biggestSize = getBestSize(camera, (sizeLists: ICameraNativeSize[]) => {
+      // console.log(sizeLists)
+      return sizeLists[0]
+    })
   }
   return biggestSize
     .catch(async err => {
@@ -74,9 +79,32 @@ async function getBiggestSize (camera: Camera): Promise<ICameraNativeSize> {
       return Promise.reject(err)
     })
 }
+*/
+
+let minCameraSize: Promise<ICameraNativeSize>
+async function getMinCameraSize (camera: Camera, minSpace: number): Promise<ICameraNativeSize> {
+  if (minCameraSize === undefined) {
+    minCameraSize = getBestSize(camera, (sizeLists: ICameraNativeSize[]): ICameraNativeSize => {
+      sizeLists = sizeLists.reverse()
+      let biggest: ICameraNativeSize = sizeLists[0]
+      for (const sizeList of sizeLists) {
+        if (sizeList.space >= minSpace) {
+          return sizeList
+        }
+        biggest = sizeList
+      }
+      return biggest
+    })
+  }
+  return minCameraSize
+    .catch(async err => {
+      minCameraSize = undefined
+      return Promise.reject(err)
+    })
+}
 
 function updateCamera (camera: Camera, setNativeSize: (size: ICameraNativeSize) => any): void {
-  getBiggestSize(camera)
+  getMinCameraSize(camera, 921600)
     .then(setNativeSize)
     .catch(err => {
       console.log(`Notice: trying to update the native size doesn't always work, here is this times error: ${err}`)
@@ -142,6 +170,7 @@ export const CameraContainer = forwardRef(({ onCode, children, style, zoom, flas
       <ConsentoButton proto={elementCamera.retry} style={{ left: null, top: null }} onPress={reask} />
     </View>
   } else if (nativeSize !== undefined) {
+    console.log({ nativeSize })
     cameraStyle = {
       ...cameraStyle,
       ...calculateCameraSize(style, isHorz ? nativeSize : {

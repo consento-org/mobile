@@ -19,6 +19,7 @@ import { VaultContext } from '../model/VaultContext'
 import { Config } from './Config'
 import { Camera } from './Camera'
 import { TextEditor } from './TextEditor'
+import { ImageEditor } from './ImageEditor'
 
 export const Screens = observer((): JSX.Element => {
   const { user } = useContext(ConsentoContext)
@@ -40,30 +41,26 @@ export const Screens = observer((): JSX.Element => {
             const { navigation } = this.props
             const vaultKey = navigation.state.params.vault
             const vault = user.findVault(vaultKey)
-            if (vault instanceof VaultModel) {
-              return <VaultContext.Provider value={{ vault }}>
-                <Vault />
-              </VaultContext.Provider>
+            if (!(vault instanceof VaultModel)) {
+              return <View /> // TODO: Return 404?
             }
-            return <View /> // TODO: Return 404?
+            return <VaultContext.Provider value={{ vault }}>
+              <Vault />
+            </VaultContext.Provider>
           }
         })
       },
       relation: {
         path: 'relation',
-        screen: withNavigation(class extends React.Component<{ navigation: TNavigation }, {}> {
-          static router = VaultRouter
-          render (): JSX.Element {
-            const { navigation } = this.props
-            const relationKey = navigation.state.params.relation
-            const relation = user.findRelation(relationKey)
-            if (relation instanceof RelationModel) {
-              return <RelationContext.Provider value={{ relation }}>
-                <Relation />
-              </RelationContext.Provider>
-            }
+        screen: withNavigation(({ navigation }: { navigation: TNavigation }): JSX.Element => {
+          const relationKey = navigation.state.params.relation
+          const relation = user.findRelation(relationKey)
+          if (!(relation instanceof RelationModel)) {
             return <View /> // TODO: Return 404?
           }
+          return <RelationContext.Provider value={{ relation }}>
+            <Relation />
+          </RelationContext.Provider>
         })
       },
       newRelation: {
@@ -76,11 +73,30 @@ export const Screens = observer((): JSX.Element => {
       },
       camera: {
         path: 'camera',
-        screen: () => <Camera />
+        screen: withNavigation(({ navigation }: { navigation: TNavigation }): JSX.Element => {
+          const onPicture = navigation.state.params.onPicture
+          return <Camera onPicture={onPicture} />
+        })
       },
       textEditor: {
         path: 'textEditor',
         screen: () => <TextEditor />
+      },
+      imageEditor: {
+        path: 'imageEditor',
+        screen: withNavigation(({ navigation }: { navigation: TNavigation }): JSX.Element => {
+          const vaultKey = navigation.state.params.vault
+          const vault = user.findVault(vaultKey)
+          if (!(vault instanceof VaultModel)) {
+            return <View /> // TODO: Return 404?
+          }
+          const imageKey = navigation.state.params.imageKey
+          const image = vault.findImage(imageKey)
+          if (image === null || image === undefined) {
+            return <View /> // TODO: Return 404?
+          }
+          return <ImageEditor key={imageKey} image={image} />
+        })
       }
     }, {
       headerMode: 'none',

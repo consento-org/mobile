@@ -7,6 +7,9 @@ import { EmptyView } from './EmptyView'
 import { PopupContext, IPopupMenuItem } from './PopupMenu'
 import { TNavigation, withNavigation } from '../navigation'
 import { elementPopUpMenu } from '../../styles/component/elementPopUpMenu'
+import { VaultContext } from '../../model/VaultContext'
+import randomBytes from '@consento/sync-randombytes'
+import { Buffer } from 'buffer'
 
 interface IFileListAction {
   name: string
@@ -69,9 +72,23 @@ export const FileList = withNavigation(({ navigation }: { navigation: TNavigatio
   ]
   const textFiles = files.filter(item => /^text\//.test(item.path))
   const imageFiles = files.filter(item => /^image\//.test(item.path))
+  const { vault } = useContext(VaultContext)
   const { open } = useContext(PopupContext)
   const popupActions: IPopupMenuItem[] = [
-    { name: elementPopUpMenu.takePicture.text, action: () => navigation.navigate('camera') },
+    {
+      name: elementPopUpMenu.takePicture.text,
+      action: () =>
+        navigation.navigate('camera', {
+          onPicture (picture) {
+            const key = randomBytes(Buffer.alloc(4)).toString('hex')
+            vault.images[key] = picture
+            navigation.navigate('imageEditor', {
+              vault: vault.$modelId,
+              imageKey: key
+            })
+          }
+        })
+    },
     { name: elementPopUpMenu.createText.text, action: () => navigation.navigate('textEditor') }
   ]
   return <EmptyView prototype={elementVaultEmpty} onAdd={() => open(popupActions)}>

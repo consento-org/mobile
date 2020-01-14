@@ -8,6 +8,7 @@ import { TouchableWithoutFeedback } from 'react-native-gesture-handler'
 import { Polygon, ImagePlacement } from '../styles/Component'
 import { topPadding } from '../styles'
 import { Asset } from '../Asset'
+import { IImage } from '../model/Vault'
 
 const containerStyle: ViewStyle = {
   backgroundColor: elementCamera.backgroundColor,
@@ -57,7 +58,11 @@ function FlatButton ({ item, pressed: poly, onPress }: {
   </TouchableWithoutFeedback>
 }
 
-export const Camera = (): JSX.Element => {
+export interface ICameraProps {
+  onPicture (capture: IImage): void
+}
+
+export const Camera = ({ onPicture }: ICameraProps): JSX.Element => {
   const { vw, vh } = useVUnits()
   const [direction, setDirection] = useState(NativeCamera.Constants.Type.back)
   const [flashMode, setFlashMode] = useState<boolean>(NativeCamera.Constants.FlashMode.off)
@@ -65,11 +70,11 @@ export const Camera = (): JSX.Element => {
   const ref = useRef<NativeCamera>()
 
   const flip = (): void => {
-    if (direction === NativeCamera.Constants.Type.front) {
-      setDirection(NativeCamera.Constants.Type.back)
-    } else {
-      setDirection(NativeCamera.Constants.Type.front)
-    }
+    setDirection(
+      direction === NativeCamera.Constants.Type.front
+        ? NativeCamera.Constants.Type.back
+        : NativeCamera.Constants.Type.front
+    )
   }
   const zoomOut = (): void => {
     setZoom(Math.max(zoom - 0.025, 0))
@@ -89,7 +94,7 @@ export const Camera = (): JSX.Element => {
     })
       .then(capture => {
         // TODO: move to encrypted store
-        console.log({ capture })
+        onPicture(capture as IImage)
       })
       .catch(error => {
         console.error(error)

@@ -41,6 +41,13 @@ export type VaultAccessEntry = typeof VaultOpenRequest | VaultClose | VaultOpen
 export class AccessOperation extends Model({
 }) {}
 
+export interface IImage {
+  uri: string
+  width: number
+  height: number
+  exif: { [key: string]: any }
+}
+
 @model('consento/Vault')
 export class Vault extends Model({
   name: tProp(types.maybeNull(types.string), () => randomBytes(Buffer.alloc(4)).toString('hex')),
@@ -49,7 +56,12 @@ export class Vault extends Model({
 }) {
   // root: Folder
   log: VaultLogEntry[]
+  images: { [key: string]: IImage } = {}
   _data: null
+
+  findImage (imageKey: string): IImage {
+    return this.images[imageKey]
+  }
 
   @computed get isClosable (): boolean {
     return this.connections.length > 0

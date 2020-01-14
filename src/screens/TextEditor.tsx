@@ -1,20 +1,7 @@
-import React, { useState } from 'react'
-import { View, ViewStyle, TouchableOpacity, Text, TextInput } from 'react-native'
-import { topPadding } from '../styles'
+import React from 'react'
+import { TextInput } from 'react-native'
 import { elementTextEditor } from '../styles/component/elementTextEditor'
-import { useVUnits } from '../util/useVUnits'
-import { ScrollView } from 'react-native-gesture-handler'
-import { useSafeArea } from 'react-native-safe-area-context'
-
-const saveSize: ViewStyle = {
-  position: 'absolute',
-  ...elementTextEditor.saveSize.place.style()
-}
-
-const editSize: ViewStyle = {
-  position: 'absolute',
-  ...elementTextEditor.editSize.place.style()
-}
+import { Editor } from './components/Editor'
 
 const text = `Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Sit amet dictum sit amet justo donec. Urna porttitor rhoncus dolor purus. Diam sollicitudin tempor id eu nisl. Iaculis urna id volutpat lacus. Faucibus in ornare quam viverra orci sagittis eu. Risus quis varius quam quisque id diam vel quam. Viverra tellus in hac habitasse platea dictumst. Proin fermentum leo vel orci porta non pulvinar. Egestas maecenas pharetra convallis posuere morbi. Nunc lobortis mattis aliquam faucibus purus in. Amet mauris commodo quis imperdiet massa tincidunt. Fringilla urna porttitor rhoncus dolor purus non. Commodo elit at imperdiet dui accumsan sit amet. Elementum integer enim neque volutpat ac tincidunt vitae semper. Elit scelerisque mauris pellentesque pulvinar pellentesque habitant morbi tristique. Tellus integer feugiat scelerisque varius morbi enim nunc. In hac habitasse platea dictumst quisque sagittis purus sit. Massa id neque aliquam vestibulum morbi blandit cursus risus at. Enim lobortis scelerisque fermentum dui faucibus in ornare quam.
 
@@ -52,47 +39,19 @@ Consectetur a erat nam at lectus. Euismod quis viverra nibh cras pulvinar mattis
 `
 
 export const TextEditor = (): JSX.Element => {
-  const { vh, vw } = useVUnits()
-  const insets = useSafeArea()
-
-  const [editing, setEditing] = useState<boolean>(false)
-
-  const mainEditStyle: ViewStyle = {
-    position: 'absolute',
-    top: elementTextEditor.readable.place.top,
-    height: vh(100) - topPadding - elementTextEditor.readable.place.top - insets.bottom,
-    width: '100%',
-    paddingLeft: elementTextEditor.readable.place.left,
-    paddingRight: elementTextEditor.width - elementTextEditor.readable.place.right
-  }
-
-  return <View style={{ position: 'absolute', top: topPadding, height: vh(100) - topPadding, width: '100%' }}>
-    <TouchableOpacity style={saveSize}>
-      <elementTextEditor.save.Render />
-    </TouchableOpacity>
-    <TouchableOpacity style={{ ...editSize, left: vw(100) - (elementTextEditor.width - elementTextEditor.edit.place.left) }} onPress={() => setEditing(!editing)}>
-      <Text style={{ ...elementTextEditor.edit.style, top: elementTextEditor.edit.place.top }}>{elementTextEditor.edit.text}</Text>
-    </TouchableOpacity>
-    <elementTextEditor.title.Render onEdit={editing ? () => null : null} targetRef={(textInput) => textInput?.focus()} selectable />
-    <elementTextEditor.size.Render />
-    {
-      editing
-        ? <TextInput
-          style={{
-            ...mainEditStyle,
-            ...elementTextEditor.readable.style
-          }}
-          multiline
-          defaultValue={text}
-          selection={{ start: 0 }}
-          editable
-        />
-        : <ScrollView
-          style={{
-            ...mainEditStyle,
-            paddingBottom: 35
-          }}
-        ><Text style={elementTextEditor.readable.style} selectable>{text}</Text></ScrollView>
-    }
-  </View>
+  return <Editor>
+    <TextInput
+      style={{
+        width: '100%',
+        height: '100%',
+        paddingLeft: elementTextEditor.readable.place.left,
+        paddingRight: elementTextEditor.width - elementTextEditor.readable.place.right,
+        ...elementTextEditor.readable.style
+      }}
+      multiline
+      defaultValue={text}
+      selection={{ start: 0 }}
+      editable
+    />
+  </Editor>
 }

@@ -3,45 +3,48 @@ import { IConsentoCrypto, IReceiver, IConnection, ISender } from '@consento/api'
 
 @model('consento/Receiver')
 export class Receiver extends Model({
-  receiveKey: tProp(types.string)
+  receiveKey: tProp(types.string),
+  id: tProp(types.string)
 }) {
   receiver (crypto: IConsentoCrypto): IReceiver {
-    return new crypto.Receiver({ receiveKey: this.receiveKey })
+    return new crypto.Receiver({
+      id: this.id,
+      receiveKey: this.receiveKey
+    })
   }
 }
 
 @model('consento/Sender')
 export class Sender extends Model({
-  sendKey: tProp(types.string)
+  id: tProp(types.string),
+  sendKey: tProp(types.string),
+  receiveKey: tProp(types.string)
 }) {
   sender (crypto: IConsentoCrypto): ISender {
-    return new crypto.Sender({ sendKey: this.sendKey })
+    return new crypto.Sender({
+      id: this.id,
+      receiveKey: this.receiveKey,
+      sendKey: this.sendKey
+    })
   }
 }
-export async function fromIConnection (connection: IConnection): Promise<Connection> {
-  return new Connection({
-    sendKey: await connection.sender.idBase64(),
-    receiveKey: await connection.receiver.idBase64()
+export function fromIConnection (connection: IConnection): Connection {
+  const newConnection = new Connection({
+    sender: new Sender(connection.sender.toJSON()),
+    receiver: new Receiver(connection.receiver.toJSON())
   })
+  return newConnection
 }
 
 @model('consento/Connection')
 export class Connection extends Model({
-  sendKey: tProp(types.string),
-  receiveKey: tProp(types.string)
+  sender: tProp(types.model<Sender>(Sender)),
+  receiver: tProp(types.model<Receiver>(Receiver))
 }) {
   connection (crypto: IConsentoCrypto): IConnection {
     return {
-      sender: new crypto.Sender({ sendKey: this.sendKey }),
-      receiver: new crypto.Receiver({ receiveKey: this.receiveKey })
+      sender: this.sender.sender(crypto),
+      receiver: this.receiver.receiver(crypto)
     }
-  }
-
-  sender (crypto: IConsentoCrypto): ISender {
-    return this.connection(crypto).sender
-  }
-
-  receiver (crypto: IConsentoCrypto): IReceiver {
-    return this.connection(crypto).receiver
   }
 }

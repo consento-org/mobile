@@ -5,10 +5,10 @@ import { Buffer } from '@consento/crypto/util/buffer'
 import { Connection, fromIConnection } from './Connection'
 
 // eslint-disable-next-line @typescript-eslint/require-await
-export async function fromConnection (connection: IConnection): Promise<Relation> {
+export function fromConnection (connection: IConnection): Relation {
   return new Relation({
     name: null,
-    connection: await fromIConnection(connection)
+    connection: fromIConnection(connection)
   })
 }
 
@@ -29,8 +29,8 @@ export class Relation extends Model({
   }
 
   @computed get defaultName (): string {
-    const send = Buffer.from(this.connection.sendKey, 'base64')
-    const receive = Buffer.from(this.connection.receiveKey, 'base64')
+    const send = Buffer.from(this.connection.sender.sendKey, 'base64')
+    const receive = Buffer.from(this.connection.receiver.receiveKey, 'base64')
     return `${send.readUInt16BE(0).toString(16)}-${send.readUInt16BE(1).toString(16)}-${receive.readUInt16BE(0).toString(16)}-${receive.readUInt16BE(1).toString(16)}`.toUpperCase()
   }
 
@@ -39,10 +39,10 @@ export class Relation extends Model({
   }
 
   receiver (crypto: IConsentoCrypto): IReceiver | null {
-    return this.connection.receiver(crypto)
+    return this.connection.receiver.receiver(crypto)
   }
 
   sender (crypto: IConsentoCrypto): ISender | null {
-    return this.connection.sender(crypto)
+    return this.connection.sender.sender(crypto)
   }
 }

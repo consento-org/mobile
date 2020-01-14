@@ -1,13 +1,15 @@
-// This file has been generated with expo-export, a Sketch plugin.
-import React from 'react'
+// This file has been generated with expo-export@3.5.2, a Sketch plugin.
+import React, { useRef } from 'react'
 import { ImageAsset, Slice9 } from '../Asset'
-import { Image, ImageStyle, TextStyle, TextInput, Text as NativeText, View, ViewStyle, FlexStyle, TouchableOpacity, GestureResponderEvent } from 'react-native'
+import { Image, ImageStyle, TextStyle, TextInput, Text as NativeText, View, ViewStyle, FlexStyle, TouchableOpacity, GestureResponderEvent, ReturnKeyTypeOptions, Insets } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 
 export type TRenderGravity = 'start' | 'end' | 'center' | 'stretch'
 export interface IRenderOptions {
   vert?: TRenderGravity
   horz?: TRenderGravity
+  debug?: boolean
+  hitSlop?: Insets
   onPress?: (event: GestureResponderEvent) => any
   onLayout?: () => any
 }
@@ -32,21 +34,61 @@ function useDefault <T> (value: T | null | undefined, defaultValue: T): T {
   return defaultValue
 }
 
-// Todo: LRU?
-const renderCache: { [key: string]: ViewStyle } = {}
-
 export interface IBaseProps<T extends React.Component, TStyle extends FlexStyle> {
   targetRef?: React.Ref<T>
   vert?: TRenderGravity
   horz?: TRenderGravity
   style?: TStyle
+  debug?: boolean
   onPress?: (event: GestureResponderEvent) => any
   onLayout?: () => any
 }
 
+export type TTextContentType = 'none'
+| 'URL'
+| 'addressCity'
+| 'addressCityAndState'
+| 'addressState'
+| 'countryName'
+| 'creditCardNumber'
+| 'emailAddress'
+| 'familyName'
+| 'fullStreetAddress'
+| 'givenName'
+| 'jobTitle'
+| 'location'
+| 'middleName'
+| 'name'
+| 'namePrefix'
+| 'nameSuffix'
+| 'nickname'
+| 'organizationName'
+| 'postalCode'
+| 'streetAddressLine1'
+| 'streetAddressLine2'
+| 'sublocality'
+| 'telephoneNumber'
+| 'username'
+| 'password'
+| 'newPassword'
+| 'oneTimeCode'
+
 interface ITextBaseProps extends IBaseProps<NativeText | TextInput, TextStyle> {
   value?: string
   selectable?: boolean
+  debug?: boolean
+  selectTextOnFocus?: boolean
+  textContentType?: TTextContentType
+  selection?: {
+    start: number
+    end?: number
+  }
+  placeholder?: string
+  placeholderTextColor?: string
+  scrollEnabled?: boolean
+  selectionColor?: string
+  secureTextEntry?: boolean
+  returnKeyType?: ReturnKeyTypeOptions
   onEdit?: (text: string) => any
   onInstantEdit?: (text: string) => any
   onBlur?: () => any
@@ -71,6 +113,8 @@ export interface ISlice9Props extends IBaseProps<View, ViewStyle> {
 
 export interface IRenderProps<T extends React.Component, TStyle extends FlexStyle> extends IBaseProps<T, TStyle> {
   place: Placement
+  debug?: boolean
+  hitSlop?: Insets
   item: (opts: {
     ref?: React.Ref<T>
     style?: TStyle
@@ -154,6 +198,8 @@ export class Component {
     }), props.place, {
       horz: props.horz,
       vert: props.vert,
+      debug: props.debug,
+      hitSlop: props.hitSlop,
       onPress: props.onPress,
       onLayout: props.onLayout
     })
@@ -182,48 +228,60 @@ export class Component {
     return this._renderItem(asset.render(style), asset.place, opts)
   }
 
-  _renderItem (item: React.ReactNode, place: Placement, { horz, vert, onPress, onLayout }: IRenderOptions = {}): JSX.Element {
-    const horzKey = `horz:${useDefault(horz, 'start')}:${useDefault(vert, 'start')}:${this.width}:${this.height}:${place.top}:${place.left}:${place.right}:${place.bottom}`
-    let horzStyle = renderCache[horzKey]
-    if (horzStyle === undefined) {
-      horzStyle = {
-        display: 'flex',
-        position: 'absolute',
-        width: '100%',
-        height: '100%',
-        flexDirection: 'row',
-        justifyContent: horz === 'end' ? 'flex-end' : horz === 'center' ? 'center' : 'flex-start'
-      }
-      if (horz !== 'start') {
-        horzStyle.paddingRight = this.width - place.right
-      }
-      if (horz !== 'end') {
-        horzStyle.paddingLeft = place.left
-      }
-      if (vert !== 'start') {
-        horzStyle.paddingBottom = this.height - place.bottom
-      }
-      if (vert !== 'end') {
-        horzStyle.paddingTop = place.top
-      }
-      renderCache[horzKey] = horzStyle
+  _renderItem (item: React.ReactNode, place: Placement, { horz, vert, onPress, onLayout, hitSlop, debug }: IRenderOptions = {}): JSX.Element {
+    const style: ViewStyle = {
+      position: 'absolute',
+      flexDirection: 'column',
+      display: 'flex'
     }
-    const vertKey = `vert:${useDefault(vert, 'start')}:${useDefault(horz, 'start')}`
-    let vertStyle = renderCache[vertKey]
-    if (vertStyle === undefined) {
-      vertStyle = {
-        display: 'flex',
-        width: horz === 'stretch' ? '100%' : 'auto',
-        flexDirection: 'column',
-        height: '100%',
-        justifyContent: vert === 'end' ? 'flex-end' : vert === 'center' ? 'center' : 'flex-start'
+    if (!exists(horz) || horz === 'start') {
+      style.width = place.width
+      style.left = place.left
+    } else {
+      style.width = '100%'
+      style.paddingLeft = place.left
+      style.paddingRight = this.width - place.right
+    }
+    if (!exists(vert) || vert === 'start') {
+      style.height = place.height
+      style.top = place.top
+    } else {
+      style.height = '100%'
+      style.display = 'flex'
+      style.paddingTop = place.top
+      style.paddingBottom = this.height - place.bottom
+    }
+    const itemStyle: ViewStyle = {
+      position: 'relative',
+      width: !exists(horz) || horz !== 'stretch' ? place.width : '100%',
+      height: !exists(vert) || vert !== 'stretch' ? place.height : '100%'
+    }
+    if (debug) {
+      style.borderColor = '#f00'
+      style.borderWidth = 1
+      style.backgroundColor = '#ac888888'
+      itemStyle.borderColor = '#0f0'
+      itemStyle.borderWidth = 1
+    }
+    if (exists(onPress)) {
+      item = <TouchableOpacity onLayout={onLayout} onPress={onPress} hitSlop={hitSlop} style={itemStyle}>{item}</TouchableOpacity>
+    } else {
+      item = <View style={itemStyle}>{item}</View>
+    }
+    if (horz === 'stretch' && vert === 'stretch') {
+      const vertStyle: ViewStyle = {
+        flexGrow: 1,
+        position: 'relative'
       }
-      renderCache[vertKey] = vertStyle
+      item = <View style={vertStyle}>{item}</View>
+    } else if (exists(vert) && vert !== 'start') {
+      style.flexDirection = 'row'
+      style.alignItems = vert === 'stretch' ? 'stretch' : vert === 'end' ? 'flex-end' : 'center'
+      style.justifyContent = horz === 'end' ? 'flex-end' : 'center'
+    } else if (exists(horz) && horz !== 'start') {
+      style.alignItems = horz === 'stretch' ? 'stretch' : horz === 'end' ? 'flex-end' : horz === 'center' ? 'center' : 'flex-start'
     }
-    if (onPress !== null && onPress !== undefined) {
-      item = <TouchableOpacity onLayout={onLayout} onPress={onPress} style={{ width: horz === 'stretch' ? '100%' : place.width, height: vert === 'stretch' ? '100%' : place.height }}>{item}</TouchableOpacity>
-    }
-    return <View onLayout={onLayout} style={horzStyle}><View style={vertStyle}>{item}</View></View>
+    return <View style={style}>{item}</View>
   }
 }
 
@@ -608,6 +666,18 @@ export interface ITextRenderOptions {
   style?: TextStyle
   ref?: React.Ref<NativeText | TextInput>
   selectable?: boolean
+  selectTextOnFocus?: boolean
+  textContentType?: TTextContentType
+  selection?: {
+    start: number
+    end: number
+  }
+  placeholder?: string
+  placeholderTextColor?: string
+  scrollEnabled?: boolean
+  selectionColor?: string
+  secureTextEntry?: boolean
+  returnKeyType?: ReturnKeyTypeOptions
   onLayout?: () => any
   onBlur?: () => any
   onEdit?: (text: string) => any
@@ -645,12 +715,14 @@ export class Text {
     })
   }
 
-  render ({ value, style, onEdit, onInstantEdit, ref, onLayout, onBlur, selectable }: ITextRenderOptions): JSX.Element {
-    value = String(useDefault(value, this.text))
+  render (props: ITextRenderOptions): JSX.Element {
+    let value = String(useDefault(props.value, this.text))
     const originalValue = value
-    if (exists(onEdit) || exists(onInstantEdit)) {
-      onInstantEdit = useDefault(onInstantEdit, noop)
-      onEdit = useDefault(onEdit, noop)
+    const isEditable = exists(props.onEdit) || exists(props.onInstantEdit)
+    const ref = useRef<TextInput>()
+    const onInstantEdit = useDefault(props.onInstantEdit, noop)
+    const onEdit = useDefault(props.onEdit, noop)
+    if (isEditable) {
       return <TextInput
         onChangeText={text => {
           onInstantEdit(value = text)
@@ -660,16 +732,37 @@ export class Text {
             onEdit(value)
           }
         }}
-        onLayout={onLayout} onBlur={onBlur} ref={ref as React.Ref<TextInput>} style={{
+        onLayout={() => {
+          if (exists(props.onLayout)) {
+            props.onLayout()
+          }
+          ref.current.focus()
+        }}
+        ref={ref}
+        style={{
           ...this.style,
-          ...style
-        }}>{value}</TextInput>
+          ...props.style
+        }}
+        selectTextOnFocus={props.selectTextOnFocus}
+        textContentType={props.textContentType}
+        selection={props.selection}
+        placeholder={props.placeholder}
+        placeholderTextColor={props.placeholderTextColor}
+        scrollEnabled={props.scrollEnabled}
+        selectionColor={props.selectionColor}
+        secureTextEntry={props.secureTextEntry}
+        returnKeyType={props.returnKeyType}
+      >{value}</TextInput>
     }
     return <NativeText
-      onLayout={onLayout} ref={ref} style={{
+      onLayout={props.onLayout}
+      ref={props.ref}
+      style={{
         ...this.style,
-        ...style
-      }} selectable={selectable}>{value}</NativeText>
+        ...props.style
+      }}
+      selectable={props.selectable}
+    >{value}</NativeText>
   }
 
   renderAbsolute (opts: ITextRenderOptions): JSX.Element {

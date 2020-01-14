@@ -37,10 +37,12 @@ export const InputField = ({ value, defaultValue, onEdit, proto, autoFocus, inva
       ? <View>
         <elementFormInputField.active.Render
           onLayout={() => {
-            if (autoFocus) {
+            if (autoFocus && ref.current !== null && ref.current !== undefined) {
               ref.current.focus()
             }
           }}
+          selectTextOnFocus
+          selection={{ start: 0 }}
           value={value}
           targetRef={ref}
           horz='stretch'
@@ -48,6 +50,7 @@ export const InputField = ({ value, defaultValue, onEdit, proto, autoFocus, inva
         />
         {exists(defaultValue)
           ? <elementFormInputField.reset.Render
+            style={{ zIndex: 1 }}
             onPress={() => { onEdit(null) }}
             horz='end' />
           : <View />}

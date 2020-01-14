@@ -1,4 +1,4 @@
-// This file has been generated with expo-export, a Sketch plugin.
+// This file has been generated with expo-export@3.5.2, a Sketch plugin.
 import { Component, Polygon, Text, ImagePlacement } from '../Component'
 import { Color } from '../Color'
 import { TextStyles } from '../TextStyles'
@@ -38,7 +38,10 @@ export class ElementFormInputFieldClass extends Component {
       ...TextStyles.Subtitle1SelectedOnSurfaceHighEmphasisLeft,
       color: Color.darkGrey
     }, { x: 35.49, y: 26, w: 297, h: 24 }, this)
-    this.active = new Text('Active', TextStyles.Subtitle1SelectedOnSurfaceHighEmphasisLeft, { x: 35.49, y: 26, w: 267.5, h: 24 }, this)
+    this.active = new Text('Active', {
+      ...TextStyles.Subtitle1SelectedOnSurfaceHighEmphasisLeft,
+      textAlignVertical: 'center'
+    }, { x: 35.49, y: 10, w: 267.5, h: 56 }, this)
     this.reset = new ImagePlacement(Asset.iconCrossGrey, { x: 308.49, y: 26, w: 24, h: 24 }, this)
   }
 }

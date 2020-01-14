@@ -1,6 +1,6 @@
-// This file has been generated with expo-export, a Sketch plugin.
+// This file has been generated with expo-export@3.5.2, a Sketch plugin.
 import React from 'react'
-import { Image, ImageStyle, View, ViewStyle, ImageSourcePropType, TouchableOpacity, FlexStyle } from 'react-native'
+import { Image, ImageStyle, View, ViewStyle, ImageSourcePropType, TouchableOpacity, FlexStyle, GestureResponderEvent } from 'react-native'
 
 function exists <T> (value: T | null | undefined): value is T {
   return value !== null && value !== undefined
@@ -27,7 +27,7 @@ class Cache<Type, Args> {
 
 export class ImageAsset {
   source: ImageSourcePropType
-  component: (props: { style?: FlexStyle, onPress?: () => void }) => JSX.Element
+  component: (props: { style?: FlexStyle, onPress?: (event: GestureResponderEvent) => void }) => JSX.Element
 
   constructor (source: ImageSourcePropType) {
     this.source = source

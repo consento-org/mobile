@@ -36,7 +36,7 @@ export const Relation = observer(withNavigation(({ navigation }: { navigation: T
   const { leave, setDirty, save } = useForm(navigation, (): void => {
     relation.setName(name)
   })
-  return <View style={{ flex: 1, display: 'flex' }}>
+  return <View style={{ flex: 1 }}>
     <TopNavigation
       title={relation.displayName}
       back={() => leave(() => navigation.navigate('relations'))}
@@ -46,6 +46,7 @@ export const Relation = observer(withNavigation(({ navigation }: { navigation: T
       <InputField
         proto={elementRelationName.relationName}
         value={name}
+        autoFocus
         defaultValue={relation.defaultName}
         onEdit={value => {
           setName(value)

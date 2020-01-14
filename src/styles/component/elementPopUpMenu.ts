@@ -1,4 +1,4 @@
-// This file has been generated with expo-export, a Sketch plugin.
+// This file has been generated with expo-export@3.5.2, a Sketch plugin.
 import { Component, Polygon, Text } from '../Component'
 import { Color } from '../Color'
 import { TextStyles } from '../TextStyles'
@@ -25,12 +25,12 @@ export class ElementPopUpMenuClass extends Component {
     }, { x: 10, y: 746, w: 355, h: 57 }, this)
     this.bottomBg = new Polygon({ x: 10, y: 682, w: 355, h: 54 }, null, null, [], this)
     this.disabled = new Text('...', {
-        color: '#a4aab3ff',
+      color: '#a4aab3ff',
       fontSize: 20,
       textAlign: 'center',
       textTransform: 'none',
       textAlignVertical: 'center'
-      }, { x: 10, y: 681.05, w: 355, h: 55 }, this)
+    }, { x: 10, y: 681.05, w: 355, h: 55 }, this)
     this.createText = new Text('Create text file', {
       ...TextStyles.BodyRobotoRegular18BlueCenter,
       textAlignVertical: 'center'

@@ -38,6 +38,7 @@ const FileListItem = ({ item }: IFileListItemProps): JSX.Element => {
 
   return <View style={{ height: itemProto.height, width: '100%' }}>
     <itemProto.label.Render horz='stretch' value={item.name} />
+    <itemProto.open.Render horz='end' onPress={() => console.log('xxx')} />
     <itemProto.menu.Render
       horz='end' onPress={(event) => open([
         { name: 'Rename', action (item): void { console.log(`Rename ${item.name}`) } },
@@ -45,8 +46,7 @@ const FileListItem = ({ item }: IFileListItemProps): JSX.Element => {
         { name: 'Other', action (item): void { console.log(`Other ${item.name}`) } },
         null,
         { name: 'Delete', action (item): void { console.log(`DELETE ${item.name}`) }, dangerous: true }
-      ], item, event)} />
-    <itemProto.open.Render horz='end' onPress={() => console.log('xxx')} />
+      ], item, event)} debug style={{ zIndex: 1 }} />
   </View>
 }
 

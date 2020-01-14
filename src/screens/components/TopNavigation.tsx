@@ -31,13 +31,15 @@ export const TopNavigation = withNavigation((props: ITopNavigationProps) => {
   return <View style={{ ...topNav, height: elementTopNavEmpty.height + inset.top }}>
     <View style={{ position: 'relative', top: inset.top }}>
       {exists(props.back)
-        ? <elementTopNavItem.back.Render onPress={() => {
-          if (typeof props.back === 'string') {
-            props.navigation.navigate(props.back)
-          } else {
-            props.back()
-          }
-        }} />
+        ? <elementTopNavItem.back.Render
+          onPress={() => {
+            if (typeof props.back === 'string') {
+              props.navigation.navigate(props.back)
+            } else {
+              props.back()
+            }
+          }}
+        />
         : <elementTopNavEmpty.logo.Render onPress={() => props.navigation.navigate('config')} style={{ zIndex: 1 }} />}
       {editing
         ? <View>

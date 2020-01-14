@@ -61,7 +61,7 @@ export const Config = withNavigation(
       ])
     }
 
-    return <View style={{ display: 'flex' }}>
+    return <View style={{ flex: 1 }}>
       <TopNavigation title='Consento' back={() => leave(() => navigation.navigate('vaults'))} />
       <BottomButtonView prototype={elementConfig} onPress={save}>
         <InputField

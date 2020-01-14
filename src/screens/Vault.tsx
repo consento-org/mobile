@@ -1,5 +1,5 @@
 import React, { useContext } from 'react'
-import { View, ViewStyle } from 'react-native'
+import { View, ViewStyle, Alert } from 'react-native'
 import { TopNavigation } from './components/TopNavigation'
 import { createTabBar } from './components/createTabBar'
 import { styles } from '../styles'
@@ -16,6 +16,9 @@ import { observer } from 'mobx-react'
 import { VaultContext } from '../model/VaultContext'
 import { PopupMenu } from './components/PopupMenu'
 import { FileList } from './components/FileList'
+import { User } from '../model/User'
+import { Vault as VaultModel } from '../model/Vault'
+import { ConsentoContext } from '../model/ConsentoContext'
 
 const lockStyle: ViewStyle = {
   height: elementSealVaultActive.height,
@@ -28,6 +31,23 @@ const lockStyle: ViewStyle = {
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 const noop = (): void => {}
+
+function confirmDelete (user: User, vault: VaultModel, navigation: TNavigation): void {
+  Alert.alert(
+    'Delete',
+    'Are you sure you want to delete this Vault? This can not be reverted!',
+    [
+      {
+        text: 'Delete',
+        onPress: () => {
+          user.vaults.delete(vault)
+          navigation.navigate('vaults')
+        }
+      },
+      { text: 'Cancel' }
+    ]
+  )
+}
 
 const VaultData = withNavigation(({ navigation }: { navigation: TNavigation }): JSX.Element => {
   return <FileList />
@@ -47,10 +67,11 @@ function LockButton (props: { onPress?: () => any }): JSX.Element {
 
 export const VaultRouter = VaultNavigator.router
 export const Vault = withNavigation(observer(({ navigation }: { navigation: TNavigation }): JSX.Element => {
+  const { user } = useContext(ConsentoContext)
   const { vault } = useContext(VaultContext)
   return <PopupMenu>
     <View style={{ ...styles.screen, position: 'absolute', width: '100%', height: '100%' }}>
-      <TopNavigation title={vault.name} back='vaults' onEdit={vault.isOpen ? newName => vault.setName(newName) : undefined} onDelete={noop} />
+      <TopNavigation title={vault.name} back='vaults' onEdit={vault.isOpen ? newName => vault.setName(newName) : undefined} onDelete={() => confirmDelete(user, vault, navigation)} />
       {
         vault.isOpen ? [
           <LockButton key='lock' />,

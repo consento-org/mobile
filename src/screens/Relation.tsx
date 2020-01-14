@@ -13,22 +13,21 @@ import { RelationContext } from '../model/RelationContext'
 import { InputField } from './components/InputField'
 import { useForm } from '../util/useForm'
 
-function confirmAlert (title: string, message: string, onOk: () => void): void {
+function confirmDelete (user: User, relation: RelationModel, navigation: TNavigation): void {
   Alert.alert(
-    title,
-    message,
+    'Delete',
+    'Are you sure you want to delete this Relation?',
     [
-      { text: 'Delete', onPress: onOk },
+      {
+        text: 'Delete',
+        onPress: () => {
+          user.relations.delete(relation)
+          navigation.navigate('relations')
+        }
+      },
       { text: 'Cancel' }
     ]
   )
-}
-
-function confirmDelete (user: User, relation: RelationModel, navigation: TNavigation): void {
-  confirmAlert('Delete', 'Are you sure you want to delete this Relation?', () => {
-    user.relations.delete(relation)
-    navigation.navigate('relations')
-  })
 }
 
 export const Relation = observer(withNavigation(({ navigation }: { navigation: TNavigation }): JSX.Element => {

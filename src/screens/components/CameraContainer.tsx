@@ -1,5 +1,5 @@
 import React, { useState, forwardRef, useRef, useLayoutEffect, RefObject } from 'react'
-import { ViewStyle, View } from 'react-native'
+import { ViewStyle, View, Platform } from 'react-native'
 import { Camera } from 'expo-camera'
 import { BarCodeScanningResult } from 'expo-camera/build/Camera.types'
 import { useVUnits } from '../../util/useVUnits'
@@ -38,18 +38,30 @@ function calculateCameraSize (space: ISpace, cameraSize: ISpace): ViewStyle {
 }
 
 async function getBestSize (camera: Camera, algo: (sizeLists: ICameraNativeSize[]) => ICameraNativeSize): Promise<ICameraNativeSize> {
-  const ratios = await camera.getSupportedRatiosAsync()
-  const sizeLists = (await Promise.all(ratios.map(async ratio => camera
-    .getAvailablePictureSizesAsync(ratio)
-    .then(sizes => ({ ratio, sizes }))
-    .catch(_ => null)
-  ))).reduce((sizeLists, entry) => {
+  let sizeLists: Array<{ ratio: string, sizes: string[] }>
+  if (Platform.OS === 'android') {
+    const ratios = await camera.getSupportedRatiosAsync()
+    sizeLists = await Promise.all(ratios.map(async ratio => camera
+      .getAvailablePictureSizesAsync(ratio)
+      .then(sizes => ({ ratio, sizes }))
+    ))
+  } else {
+    sizeLists = [{
+      ratio: null,
+      sizes: await camera.getAvailablePictureSizesAsync()
+    }]
+  }
+  const sizeList = sizeLists.reduce((sizeLists, entry) => {
     if (entry === null) {
       return sizeLists
     }
     const { ratio, sizes } = entry
     for (const size of sizes) {
-      const [wStr, hStr] = /(\d+)x(\d+)/.exec(size).slice(1)
+      const parts = /(\d+)x(\d+)/.exec(size)
+      if (parts === null) {
+        continue
+      }
+      const [wStr, hStr] = parts.slice(1)
       const width = parseInt(wStr, 10)
       const height = parseInt(hStr, 10)
       const space = width * height
@@ -61,7 +73,7 @@ async function getBestSize (camera: Camera, algo: (sizeLists: ICameraNativeSize[
     if (a.space < b.space) return 1
     return 0
   })
-  return algo(sizeLists)
+  return algo(sizeList)
 }
 
 /*

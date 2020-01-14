@@ -3,7 +3,6 @@ import { View, Text, ViewStyle, TouchableOpacity } from 'react-native'
 import { BarCodeScanningResult } from 'expo-camera/build/Camera.types'
 import { screen09ScanQRCode } from '../styles/component/screen09ScanQRCode'
 import { useVUnits } from '../util/useVUnits'
-import { topPadding } from '../styles'
 import { withNavigation, TNavigation } from './navigation'
 import { useHandshake, isInitLink, IncomingState } from '../model/useHandshake'
 import { CameraContainer } from './components/CameraContainer'
@@ -12,6 +11,7 @@ import QRCode from 'react-native-qrcode-svg'
 import Svg, { Path } from 'react-native-svg'
 import { ConsentoContext } from '../model/ConsentoContext'
 import { fromConnection } from '../model/Relation'
+import { useSafeArea } from 'react-native-safe-area-context'
 
 const barContainer: ViewStyle = {
   position: 'absolute',
@@ -34,7 +34,6 @@ const cutOutContainer: ViewStyle = {
 const retryButtonStyle: ViewStyle = {
   position: 'absolute',
   width: '100%',
-  top: topPadding,
   height: 50,
   display: 'flex',
   alignContent: 'center',
@@ -46,10 +45,11 @@ const retryButtonStyle: ViewStyle = {
 export const NewRelation = withNavigation(({ navigation }: { navigation: TNavigation }) => {
   const { user } = useContext(ConsentoContext)
   const { vw, vh, isHorz, isVert } = useVUnits()
+  const inset = useSafeArea()
   // eslint-disable-next-line @typescript-eslint/require-await
   const { incoming, outgoing, connect } = useHandshake(async (connection): Promise<void> => {
     try {
-      const relation = await fromConnection(connection)
+      const relation = fromConnection(connection)
       user.relations.add(relation)
       navigation.navigate('relation', { relation: relation.$modelId })
     } catch (error) {
@@ -74,7 +74,7 @@ export const NewRelation = withNavigation(({ navigation }: { navigation: TNaviga
     width: isHorz ? vw(100) - qrSpace : vw(100)
   }
 
-  const cutOutSize: number = Math.min(camSpace.width, camSpace.height - topPadding - 50) - (screen09ScanQRCode.topLeft.place.left * 2)
+  const cutOutSize: number = Math.min(camSpace.width, camSpace.height - inset.top - 50) - (screen09ScanQRCode.topLeft.place.left * 2)
   const cutOutRect = {
     width: cutOutSize,
     height: cutOutSize,
@@ -98,7 +98,7 @@ export const NewRelation = withNavigation(({ navigation }: { navigation: TNaviga
   }
 
   return <View style={{ width: '100%', height: '100%', display: 'flex', flexDirection: isHorz ? 'row' : 'column', backgroundColor: screen09ScanQRCode.backgroundColor }}>
-    <Text style={{ position: 'absolute', borderRadius: 20, top: topPadding, padding: 10, backgroundColor: '#fff', color: '#000', zIndex: 10 }}>{String(exists(outgoing) ? outgoing.state : '')}</Text>
+    <Text style={{ position: 'absolute', borderRadius: 20, top: inset.top, padding: 10, backgroundColor: '#fff', color: '#000', zIndex: 10 }}>{String(exists(outgoing) ? outgoing.state : '')}</Text>
     <CameraContainer style={camSpace} onCode={onCode}>
       <Svg viewBox={`0 0 ${camSpace.width} ${camSpace.height}`} style={{ ...camSpace, position: 'absolute' }}>
         <Path fill={screen09ScanQRCode.shadow.fill.color} d={cutOutG} fillRule='evenodd' />
@@ -116,7 +116,7 @@ export const NewRelation = withNavigation(({ navigation }: { navigation: TNaviga
         </View>
       </View>
       <TouchableOpacity
-        style={retryButtonStyle}
+        style={{ ...retryButtonStyle, top: inset.top }}
         onPress={() => navigation.goBack()}>
         {screen09ScanQRCode.close.img()}
       </TouchableOpacity>

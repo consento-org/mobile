@@ -1,8 +1,6 @@
 import React, { useContext, useState } from 'react'
 import { View, Alert } from 'react-native'
 import { TopNavigation } from './components/TopNavigation'
-import { styles } from '../styles'
-import { Relation as RelationModel } from '../model/Relation'
 import { observer } from 'mobx-react'
 import { ConsentoContext } from '../model/ConsentoContext'
 import { User } from '../model/User'
@@ -12,6 +10,7 @@ import { BottomButtonView } from './components/BottomButtonView'
 import { RelationContext } from '../model/RelationContext'
 import { InputField } from './components/InputField'
 import { useForm } from '../util/useForm'
+import { Relation as RelationModel } from '../model/Relation'
 
 function confirmDelete (user: User, relation: RelationModel, navigation: TNavigation): void {
   Alert.alert(
@@ -37,7 +36,7 @@ export const Relation = observer(withNavigation(({ navigation }: { navigation: T
   const { leave, setDirty, save } = useForm(navigation, (): void => {
     relation.setName(name)
   })
-  return <View style={styles.screen}>
+  return <View style={{ flex: 1, display: 'flex' }}>
     <TopNavigation
       title={relation.displayName}
       back={() => leave(() => navigation.navigate('relations'))}

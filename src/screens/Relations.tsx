@@ -1,7 +1,6 @@
 import React, { useContext } from 'react'
 import { View, ScrollView } from 'react-native'
 import { observer } from 'mobx-react'
-import { styles } from '../styles'
 import { TopNavigation } from './components/TopNavigation'
 import { EmptyView } from './components/EmptyView'
 import { elementRelationsEmpty } from '../styles/component/elementRelationsEmpty'
@@ -33,7 +32,7 @@ const RelationsList = observer((): JSX.Element => {
 
 export const RelationsScreen = withNavigation(observer(({ navigation }: { navigation: TNavigation }) => {
   const { user: { relations } } = useContext(ConsentoContext)
-  return <View style={{ ...styles.screen }}>
+  return <View style={{ flex: 1 }}>
     <TopNavigation title='Relations' />
     {relations.size === 0 ? <EmptyView prototype={elementRelationsEmpty} /> : <RelationsList />}
     <AddButton style={{ position: 'absolute', right: 10, bottom: 10 }} onPress={() => navigation.navigate('newRelation', { timestamp: Date.now() })} />

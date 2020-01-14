@@ -2,7 +2,6 @@ import React, { useContext } from 'react'
 import { View, ViewStyle, Alert } from 'react-native'
 import { TopNavigation } from './components/TopNavigation'
 import { createTabBar } from './components/createTabBar'
-import { styles } from '../styles'
 import { TNavigation } from './navigation'
 import { elementSealVaultActive } from '../styles/component/elementSealVaultActive'
 import { elementSealVaultIdle } from '../styles/component/elementSealVaultIdle'
@@ -22,6 +21,7 @@ import { ConsentoContext } from '../model/ConsentoContext'
 
 const lockStyle: ViewStyle = {
   height: elementSealVaultActive.height,
+  backgroundColor: elementSealVaultActive.backgroundColor,
   borderBottomColor: elementSealVaultActive.borderBottom.border.fill.color,
   borderBottomWidth: elementSealVaultActive.borderBottom.border.thickness,
   display: 'flex',
@@ -67,7 +67,7 @@ export const Vault = withNavigation(observer(({ navigation }: { navigation: TNav
   const { user } = useContext(ConsentoContext)
   const { vault } = useContext(VaultContext)
   return <PopupMenu>
-    <View style={{ ...styles.screen, position: 'absolute', width: '100%', height: '100%' }}>
+    <View style={{ position: 'absolute', width: '100%', height: '100%' }}>
       <TopNavigation title={vault.name} back='vaults' onEdit={vault.isOpen ? newName => vault.setName(newName) : undefined} onDelete={() => confirmDelete(user, vault, navigation)} />
       {
         vault.isOpen ? [

@@ -1,7 +1,6 @@
 import React, { useContext } from 'react'
 import { View, ViewStyle, ScrollView } from 'react-native'
 import { VaultCard } from './components/VaultCard'
-import { styles } from '../styles'
 import { TopNavigation } from './components/TopNavigation'
 import { Asset } from '../Asset'
 import { ConsentoContext } from '../model/ConsentoContext'
@@ -40,7 +39,7 @@ export const VaultsScreen = withNavigation(observer(({ navigation }: { navigatio
   } while (space > 0)
   const width = count * entryWidth + (count * 2 + 1) * HorzPadding
 
-  return <View style={styles.screen}>
+  return <View style={{ display: 'flex', height: '100%' }}>
     <TopNavigation title='Vaults' />
     <ScrollView centerContent>
       <View style={{ ...listStyle, width, left: (vw(100) - width) / 2 }}>

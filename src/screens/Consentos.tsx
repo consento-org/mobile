@@ -1,7 +1,6 @@
 import React, { useContext } from 'react'
 import { View, ViewStyle, ScrollView } from 'react-native'
 import { observer } from 'mobx-react'
-import { styles } from '../styles'
 import { EmptyView } from './components/EmptyView'
 import { TopNavigation } from './components/TopNavigation'
 import { elementConsentosEmpty } from '../styles/component/elementConsentosEmpty'
@@ -111,7 +110,7 @@ const listStyle: ViewStyle = {
 
 export const ConsentosScreen = observer(() => {
   const { user: { consentos } } = useContext(ConsentoContext)
-  return <View style={styles.screen}>
+  return <View style={{ flex: 1 }}>
     <TopNavigation title='Consentos' />
     {
       (consentos.size === 0)

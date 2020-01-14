@@ -1,7 +1,6 @@
 import React, { useState, useContext, useEffect } from 'react'
 import { View, Alert, BackHandler } from 'react-native'
 import { TopNavigation } from './components/TopNavigation'
-import { styles } from '../styles'
 import { InputField } from './components/InputField'
 import { elementConfig } from '../styles/component/elementConfig'
 import { BottomButtonView } from './components/BottomButtonView'
@@ -62,7 +61,7 @@ export const Config = withNavigation(
       ])
     }
 
-    return <View style={{ ...styles.screen, display: 'flex' }}>
+    return <View style={{ display: 'flex' }}>
       <TopNavigation title='Consento' back={() => leave(() => navigation.navigate('vaults'))} />
       <BottomButtonView prototype={elementConfig} onPress={save}>
         <InputField

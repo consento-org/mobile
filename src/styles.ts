@@ -38,8 +38,6 @@ export function shadow (elevation: number = 4): Shadow {
   return shadow
 }
 
-export const topPadding = Platform.OS === 'ios' ? 0 : StatusBar.currentHeight
-
 export const styles = StyleSheet.create({
   label: {
     color: '#999',
@@ -50,9 +48,6 @@ export const styles = StyleSheet.create({
     margin: 10
   },
   screen: {
-    // justifyContent: 'center',
-    flex: 1,
-    paddingTop: topPadding,
     backgroundColor: Color.grey
   },
   input: {
@@ -68,9 +63,7 @@ export const styles = StyleSheet.create({
     flex: 1,
     padding: 10,
     backgroundColor: '#fff',
-    // alignContent: 'flex-start',
     flexDirection: 'column',
     alignItems: 'flex-start'
-    // justifyContent: 'center',
   }
 })

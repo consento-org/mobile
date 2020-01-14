@@ -6,10 +6,10 @@ import { ViewStyle, View } from 'react-native'
 import { Camera as NativeCamera } from 'expo-camera'
 import { TouchableWithoutFeedback } from 'react-native-gesture-handler'
 import { Polygon, ImagePlacement } from '../styles/Component'
-import { topPadding } from '../styles'
 import { Asset } from '../Asset'
 import { IImage } from '../model/Vault'
 import { importFile } from '../util/expoSecureBlobStore'
+import { useSafeArea } from 'react-native-safe-area-context'
 
 const containerStyle: ViewStyle = {
   backgroundColor: elementCamera.backgroundColor,
@@ -133,12 +133,14 @@ export const Camera = ({ onPicture }: ICameraProps): JSX.Element => {
       ? Asset.iconCameraFlashOn()
       : Asset.iconCameraFlashOff()
 
+  const inset = useSafeArea()
+
   return <View style={containerStyle}>
     <CameraContainer style={{ width: vw(100), height: vh(100) }} zoom={zoom} type={direction} ref={ref} flashMode={flashMode} />
     <flash.component
       style={{
         position: 'absolute',
-        top: topPadding,
+        top: inset.top,
         left: vw(50) - elementCamera.flash.place.width / 2
       }}
       onPress={toggleFlash}

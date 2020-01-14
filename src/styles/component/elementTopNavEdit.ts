@@ -10,8 +10,8 @@ export class ElementTopNavEditClass extends Component {
   background: Polygon
   underline: Polygon
   title: Text
+  backCopy: ImagePlacement
   delete: ImagePlacement
-  back: ImagePlacement
   constructor () {
     super('elementTopNavEdit', 360, 60, Color.grey)
     this.borderTop = new Polygon({ x: 0, y: 58.25, w: 360, h: 2 }, null, {
@@ -26,8 +26,8 @@ export class ElementTopNavEditClass extends Component {
       lineEnd: 'Butt'
     }, [], this)
     this.title = new Text('Vault Name', TextStyles.H5RobotoRegular24BlackCenter, { x: 52, y: 12, w: 259, h: 36 }, this)
-    this.delete = new ImagePlacement(Asset.iconDeleteGrey, { x: 318, y: 18, w: 24, h: 24 }, this)
-    this.back = new ImagePlacement(Asset.iconBackGrey, { x: 18, y: 18, w: 24, h: 24 }, this)
+    this.backCopy = new ImagePlacement(Asset.iconBackGrey, { x: 0, y: -0.5, w: 60, h: 60 }, this)
+    this.delete = new ImagePlacement(Asset.iconDeleteGrey, { x: 304, y: 6, w: 48, h: 48 }, this)
   }
 }
 

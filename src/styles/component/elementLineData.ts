@@ -13,14 +13,14 @@ export class ElementLineDataClass extends Component {
   label: Text
   constructor () {
     super('elementLineData', 375, 60, Color.white)
-    this.open = new ImagePlacement(Asset.iconForwardGrey, { x: 331, y: 19, w: 24, h: 24 }, this)
-    this.menu = new ImagePlacement(Asset.iconDotsHorizontal, { x: 283, y: 19, w: 24, h: 23 }, this)
+    this.open = new ImagePlacement(Asset.iconForwardGrey, { x: 315, y: 1, w: 60, h: 60 }, this)
+    this.menu = new ImagePlacement(Asset.iconDotsHorizontal, { x: 260, y: 1, w: 55, h: 60 }, this)
     this.label = new Text('Label', {
       ...TextStyles.H6BlackHighEmphasisCenter,
       fontSize: 16,
       textAlign: 'left',
       textAlignVertical: 'center'
-    }, { x: 15, y: 19, w: 240, h: 24 }, this)
+    }, { x: 15, y: 19, w: 245, h: 24 }, this)
   }
 }
 

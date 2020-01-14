@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { CameraContainer } from './components/CameraContainer'
 import { useVUnits } from '../util/useVUnits'
 import { elementCamera } from '../styles/component/elementCamera'
@@ -68,6 +68,7 @@ export const Camera = ({ onPicture }: ICameraProps): JSX.Element => {
   const [direction, setDirection] = useState(NativeCamera.Constants.Type.back)
   const [flashMode, setFlashMode] = useState<boolean>(NativeCamera.Constants.FlashMode.off)
   const [zoom, setZoom] = useState<number>(0)
+  const [isEncrypting, setEncrypting] = useState<boolean>(false)
   const ref = useRef<NativeCamera>()
 
   const flip = (): void => {
@@ -85,9 +86,8 @@ export const Camera = ({ onPicture }: ICameraProps): JSX.Element => {
     setZoom(Math.min(zoom + 0.025, 1))
   }
 
-  const takePic = (): void => {
-    if (ref.current === null) {
-      console.log('Error while trying to take picture: reference is not properly set!')
+  useEffect(() => {
+    if (!isEncrypting) {
       return
     }
     (async (): Promise<void> => {
@@ -96,13 +96,25 @@ export const Camera = ({ onPicture }: ICameraProps): JSX.Element => {
         exif: true
       })
       const blob = await importFile(capture.uri)
+      setEncrypting(false)
       onPicture({
         secretKey: blob.secretKey,
         width: capture.width,
         height: capture.height,
         exif: capture.exif
       })
-    })().catch(err => console.error(err))
+    })().catch(err => {
+      setEncrypting(false)
+      console.error(err)
+    })
+  }, [isEncrypting])
+
+  const takePic = (): void => {
+    if (ref.current === null) {
+      console.log('Warn: Error while trying to take picture: reference is not properly set!')
+      return
+    }
+    setEncrypting(true)
   }
 
   const toggleFlash = (): void => {
@@ -122,7 +134,7 @@ export const Camera = ({ onPicture }: ICameraProps): JSX.Element => {
       : Asset.iconCameraFlashOff()
 
   return <View style={containerStyle}>
-    <CameraContainer style={{ width: vw(100), height: vh(100) }} zoom={zoom} type={direction} ref={ref} flashMode={flashMode} />
+    <CameraContainer style={{ width: vw(100), height: vh(100) }} zoom={zoom} type={direction} ref={ref} flashMode={flashMode} onCameraReady={onCameraReady} />
     <flash.component
       style={{
         position: 'absolute',
@@ -139,5 +151,12 @@ export const Camera = ({ onPicture }: ICameraProps): JSX.Element => {
       </View>
       <FlatButton item={elementCamera.flip} pressed={elementCamera.flipBg} onPress={flip} />
     </View>
+    {
+      isEncrypting
+        ? <View style={{ width: '100%', height: '100%', position: 'absolute', backgroundColor: elementCamera.encryptingBg.fill.color, zIndex: 1 }}>
+          <elementCamera.encryptingText.Render horz='center' vert='center' />
+        </View>
+        : <></>
+    }
   </View>
 }

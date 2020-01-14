@@ -14,12 +14,14 @@ export interface IEncryptedBlob {
   path: string[]
 }
 
-export async function importFile (fileUri: string): Promise<IEncryptedBlob> {
+export async function importFile (fileUri: string, doDelete?: boolean): Promise<IEncryptedBlob> {
   const dataAsString = await readAsStringAsync(fileUri, { encoding: 'base64' })
-  deleteAsync(fileUri)
-    .catch(err => {
-      console.log(`Warning: Import of ${fileUri} worked but the original file was not deleted: ${err}`)
-    })
+  if (doDelete) {
+    deleteAsync(fileUri)
+      .catch(err => {
+        console.log(`Warning: Import of ${fileUri} worked but the original file was not deleted: ${err}`)
+      })
+  }
   return writeBlob(toBuffer(dataAsString))
 }
 

@@ -69,7 +69,6 @@ let biggestSize: Promise<ICameraNativeSize>
 async function getBiggestSize (camera: Camera): Promise<ICameraNativeSize> {
   if (biggestSize === undefined) {
     biggestSize = getBestSize(camera, (sizeLists: ICameraNativeSize[]) => {
-      // console.log(sizeLists)
       return sizeLists[0]
     })
   }
@@ -103,10 +102,13 @@ async function getMinCameraSize (camera: Camera, minSpace: number): Promise<ICam
     })
 }
 
-function updateCamera (camera: Camera, setNativeSize: (size: ICameraNativeSize) => any): void {
-  getMinCameraSize(camera, 921600)
+function updateCamera (camera: RefObject<Camera>, setNativeSize: (size: ICameraNativeSize) => any): void {
+  getMinCameraSize(camera.current, 921600)
     .then(setNativeSize)
     .catch(err => {
+      if (camera.current === null) {
+        return
+      }
       console.log(`Notice: trying to update the native size doesn't always work, here is this times error: ${err}`)
       setTimeout(updateCamera, 100, camera, setNativeSize)
     }) // Sometimes the camera is not immediately running, retrying again in 100ms is not a bad plan
@@ -123,6 +125,7 @@ export interface ICameraContainerProps {
   zoom?: number
   flashMode?: any
   type?: any
+  onCameraReady?: () => any
 }
 
 const containerStyle: ViewStyle = {
@@ -146,7 +149,7 @@ const permissionStyle: ViewStyle = {
   alignItems: 'center'
 }
 
-export const CameraContainer = forwardRef(({ onCode, children, style, zoom, flashMode, type }: ICameraContainerProps, ref: RefObject<Camera>): JSX.Element => {
+export const CameraContainer = forwardRef(({ onCode, children, style, zoom, flashMode, type, onCameraReady }: ICameraContainerProps, ref: RefObject<Camera>): JSX.Element => {
   const { status, reask } = usePermission(Permissions.CAMERA, error => {
     console.log(`Error while fetching permissions: ${error}`) // TODO: Create a system error log
   })
@@ -170,7 +173,6 @@ export const CameraContainer = forwardRef(({ onCode, children, style, zoom, flas
       <ConsentoButton proto={elementCamera.retry} style={{ left: null, top: null }} onPress={reask} />
     </View>
   } else if (nativeSize !== undefined) {
-    console.log({ nativeSize })
     cameraStyle = {
       ...cameraStyle,
       ...calculateCameraSize(style, isHorz ? nativeSize : {
@@ -182,7 +184,7 @@ export const CameraContainer = forwardRef(({ onCode, children, style, zoom, flas
 
   useLayoutEffect(() => {
     if (ref.current !== undefined) {
-      updateCamera(ref.current, setNativeSize)
+      updateCamera(ref, setNativeSize)
     }
   }, [ref, status])
 
@@ -197,7 +199,7 @@ export const CameraContainer = forwardRef(({ onCode, children, style, zoom, flas
           onBarCodeScanned={onCode}
           zoom={zoom}
           flashMode={flashMode}
-          useCamera2Api
+          onCameraReady={onCameraReady}
         /> : null
     }
     <View style={uiStyle}>{children}</View>

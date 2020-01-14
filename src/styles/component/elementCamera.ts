@@ -22,6 +22,8 @@ export class ElementCameraClass extends Component {
   minus: ImagePlacement
   plus: ImagePlacement
   flash: ImagePlacement
+  encryptingBg: Polygon
+  encryptingText: Text
   constructor () {
     super('elementCamera', 375.0000000000001, 675, Color.black)
     this.image = new Polygon({ x: 0, y: 0, w: 375, h: 675 }, {
@@ -55,6 +57,12 @@ export class ElementCameraClass extends Component {
     this.minus = new ImagePlacement(Asset.iconCameraZoomMinus, { x: 21.5, y: 614.25, w: 20, h: 20 }, this)
     this.plus = new ImagePlacement(Asset.iconCameraZoomPlus, { x: 84.5, y: 614.25, w: 20, h: 20 }, this)
     this.flash = new ImagePlacement(Asset.iconCameraFlashAuto, { x: 158.5, y: 0, w: 62, h: 36 }, this)
+    this.encryptingBg = new Polygon({ x: 0, y: 0, w: 375, h: 675 }, '#000000b3', {
+      fill: '#979797ff',
+      thickness: 1,
+      lineEnd: 'Butt'
+    }, [], this)
+    this.encryptingText = new Text('Encrypting…', TextStyles.BUTTONRobotoSmallCapRegular18WhiteCenter, { x: 0, y: 310.5, w: 375, h: 42 }, this)
   }
 }
 

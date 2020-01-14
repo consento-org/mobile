@@ -14,7 +14,7 @@ export class ElementBottomNavClass extends Component {
   constructor () {
     super('elementBottomNav', 294, 60, Color.grey)
     this.borderTop = new Polygon({ x: 0, y: 0, w: 294, h: 1 }, null, {
-      fill: Color.darkGrey,
+      fill: Color.mediumGrey,
       thickness: 1,
       lineEnd: 'Butt'
     }, [], this)

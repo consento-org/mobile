@@ -29,9 +29,6 @@ const lockStyle: ViewStyle = {
   alignItems: 'center'
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-function
-const noop = (): void => {}
-
 function confirmDelete (user: User, vault: VaultModel, navigation: TNavigation): void {
   Alert.alert(
     'Delete',

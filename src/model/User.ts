@@ -1,4 +1,4 @@
-import { model, Model, prop, arraySet, Ref, findParent, tProp, types, onPatches, Patch, modelAction, applySnapshot, getSnapshot, customRef } from 'mobx-keystone'
+import { model, Model, prop, arraySet, Ref, findParent, tProp, types, onPatches, modelAction, applySnapshot, getSnapshot, customRef, patchToJsonPatch, JsonPatch } from 'mobx-keystone'
 import { Vault } from './Vault'
 import { Relation } from './Relation'
 import { Consento } from './Consento'
@@ -10,23 +10,9 @@ import { Buffer, bufferToString } from '@consento/crypto/util/buffer'
 import patcher from 'fast-json-patch'
 import { find } from '../util/find'
 
-interface IJSONPatch {
-  op: 'replace' | 'remove' | 'add'
-  path: string
-  value?: any
-}
-
 type IUserStore = ISecureStore<any>
 
 const cloneJSON = (item: any): any => JSON.parse(JSON.stringify(item))
-
-const patchToJSONPatch = (patch: Patch): IJSONPatch => {
-  return {
-    op: patch.op,
-    path: '/' + patch.path.join('/'),
-    value: patch.value
-  }
-}
 
 function displayError (error: Error): void {
   setTimeout(() => {
@@ -70,8 +56,12 @@ export const vaultRefInUser = customRef<Vault>('consento/Vault#inUser', {
   }
 })
 
-function isNotSecretPatch (patch: IJSONPatch): boolean {
-  return !/^\/vaults\/\d+\/dataSecretBase64\//.test(patch.path)
+function isNotSecretPatch (patch: JsonPatch): boolean {
+  return !/^\/vaults\/items\/\d+\/dataSecretBase64\//.test(patch.path)
+}
+
+function isNotVaultPatch (patch: JsonPatch): boolean {
+  return !/^\/vaults\/items\/\d+\/data(\/|$)/.test(patch.path)
 }
 
 @model('consento/User')
@@ -130,19 +120,12 @@ export class User extends Model({
     const stopPatches = onPatches(this, patches => {
       if (stopped) return
       if (snapshotLock) return
-      const jsonPatches = patches.map(patchToJSONPatch).filter(isNotSecretPatch)
-      const storePatches: IJSONPatch[] = []
-      for (const patch of jsonPatches) {
-        const vaultParts = /^\/vaults\/(\d+)\/data\//.exec(patch.path)
-        if (vaultParts !== null) {
-          console.log({ vaultPatch: patch, vaultParts })
-        } else {
-          storePatches.push(patch)
-        }
-      }
+      const jsonPatches = patches.map(patchToJsonPatch)
+        .filter(isNotSecretPatch)
+        .filter(isNotVaultPatch)
       if (jsonPatches.length > 0) {
         // TODO: How often should the snapshotter be persisted? Every 20th patch? Every 10 minutes? A combination?
-        store.append(storePatches).catch(displayError)
+        store.append(jsonPatches).catch(displayError)
       }
     })
     return () => {

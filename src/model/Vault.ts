@@ -5,6 +5,9 @@ import { RequestBase } from './RequestBase'
 import { Buffer } from 'buffer'
 import randomBytes from '@consento/sync-randombytes'
 import { VaultData } from './VaultData'
+import { getItemAsync, setItemAsync } from 'expo-secure-store'
+import { sodium } from '@consento/crypto/core/sodium'
+import { bufferToString } from '@consento/crypto/util/buffer'
 
 export enum TVaultState {
   open = 'open',
@@ -49,18 +52,46 @@ export interface IImage {
   exif: { [key: string]: any }
 }
 
+const vaultsAboutToInit: { [dataKeyHex: string]: Promise<string>} = {}
+
 @model('consento/Vault')
 export class Vault extends Model({
   name: tProp(types.maybeNull(types.string), () => randomBytes(Buffer.alloc(4)).toString('hex')),
   connections: prop<Connection[]>(() => []),
   accessLog: prop<VaultAccessEntry[]>(() => []),
-  dataKeyHex: tProp(types.string, () => randomBytes(Buffer.alloc(32)).toString('hex')),
-  dataSecretBase64: tProp(types.maybeNull(types.string), () => null),
-  data: tProp(types.maybeNull(types.model(VaultData)), () => null)
+  dataKeyHex: tProp(types.string, () => {
+    const dataKeyHex = randomBytes(Buffer.alloc(32)).toString('hex')
+    const initProcess = (async (): Promise<string> => {
+      const secretKey = await sodium.createSecretKey()
+      const secretKeyBase64 = bufferToString(secretKey, 'base64')
+      await setItemAsync(`vault-${dataKeyHex}`, secretKeyBase64)
+      return secretKeyBase64
+    })().catch((err): undefined => {
+      console.log({ err })
+      return undefined
+    })
+    vaultsAboutToInit[dataKeyHex] = initProcess
+    return dataKeyHex
+  }),
+  data: prop<VaultData>(() => null)
 }) {
   // root: Folder
   log: VaultLogEntry[]
   images: { [key: string]: IImage } = {}
+
+  onInit (): void {
+    (async () => {
+      let secretKeyBase64 = await vaultsAboutToInit[this.dataKeyHex]
+      if (secretKeyBase64 === undefined) {
+        secretKeyBase64 = await getItemAsync(`vault-${this.dataKeyHex}`)
+      }
+      if (secretKeyBase64 !== undefined) {
+        this._unlock(secretKeyBase64)
+      }
+    })().catch(err => {
+      console.log({ err })
+    })
+  }
 
   findImage (imageKey: string): IImage {
     return this.images[imageKey]
@@ -97,8 +128,12 @@ export class Vault extends Model({
     this.accessLog.push(new VaultClose({}))
   }
 
-  unlock (secret: Uint8Array): void {
-    // this._data = new VaultData (secret)
+  @modelAction _unlock (secretKeyBase64: string): void {
+    this.data = new VaultData({ secretKeyBase64, dataKeyHex: this.dataKeyHex })
+  }
+
+  @modelAction unlock (secretKeyBase64: string): void {
+    this._unlock(secretKeyBase64)
     this.accessLog.push(new VaultOpen({}))
   }
 
@@ -111,14 +146,13 @@ export class Vault extends Model({
   }
 
   @computed get state (): TVaultState {
-    // if (this._data !== null) {
-    //   return TVaultState.open
-    // }
-    // const entry = this.accessLog[this.accessLog.length - 1]
-    // if (entry instanceof VaultOpenRequest && entry.isActive) {
-    //   return TVaultState.pending
-    // }
-    // return TVaultState.locked
-    return TVaultState.open
+    if (this.data !== null) {
+      return TVaultState.open
+    }
+    const entry = this.accessLog[this.accessLog.length - 1]
+    if (entry instanceof VaultOpenRequest && entry.isActive) {
+      return TVaultState.pending
+    }
+    return TVaultState.locked
   }
 }

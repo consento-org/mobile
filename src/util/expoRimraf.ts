@@ -6,6 +6,7 @@ export interface IDeleteState {
 }
 
 async function _rimraf (folder: string): Promise<void> {
+  // TODO: delete secure store items!!!
   const entries = await readDirectoryAsync(folder)
   await Promise.all(entries.map(async entry => {
     const child = `${folder}/${entry}`

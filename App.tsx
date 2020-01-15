@@ -33,5 +33,5 @@ export default function App (): JSX.Element {
       return <Text>{`Error: ${err}`}</Text>
     }
   }
-  return <Loading />
+  return <SafeAreaProvider><Loading /></SafeAreaProvider>
 }

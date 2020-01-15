@@ -1,7 +1,7 @@
 import React, { useContext } from 'react'
 import { View, ViewStyle, TouchableOpacity, Text } from 'react-native'
 import { elementTextEditor } from '../../styles/component/elementTextEditor'
-import { useVUnits } from '../../util/useVUnits'
+import { useVUnits } from '../../styles/Component'
 import { useSafeArea } from 'react-native-safe-area-context'
 import { ContextMenuContext } from './ContextMenu'
 

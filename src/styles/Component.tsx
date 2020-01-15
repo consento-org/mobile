@@ -1,7 +1,7 @@
-// This file has been generated with expo-export@3.5.2, a Sketch plugin.
-import React, { useRef } from 'react'
+// This file has been generated with expo-export@3.6.0, a Sketch plugin.
+import React, { useState, useEffect } from 'react'
 import { ImageAsset, Slice9 } from '../Asset'
-import { Image, ImageStyle, TextStyle, TextInput, Text as NativeText, View, ViewStyle, FlexStyle, TouchableOpacity, GestureResponderEvent, ReturnKeyTypeOptions, Insets } from 'react-native'
+import { Image, ImageStyle, TextStyle, TextInput, Text as NativeText, View, ViewStyle, FlexStyle, TouchableOpacity, GestureResponderEvent, Dimensions, Insets, ReturnKeyTypeOptions } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 
 export type TRenderGravity = 'start' | 'end' | 'center' | 'stretch'
@@ -13,6 +13,88 @@ export interface IRenderOptions {
   onPress?: (event: GestureResponderEvent) => any
   onLayout?: () => any
 }
+
+export function createGlobalEffect <T> ({ update, init, exit }: {
+  update (): T | undefined
+  init (handler: () => any): void
+  exit (handler: () => any): void
+}): () => T {
+  const listeners = new Set<(lastUpdate: number) => any>()
+  let output: T = update()
+  let globalLastUpdate: number
+  function updateOutput (): void {
+    const newOutput = update()
+    if (newOutput === undefined) {
+      return
+    }
+    output = newOutput
+    globalLastUpdate = Date.now()
+    for (const update of listeners) {
+      update(globalLastUpdate)
+    }
+  }
+  return () => {
+    const setLastUpdate = useState<number>(globalLastUpdate)[1]
+    useEffect(() => {
+      listeners.add(setLastUpdate)
+      if (listeners.size === 1) {
+        init(updateOutput)
+      }
+      return () => {
+        listeners.delete(setLastUpdate)
+        if (listeners.size === 0) {
+          exit(updateOutput)
+        }
+      }
+    }, [false]) // Only update the effect once
+    return output
+  }
+}
+
+export enum TOrientation {
+  horizontal = 'horizontal',
+  vertical = 'vertical'
+}
+
+export interface IVUnits {
+  vw (number: number): number
+  vh (number: number): number
+  vmin (number: number): number
+  vmax (number: number): number
+  orientation: TOrientation
+  isHorz: boolean
+  isVert: boolean
+}
+
+const mem = {
+  vw: null,
+  vh: null
+}
+
+export const useVUnits = createGlobalEffect({
+  update () {
+    const { width, height } = Dimensions.get('window')
+    const vw = width / 100
+    const vh = height / 100
+    if (vw === mem.vw && vh === mem.vh) {
+      return
+    }
+    mem.vw = vw
+    mem.vh = vh
+    const orientation = vw > vh ? TOrientation.horizontal : TOrientation.vertical
+    return Object.freeze({
+      vw: (number: number = 1) => vw * number,
+      vh: (number: number = 1) => vh * number,
+      vmin: (number: number = 1) => Math.min(vw * number, vh * number),
+      vmax: (number: number = 1) => Math.max(vw * number, vh * number),
+      orientation: orientation,
+      isHorz: orientation === TOrientation.horizontal,
+      isVert: orientation === TOrientation.vertical
+    })
+  },
+  init: handler => Dimensions.addEventListener('change', handler),
+  exit: handler => Dimensions.removeEventListener('change', handler)
+})
 
 function applyRenderOptions<T extends FlexStyle> ({ horz, vert }: IRenderOptions = {}, place: Placement, style?: T): T {
   if (style === null || style === undefined) {
@@ -228,58 +310,47 @@ export class Component {
     return this._renderItem(asset.render(style), asset.place, opts)
   }
 
-  _renderItem (item: React.ReactNode, place: Placement, { horz, vert, onPress, onLayout, hitSlop, debug }: IRenderOptions = {}): JSX.Element {
+  _renderItem (item: React.ReactNode, place: Placement, { horz, vert, onPress, onLayout, debug, hitSlop }: IRenderOptions = {}): JSX.Element {
+    const { vw, vh } = useVUnits()
     const style: ViewStyle = {
       position: 'absolute',
-      flexDirection: 'column',
-      display: 'flex'
+      width: place.width,
+      height: place.height
     }
     if (!exists(horz) || horz === 'start') {
-      style.width = place.width
       style.left = place.left
     } else {
-      style.width = '100%'
-      style.paddingLeft = place.left
-      style.paddingRight = this.width - place.right
+      const right = (this.width - place.right)
+      if (horz === 'center') {
+        style.left = vw(50) + (place.centerX - (this.width / 2)) - (place.width / 2)
+      } else if (horz === 'stretch') {
+        style.left = place.left
+        style.width = vw(100) - right - place.left
+      } else {
+        style.left = vw(100) - right - place.width
+      }
     }
     if (!exists(vert) || vert === 'start') {
-      style.height = place.height
       style.top = place.top
     } else {
-      style.height = '100%'
-      style.display = 'flex'
-      style.paddingTop = place.top
-      style.paddingBottom = this.height - place.bottom
-    }
-    const itemStyle: ViewStyle = {
-      position: 'relative',
-      width: !exists(horz) || horz !== 'stretch' ? place.width : '100%',
-      height: !exists(vert) || vert !== 'stretch' ? place.height : '100%'
+      const bottom = (this.width - place.right)
+      if (vert === 'center') {
+        style.top = vh(50) + (place.centerY - (this.height / 2)) - (place.height / 2)
+      } else if (vert === 'stretch') {
+        style.top = place.top
+        style.height = vh(100) - bottom - place.top
+      } else {
+        style.top = vh(100) - bottom - place.height
+      }
     }
     if (debug) {
-      style.borderColor = '#f00'
+      style.borderColor = '#04a'
+      style.backgroundColor = '#ac8888888'
       style.borderWidth = 1
-      style.backgroundColor = '#ac888888'
-      itemStyle.borderColor = '#0f0'
-      itemStyle.borderWidth = 1
+      console.log({ style, horz, vert, place, width: this.width, height: this.height, vw100: vw(100), vh100: vh(100) })
     }
     if (exists(onPress)) {
-      item = <TouchableOpacity onLayout={onLayout} onPress={onPress} hitSlop={hitSlop} style={itemStyle}>{item}</TouchableOpacity>
-    } else {
-      item = <View style={itemStyle}>{item}</View>
-    }
-    if (horz === 'stretch' && vert === 'stretch') {
-      const vertStyle: ViewStyle = {
-        flexGrow: 1,
-        position: 'relative'
-      }
-      item = <View style={vertStyle}>{item}</View>
-    } else if (exists(vert) && vert !== 'start') {
-      style.flexDirection = 'row'
-      style.alignItems = vert === 'stretch' ? 'stretch' : vert === 'end' ? 'flex-end' : 'center'
-      style.justifyContent = horz === 'end' ? 'flex-end' : 'center'
-    } else if (exists(horz) && horz !== 'start') {
-      style.alignItems = horz === 'stretch' ? 'stretch' : horz === 'end' ? 'flex-end' : horz === 'center' ? 'center' : 'flex-start'
+      return <TouchableOpacity onLayout={onLayout} onPress={onPress} style={style} hitSlop={hitSlop}>{item}</TouchableOpacity>
     }
     return <View style={style}>{item}</View>
   }
@@ -719,7 +790,6 @@ export class Text {
     let value = String(useDefault(props.value, this.text))
     const originalValue = value
     const isEditable = exists(props.onEdit) || exists(props.onInstantEdit)
-    const ref = useRef<TextInput>()
     const onInstantEdit = useDefault(props.onInstantEdit, noop)
     const onEdit = useDefault(props.onEdit, noop)
     if (isEditable) {
@@ -732,13 +802,8 @@ export class Text {
             onEdit(value)
           }
         }}
-        onLayout={() => {
-          if (exists(props.onLayout)) {
-            props.onLayout()
-          }
-          ref.current.focus()
-        }}
-        ref={ref}
+        onLayout={props.onLayout}
+        ref={props.ref as React.Ref<TextInput>}
         style={{
           ...this.style,
           ...props.style

@@ -46,7 +46,7 @@ const FileListItem = ({ item }: IFileListItemProps): JSX.Element => {
         { name: 'Other', action (item): void { console.log(`Other ${item.name}`) } },
         null,
         { name: 'Delete', action (item): void { console.log(`DELETE ${item.name}`) }, dangerous: true }
-      ], item, event)} debug style={{ zIndex: 1 }} />
+      ], item, event)} style={{ zIndex: 1 }} />
   </View>
 }
 

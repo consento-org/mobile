@@ -1,7 +1,7 @@
 import React, { createContext, useState, useEffect } from 'react'
 import { View, GestureResponderEvent, TouchableWithoutFeedback, TouchableOpacity, BackHandler } from 'react-native'
 import { IPopupContext, IPopupMenuItem } from './PopupMenu'
-import { useVUnits } from '../../util/useVUnits'
+import { useVUnits } from '../../styles/Component'
 import { useSafeArea } from 'react-native-safe-area-context'
 import { elementContextMenu } from '../../styles/component/elementContextMenu'
 

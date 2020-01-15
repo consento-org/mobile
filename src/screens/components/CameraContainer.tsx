@@ -2,7 +2,7 @@ import React, { useState, forwardRef, useRef, useLayoutEffect, RefObject } from 
 import { ViewStyle, View, Platform } from 'react-native'
 import { Camera } from 'expo-camera'
 import { BarCodeScanningResult } from 'expo-camera/build/Camera.types'
-import { useVUnits } from '../../util/useVUnits'
+import { useVUnits } from '../../styles/Component'
 import { usePermission, Permissions } from '../../util/usePermission'
 import { elementCamera } from '../../styles/component/elementCamera'
 import { ConsentoButton } from './ConsentoButton'

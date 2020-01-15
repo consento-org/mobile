@@ -1,4 +1,4 @@
-// This file has been generated with expo-export@3.5.2, a Sketch plugin.
+// This file has been generated with expo-export@3.6.0, a Sketch plugin.
 import { Component, Polygon, ImagePlacement, Text } from '../Component'
 import { Color } from '../Color'
 import { Asset } from '../../Asset'

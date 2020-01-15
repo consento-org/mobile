@@ -1,4 +1,4 @@
-import { createGlobalEffect } from './createGlobalEffect'
+import { createGlobalEffect } from '../styles/Component'
 import { AppState } from 'react-native'
 
 export const useAppState = createGlobalEffect({

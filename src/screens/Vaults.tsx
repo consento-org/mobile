@@ -8,7 +8,7 @@ import { observer } from 'mobx-react'
 import { map } from '../util/map'
 import { Vault } from '../model/Vault'
 import { withNavigation, TNavigation } from './navigation'
-import { useVUnits } from '../util/useVUnits'
+import { useVUnits } from '../styles/Component'
 import { elementCardVaultClose } from '../styles/component/elementCardVaultClose'
 
 const listStyle: ViewStyle = {

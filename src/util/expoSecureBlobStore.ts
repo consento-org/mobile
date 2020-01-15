@@ -90,7 +90,6 @@ export async function readBlob (input: string | Uint8Array | IEncryptedBlob): Pr
 export async function readImageBlob (secretKey: Uint8Array | IEncryptedBlob): Promise<string> {
   const data = await readBlob(secretKey)
   let dataBase64: string
-  console.log({ dataType: typeof data })
   if (typeof data === 'string') {
     if (/^data:/.test(data)) {
       return data

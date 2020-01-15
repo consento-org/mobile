@@ -8,37 +8,41 @@ import { PopupContext, IPopupMenuItem } from './PopupMenu'
 import { TNavigation, withNavigation } from '../navigation'
 import { elementPopUpMenu } from '../../styles/component/elementPopUpMenu'
 import { VaultContext } from '../../model/VaultContext'
-import randomBytes from '@consento/sync-randombytes'
-import { Buffer } from 'buffer'
+import { ImageFile, FileType, TextFile, File } from '../../model/VaultData'
+import { filter } from '../../util/filter'
+import { observer } from 'mobx-react'
 
-interface IFileListAction {
+interface IFileListAction <T extends File> {
   name: string
-  action (item: IFileListItem): void
+  action (item: T): void
 }
 
-interface IFileListItem {
+export interface ISectionProps <T extends File> {
   name: string
-  path: string
+  items: T[]
 }
 
-export interface ISectionProps {
-  name: string
-  items: IFileListItem[]
-}
-
-export interface IFileListItemProps {
-  item: IFileListItem
+export interface IFileListItemProps <T extends File> {
+  item: T
+  navigation: TNavigation
 }
 
 const section = elementFileList.sectionText.component
 const itemProto = elementFileList.entry.component
 
-const FileListItem = ({ item }: IFileListItemProps): JSX.Element => {
+const FileListItem = withNavigation(observer(function <T extends File> ({ item, navigation }: IFileListItemProps<T>): JSX.Element {
   const { open } = useContext(ContextMenuContext)
+  const { vault } = useContext(VaultContext)
 
   return <View style={{ height: itemProto.height, width: '100%' }}>
     <itemProto.label.Render horz='stretch' value={item.name} />
-    <itemProto.open.Render horz='end' onPress={() => console.log('xxx')} />
+    <itemProto.open.Render
+      horz='end'
+      onPress={() => navigation.navigate('editor', {
+        vault: vault.$modelId,
+        file: item.$modelId
+      })}
+    />
     <itemProto.menu.Render
       horz='end' onPress={(event) => open([
         { name: 'Rename', action (item): void { console.log(`Rename ${item.name}`) } },
@@ -48,9 +52,9 @@ const FileListItem = ({ item }: IFileListItemProps): JSX.Element => {
         { name: 'Delete', action (item): void { console.log(`DELETE ${item.name}`) }, dangerous: true }
       ], item, event)} style={{ zIndex: 1 }} />
   </View>
-}
+}))
 
-const Section = ({ name, items }: ISectionProps): JSX.Element => {
+const Section = function <T extends File> ({ name, items }: ISectionProps<T>): JSX.Element {
   if (items.length === 0) {
     return null
   }
@@ -59,32 +63,26 @@ const Section = ({ name, items }: ISectionProps): JSX.Element => {
       <section.bg.Render horz='stretch' />
       <section.label.Render value={name} style={{ position: 'absolute' }} />
     </View>
-    {items.map(item => <FileListItem key={item.name} item={item} />)}
+    {items.map(item => <FileListItem key={item.$modelId} item={item} />)}
   </View>
 }
 
-export const FileList = withNavigation(({ navigation }: { navigation: TNavigation }): JSX.Element => {
-  const files = [
-    { path: 'image/Test', name: 'Test' },
-    { path: 'image/Top', name: 'Top' },
-    { path: 'text/Test', name: 'Test' },
-    { path: 'text/Top', name: 'Top' }
-  ]
-  const textFiles = files.filter(item => /^text\//.test(item.path))
-  const imageFiles = files.filter(item => /^image\//.test(item.path))
+export const FileList = withNavigation(observer(({ navigation }: { navigation: TNavigation }): JSX.Element => {
   const { vault } = useContext(VaultContext)
+  const files = vault.data?.files.items ?? []
+  const textFiles = filter(files, (item): item is TextFile => item.type === FileType.text)
+  const imageFiles = filter(files, (item): item is ImageFile => item.type === FileType.image)
   const { open } = useContext(PopupContext)
   const popupActions: IPopupMenuItem[] = [
     {
       name: elementPopUpMenu.takePicture.text,
       action: () =>
         navigation.navigate('camera', {
-          onPicture (picture) {
-            const key = randomBytes(Buffer.alloc(4)).toString('hex')
-            vault.images[key] = picture
-            navigation.navigate('imageEditor', {
+          onPicture (input: ImageFile): void {
+            vault.data.files.add(input)
+            navigation.navigate('editor', {
               vault: vault.$modelId,
-              imageKey: key
+              file: input.$modelId
             })
           }
         })
@@ -102,4 +100,4 @@ export const FileList = withNavigation(({ navigation }: { navigation: TNavigatio
         : null
     }
   </EmptyView>
-})
+}))

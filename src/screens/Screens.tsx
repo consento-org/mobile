@@ -12,6 +12,7 @@ import { Relation } from './Relation'
 import { TNavigation } from './navigation'
 import { NewRelation } from './NewRelation'
 import { Vault as VaultModel } from '../model/Vault'
+import { isImageFile, isTextFile } from '../model/VaultData'
 import { Relation as RelationModel } from '../model/Relation'
 import { ConsentoContext } from '../model/ConsentoContext'
 import { RelationContext } from '../model/RelationContext'
@@ -78,24 +79,23 @@ export const Screens = observer((): JSX.Element => {
           return <Camera onPicture={onPicture} />
         })
       },
-      textEditor: {
-        path: 'textEditor',
-        screen: () => <TextEditor />
-      },
-      imageEditor: {
-        path: 'imageEditor',
+      editor: {
+        path: 'editor',
         screen: withNavigation(({ navigation }: { navigation: TNavigation }): JSX.Element => {
           const vaultKey = navigation.state.params.vault
           const vault = user.findVault(vaultKey)
           if (!(vault instanceof VaultModel)) {
             return <View /> // TODO: Return 404?
           }
-          const imageKey = navigation.state.params.imageKey
-          const image = vault.findImage(imageKey)
-          if (image === null || image === undefined) {
-            return <View /> // TODO: Return 404?
+          const fileKey = navigation.state.params.file
+          const file = vault.findFile(fileKey)
+          if (isImageFile(file)) {
+            return <ImageEditor image={file} />
           }
-          return <ImageEditor key={imageKey} image={image} />
+          if (isTextFile(file)) {
+            return <TextEditor text={file} />
+          }
+          return <View /> // TODO: Return 404?
         })
       }
     }, {

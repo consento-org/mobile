@@ -4,7 +4,7 @@ import { Connection } from './Connection'
 import { RequestBase } from './RequestBase'
 import { Buffer } from 'buffer'
 import randomBytes from '@consento/sync-randombytes'
-import { VaultData } from './VaultData'
+import { VaultData, File } from './VaultData'
 import { getItemAsync, setItemAsync } from 'expo-secure-store'
 import { sodium } from '@consento/crypto/core/sodium'
 import { bufferToString } from '@consento/crypto/util/buffer'
@@ -45,13 +45,6 @@ export type VaultAccessEntry = typeof VaultOpenRequest | VaultClose | VaultOpen
 export class AccessOperation extends Model({
 }) {}
 
-export interface IImage {
-  secretKey: string | Uint8Array
-  width: number
-  height: number
-  exif: { [key: string]: any }
-}
-
 const vaultsAboutToInit: { [dataKeyHex: string]: Promise<string>} = {}
 
 @model('consento/Vault')
@@ -77,7 +70,6 @@ export class Vault extends Model({
 }) {
   // root: Folder
   log: VaultLogEntry[]
-  images: { [key: string]: IImage } = {}
 
   onInit (): void {
     (async () => {
@@ -93,8 +85,8 @@ export class Vault extends Model({
     })
   }
 
-  findImage (imageKey: string): IImage {
-    return this.images[imageKey]
+  findFile (modelId: string): File {
+    return this.data?.findFile(modelId)
   }
 
   @computed get isClosable (): boolean {

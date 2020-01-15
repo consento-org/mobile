@@ -6,9 +6,10 @@ import { Camera as NativeCamera } from 'expo-camera'
 import { TouchableWithoutFeedback } from 'react-native-gesture-handler'
 import { Polygon, ImagePlacement, useVUnits } from '../styles/Component'
 import { Asset } from '../Asset'
-import { IImage } from '../model/Vault'
+import { ImageFile } from '../model/VaultData'
 import { importFile } from '../util/expoSecureBlobStore'
 import { useSafeArea } from 'react-native-safe-area-context'
+import { bufferToString } from '@consento/crypto/util/buffer'
 
 const containerStyle: ViewStyle = {
   backgroundColor: elementCamera.backgroundColor,
@@ -59,7 +60,7 @@ function FlatButton ({ item, pressed: poly, onPress }: {
 }
 
 export interface ICameraProps {
-  onPicture (capture: IImage): void
+  onPicture (capture: ImageFile): void
 }
 
 export const Camera = ({ onPicture }: ICameraProps): JSX.Element => {
@@ -96,12 +97,12 @@ export const Camera = ({ onPicture }: ICameraProps): JSX.Element => {
       })
       const blob = await importFile(capture.uri)
       setEncrypting(false)
-      onPicture({
-        secretKey: blob.secretKey,
+      onPicture(new ImageFile({
+        secretKeyBase64: bufferToString(blob.secretKey, 'base64'),
         width: capture.width,
         height: capture.height,
         exif: capture.exif
-      })
+      }))
     })().catch(err => {
       setEncrypting(false)
       console.error(err)

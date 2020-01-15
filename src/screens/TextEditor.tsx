@@ -2,6 +2,7 @@ import React from 'react'
 import { TextInput } from 'react-native'
 import { elementTextEditor } from '../styles/component/elementTextEditor'
 import { Editor } from './components/Editor'
+import { TextFile } from '../model/VaultData'
 
 const text = `Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Sit amet dictum sit amet justo donec. Urna porttitor rhoncus dolor purus. Diam sollicitudin tempor id eu nisl. Iaculis urna id volutpat lacus. Faucibus in ornare quam viverra orci sagittis eu. Risus quis varius quam quisque id diam vel quam. Viverra tellus in hac habitasse platea dictumst. Proin fermentum leo vel orci porta non pulvinar. Egestas maecenas pharetra convallis posuere morbi. Nunc lobortis mattis aliquam faucibus purus in. Amet mauris commodo quis imperdiet massa tincidunt. Fringilla urna porttitor rhoncus dolor purus non. Commodo elit at imperdiet dui accumsan sit amet. Elementum integer enim neque volutpat ac tincidunt vitae semper. Elit scelerisque mauris pellentesque pulvinar pellentesque habitant morbi tristique. Tellus integer feugiat scelerisque varius morbi enim nunc. In hac habitasse platea dictumst quisque sagittis purus sit. Massa id neque aliquam vestibulum morbi blandit cursus risus at. Enim lobortis scelerisque fermentum dui faucibus in ornare quam.
 
@@ -38,7 +39,7 @@ Felis eget nunc lobortis mattis. Nam aliquam sem et tortor consequat id porta ni
 Consectetur a erat nam at lectus. Euismod quis viverra nibh cras pulvinar mattis nunc sed. Arcu bibendum at varius vel pharetra vel. At auctor urna nunc id cursus metus aliquam eleifend. Aenean euismod elementum nisi quis eleifend quam adipiscing vitae proin. Accumsan lacus vel facilisis volutpat est velit egestas dui id. Integer feugiat scelerisque varius morbi. Tempus iaculis urna id volutpat lacus laoreet non curabitur. Facilisis leo vel fringilla est ullamcorper eget nulla. Odio facilisis mauris sit amet massa. Lectus sit amet est placerat. Eu mi bibendum neque egestas congue quisque egestas.
 `
 
-export const TextEditor = (): JSX.Element => {
+export const TextEditor = (_: { text: TextFile }): JSX.Element => {
   return <Editor>
     <TextInput
       style={{

@@ -21,6 +21,11 @@ const editSize: ViewStyle = {
   ...elementTextEditor.editSize.place.style()
 }
 
+const closeSize: ViewStyle = {
+  position: 'absolute',
+  ...elementTextEditor.closeSize.place.style()
+}
+
 export interface IEditorProps {
   file: File
   vault: Vault
@@ -32,7 +37,7 @@ export interface IEditorProps {
 export const Editor = observer(({ navigation, file, vault, children }: IEditorProps): JSX.Element => {
   const { vh, vw } = useVUnits()
   const { open } = useContext(ContextMenuContext)
-  const { Form, useField } = useForm(navigation, undefined, (): any => navigation.navigate('vault', { vault: vault.$modelId }))
+  const { Form, useField, save, leave, isDirty } = useForm(navigation, undefined, (): any => navigation.navigate('vault', { vault: vault.$modelId }))
   const filename = useField(
     'filename',
     file.name,
@@ -43,9 +48,16 @@ export const Editor = observer(({ navigation, file, vault, children }: IEditorPr
 
   return <Form>
     <View style={{ position: 'absolute', top: insets.top, height: vh(100) - insets.top, width: '100%' }}>
-      <TouchableOpacity style={saveSize}>
-        <elementTextEditor.save.Render />
+      <TouchableOpacity style={closeSize}>
+        <elementTextEditor.close.Render onPress={() => leave(() => navigation.navigate('vault', { vault: vault.$modelId }))} />
       </TouchableOpacity>
+      {
+        isDirty
+          ? <TouchableOpacity style={saveSize} onPress={save}>
+            {elementTextEditor.save.render({ style: { left: elementTextEditor.save.place.left - elementTextEditor.saveSize.place.left, top: elementTextEditor.save.place.top - elementTextEditor.saveSize.place.top } })}
+          </TouchableOpacity>
+          : <></>
+      }
       <TouchableOpacity style={{ ...editSize, left: vw(100) - (elementTextEditor.width - elementTextEditor.edit.place.left) }} onPress={event => open([], null, event)}>
         <Text style={{ ...elementTextEditor.edit.style, top: elementTextEditor.edit.place.top }}>{elementTextEditor.edit.text}</Text>
       </TouchableOpacity>

@@ -90,6 +90,11 @@ export const FileList = withNavigation(observer(({ navigation }: { navigation: T
               vault: vault.$modelId,
               file: input.$modelId
             })
+          },
+          onClose () {
+            navigation.navigate('vault', {
+              valut: vault.$modelId
+            })
           }
         })
     },

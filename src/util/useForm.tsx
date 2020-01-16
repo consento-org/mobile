@@ -2,6 +2,7 @@ import React, { useState, useEffect, createContext } from 'react'
 import { BackHandler, Alert } from 'react-native'
 import { TNavigation } from '../screens/navigation'
 import { isPromiseLike } from '@consento/crypto/util/isPromiseLike'
+import { deepEqual } from 'fast-equals'
 
 function alertInvalid (onDiscard: () => any): void {
   Alert.alert('Unsaved Changes', 'Leaving this page will discard any changes!', [
@@ -150,7 +151,8 @@ export function useForm (
   save?: (fields: { [key: string]: any }) => void | Promise<void>,
   leave?: () => void
 ): IMainForm {
-  const [form, setForm] = useState<IMainForm>((): IMainForm => {
+  const setUpdate = useState<number>(Date.now())[1]
+  const form = useState<IMainForm>((): IMainForm => {
     const fields: { [key: string]: FormField<any> } = {}
     const _save = async (): Promise<boolean> => {
       if (!form.isDirty || form.isInvalid) {
@@ -158,7 +160,7 @@ export function useForm (
       }
       form.error = undefined
       form.isSaving = true
-      setForm(form)
+      setUpdate(Date.now())
       try {
         const ops = []
         const data = Object.keys(fields).reduce((data: { [key: string]: any }, key) => {
@@ -179,14 +181,13 @@ export function useForm (
         console.log('saved')
         form.isDirty = false
         form.isSaving = false
-        setForm(form)
-        console.log('done')
+        setUpdate(Date.now())
         return true
       } catch (error) {
         console.log({ error })
         form.error = error
         form.isSaving = false
-        setForm(form)
+        setUpdate(Date.now())
         return false
       }
     }
@@ -260,14 +261,24 @@ export function useForm (
         }
         return invalid
       }, undefined)
-      form.invalid = invalid
-      form.isInvalid = invalid !== undefined
-      form.isDirty = isDirty
-      form.save = isDirty ? _save : undefined
-      setForm(form)
+      let hasChange = false
+      // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+      if (!deepEqual(invalid, form.invalid)) {
+        form.invalid = invalid
+        form.isInvalid = invalid !== undefined
+        hasChange = true
+      }
+      if (isDirty !== form.isDirty) {
+        form.isDirty = isDirty
+        form.save = isDirty ? _save : undefined
+        hasChange = true
+      }
+      if (hasChange) {
+        setUpdate(Date.now())
+      }
     }
     return form
-  })
+  })[0]
 
   useEffect(() => {
     if (!form.isDirty) return

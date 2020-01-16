@@ -27,7 +27,7 @@ AsyncStorage
   .then((config) => {
     if (!exists(config)) {
       config = {
-        address: 'https://expo.consento.org'
+        address: 'https://notify.consento.org'
       }
     } else {
       config = JSON.parse(config)

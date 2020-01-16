@@ -1,6 +1,6 @@
 import { getSnapshot, applySnapshot, onPatches, patchToJsonPatch, BaseModel, JsonPatch, SnapshotOutOf } from 'mobx-keystone'
 import { getExpoSecureStore, expoSecureStore } from './expoSecureStore'
-import { ISecureStore } from './createSecureStore'
+import { ISecureStore, IIndexer } from './createSecureStore'
 import { jsonEncoding } from './jsonEncoding'
 import patcher from 'fast-json-patch'
 import { sodium as cryptoCore } from '@consento/crypto/core/sodium'
@@ -35,6 +35,7 @@ export function mobxPersist <
   let store: IJsonStore
   let stopped: boolean = false
   let snapshotLock: boolean = false
+  let snapshotter: IIndexer<any>
   ;(async () => {
     const newStore = secretKey !== undefined
       ? expoSecureStore(cryptoCore, secretKey, jsonEncoding)
@@ -49,7 +50,7 @@ export function mobxPersist <
     const version = await store.version()
     if (stopped) return
     const initSnapshot = getSnapshot(item)
-    const snapshotter = store.defineIndex('snapshot', () => {
+    snapshotter = store.defineIndex('snapshot', () => {
       const cloned = cloneJSON(initSnapshot)
       delete cloned.$modelId
       return clearClone(cloned)
@@ -57,7 +58,6 @@ export function mobxPersist <
       if (snapshot === null) {
         return patches
       }
-      // console.log({ restoring: patches.map(patch => `${patch.op} → ${patch.path}`), owner: item.$modelId, ownerType: item.$modelType })
       const { newDocument } = patcher.applyPatch(
         snapshot,
         patches
@@ -86,8 +86,14 @@ export function mobxPersist <
       jsonPatches = jsonPatches.filter(filter)
     }
     if (jsonPatches.length > 0) {
-      // TODO: How often should the snapshotter be persisted? Every 20th patch? Every 10 minutes? A combination?
-      store.append(jsonPatches).catch(displayError)
+      store.append(jsonPatches)
+        .then(async () => {
+          const [persistedVersion, version] = await Promise.all([snapshotter.persistedVersion(), store.version()])
+          if ((version - persistedVersion) > 10) {
+            await snapshotter.persist()
+          }
+        })
+        .catch(displayError)
     }
   })
   return () => {

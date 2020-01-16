@@ -47,6 +47,7 @@ export interface IIndexer <Index> {
   read (): Promise<Index>
   persist (): Promise<void>
   isDirty (): Promise<boolean>
+  persistedVersion (): Promise<number>
 }
 
 export interface ISecureStore <LogEntry> {
@@ -64,6 +65,7 @@ interface IInternalIndexer <Index, LogEntry> extends IIndexer<Index> {
 
 interface IIndexState<Index> {
   version: number
+  persistedVersion: number
   data: Index
   dirty: boolean
 }
@@ -122,10 +124,12 @@ export function createSecureStore <LogEntry> (secretKey: Uint8Array, options: IS
       throw new Error(`Indexer ${indexName} already defined.`)
     }
     const processIndex = async (indexVersion: number, data: Index, logVersions: number[]): Promise<IIndexState<Index>> => {
+      const persistedVersion = indexVersion
       if (logVersions.length === 0) {
         return {
           dirty: false,
           version: indexVersion,
+          persistedVersion,
           data
         }
       }
@@ -137,6 +141,7 @@ export function createSecureStore <LogEntry> (secretKey: Uint8Array, options: IS
       return {
         dirty: true,
         version: indexVersion,
+        persistedVersion,
         data
       }
     }
@@ -171,6 +176,7 @@ export function createSecureStore <LogEntry> (secretKey: Uint8Array, options: IS
         return {
           dirty: false,
           version: 0,
+          persistedVersion: 0,
           data
         }
       }
@@ -203,8 +209,12 @@ export function createSecureStore <LogEntry> (secretKey: Uint8Array, options: IS
         release({
           dirty: true,
           version,
+          persistedVersion: state.persistedVersion,
           data: merge(state.data, entry, version)
         })
+      },
+      async persistedVersion () {
+        return (await indexLock).persistedVersion
       },
       async isDirty () {
         return (await indexLock).dirty
@@ -222,6 +232,7 @@ export function createSecureStore <LogEntry> (secretKey: Uint8Array, options: IS
         release({
           dirty: false,
           version: state.version,
+          persistedVersion: state.version,
           data: state.data
         })
       },
@@ -234,6 +245,7 @@ export function createSecureStore <LogEntry> (secretKey: Uint8Array, options: IS
         release({
           dirty: false,
           version: 0,
+          persistedVersion: 0,
           data: init()
         })
       }

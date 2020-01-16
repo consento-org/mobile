@@ -64,9 +64,8 @@ export const Editor = observer(({ navigation, file, vault, children }: IEditorPr
       <elementTextEditor.title.Render
         onInstantEdit={filename.handleValue}
         style={filename.isInvalid ? { color: Color.red } : undefined}
-        value={filename.value}
-        targetRef={(textInput) => textInput?.focus()}
-        selectable />
+        value={filename.initial}
+      />
       <elementTextEditor.size.Render />
       <View
         style={{

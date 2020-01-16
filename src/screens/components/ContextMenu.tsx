@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from 'react'
+import React, { createContext, useState, useEffect, useContext } from 'react'
 import { View, GestureResponderEvent, TouchableWithoutFeedback, TouchableOpacity, BackHandler } from 'react-native'
 import { IPopupContext, IPopupMenuItem } from './PopupMenu'
 import { useVUnits } from '../../styles/Component'
@@ -49,6 +49,7 @@ export const ContextMenu = ({ children }: IPopupMenuProps): JSX.Element => {
     <View style={{ position: 'absolute', width: '100%', height: '100%' }}>
       {children}
       {active !== null ? <ContextMenuDisplay
+        close={close}
         context={active.context}
         items={active.items}
         pos={active.pos}
@@ -73,8 +74,12 @@ const Divider = (): JSX.Element => {
   </View>
 }
 
-const Item = ({ item, context }: { item: IPopupMenuItem, context: any }): JSX.Element => {
-  return <TouchableOpacity style={{ height: elementContextMenu.copy.component.height }} onPress={(event) => item.action(context, event)}>
+const Item = ({ item, context, close }: { item: IPopupMenuItem, context: any, close: () => any }): JSX.Element => {
+  return <TouchableOpacity
+    style={{ height: elementContextMenu.copy.component.height }} onPress={(event) => {
+      item.action(context, event)
+      close()
+    }}>
     {
       item.dangerous
         ? <elementContextMenu.delete.component.label.Render value={item.name} />
@@ -83,7 +88,18 @@ const Item = ({ item, context }: { item: IPopupMenuItem, context: any }): JSX.El
   </TouchableOpacity>
 }
 
-export const ContextMenuDisplay = ({ items, onItemSelect, pos, context }: { pos: { top: number, left: number }, items?: IPopupMenuItem[], onItemSelect: (item: IPopupMenuItem, event: GestureResponderEvent) => void, context: any }): JSX.Element => {
+export interface IConsentMenuDisplayProps {
+  pos: {
+    top: number
+    left: number
+  }
+  items?: IPopupMenuItem[]
+  onItemSelect: (item: IPopupMenuItem, event: GestureResponderEvent) => void
+  context: any
+  close: () => any
+}
+
+export const ContextMenuDisplay = ({ items, onItemSelect, pos, context, close }: IConsentMenuDisplayProps): JSX.Element => {
   const cancel = (): void => onItemSelect(null, null)
   const { vw, vh } = useVUnits()
   const inset = useSafeArea()
@@ -114,7 +130,7 @@ export const ContextMenuDisplay = ({ items, onItemSelect, pos, context }: { pos:
           if (item === null) {
             return <Divider key={index} />
           }
-          return <Item key={index} item={item} context={context} />
+          return <Item key={index} item={item} context={context} close={close} />
         })}
       </View>
     </View>

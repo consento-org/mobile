@@ -49,7 +49,13 @@ const FileListItem = withNavigation(observer(function <T extends File> ({ item, 
         { name: 'Share', action (item): void { console.log(`Share ${item.name}`) } },
         { name: 'Other', action (item): void { console.log(`Other ${item.name}`) } },
         null,
-        { name: 'Delete', action (item): void { console.log(`DELETE ${item.name}`) }, dangerous: true }
+        {
+          name: 'Delete',
+          action (file: File): void {
+            vault.data.deleteFile(file)
+          },
+          dangerous: true
+        }
       ], item, event)} style={{ zIndex: 1 }} />
   </View>
 }))

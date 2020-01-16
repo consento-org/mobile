@@ -68,21 +68,34 @@ export class VaultData extends Model({
 
   onAttachedToRootStore (): () => any {
     // TODO: Should we delete actually deleted blobs?
-    return mobxPersist({
-      item: this,
-      secretKey: this.secretKey,
-      filter: (patch: JsonPatch) => {
-        return patch.path !== '/secretKeyBase64'
-      },
-      clearClone: (cloned: any) => {
-        delete cloned.files.$modelId
-        return cloned
-      },
-      prepareSnapshot: (_: VaultData, snapshot: SnapshotOutOf<VaultData>) => {
-        snapshot.files.$modelId = this.files.$modelId
-        return snapshot
+    let isStopped = false
+    let stopPersist: () => any
+    setTimeout(() => {
+      stopPersist = mobxPersist({
+        item: this,
+        secretKey: this.secretKey,
+        filter: (patch: JsonPatch) => {
+          return patch.path !== '/secretKeyBase64'
+        },
+        clearClone: (cloned: any) => {
+          delete cloned.files.$modelId
+          return cloned
+        },
+        prepareSnapshot: (_: VaultData, snapshot: SnapshotOutOf<VaultData>) => {
+          snapshot.files.$modelId = this.files.$modelId
+          return snapshot
+        }
+      })
+      if (isStopped) {
+        stopPersist()
       }
-    })
+    }, 0)
+    return () => {
+      isStopped = true
+      if (stopPersist !== undefined) {
+        stopPersist()
+      }
+    }
   }
 
   @modelAction _markLoaded (): void {

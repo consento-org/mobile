@@ -1,5 +1,6 @@
 import React from 'react'
 import { ViewStyle, TouchableOpacity } from 'react-native'
+import { elementCardVaultLoading } from '../../styles/component/elementCardVaultLoading'
 import { elementCardVaultClose } from '../../styles/component/elementCardVaultClose'
 import { elementCardVaultPending } from '../../styles/component/elementCardVaultPending'
 import { elementCardVaultOpen } from '../../styles/component/elementCardVaultOpen'
@@ -25,7 +26,9 @@ interface IVaultPrototype {
 }
 
 function getPrototype (state: TVaultState): IVaultPrototype {
-  if (state === TVaultState.open) {
+  if (state === TVaultState.loading) {
+    return elementCardVaultLoading
+  } else if (state === TVaultState.open) {
     return elementCardVaultOpen
   } else if (state === TVaultState.pending) {
     return elementCardVaultPending
@@ -39,7 +42,7 @@ export const VaultCard = withNavigation(observer(({ vault, navigation }: { vault
     navigation.navigate('vault', { vault: vault.$modelId })
   }
 
-  return <TouchableOpacity style={cardStyle} onPress={onPress} activeOpacity={0.55}>
+  return <TouchableOpacity style={cardStyle} onPress={onPress} activeOpacity={0.55} disabled={vault.isLoading}>
     <proto.background.Render style={{ position: 'absolute' }} />
     <proto.title.Render value={vault.name} />
     <proto.lastAccess.Render />

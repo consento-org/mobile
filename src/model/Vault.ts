@@ -1,5 +1,5 @@
-import { computed } from 'mobx'
-import { model, modelAction, Model, prop, tProp, types, ExtendedModel } from 'mobx-keystone'
+import { computed, observable, IObservableValue } from 'mobx'
+import { model, modelAction, Model, prop, tProp, types, ExtendedModel, ObjectMap, registerRootStore } from 'mobx-keystone'
 import { Connection } from './Connection'
 import { RequestBase } from './RequestBase'
 import { Buffer } from 'buffer'
@@ -12,7 +12,8 @@ import { bufferToString } from '@consento/crypto/util/buffer'
 export enum TVaultState {
   open = 'open',
   locked = 'locked',
-  pending = 'pending'
+  pending = 'pending',
+  loading = 'loading'
 }
 
 @model('consento/MessageLogEntry')
@@ -45,7 +46,9 @@ export type VaultAccessEntry = typeof VaultOpenRequest | VaultClose | VaultOpen
 export class AccessOperation extends Model({
 }) {}
 
-const vaultsAboutToInit: { [dataKeyHex: string]: Promise<string>} = {}
+const vaultSecrets: { [dataKeyHex: string]: Promise<string>} = {}
+const vaultRoot = new ObjectMap<VaultData>({})
+registerRootStore(vaultRoot)
 
 @model('consento/Vault')
 export class Vault extends Model({
@@ -63,30 +66,76 @@ export class Vault extends Model({
       console.log({ err })
       return undefined
     })
-    vaultsAboutToInit[dataKeyHex] = initProcess
+    vaultSecrets[dataKeyHex] = initProcess
     return dataKeyHex
-  }),
-  data: prop<VaultData>(() => null)
+  })
 }) {
   // root: Folder
   log: VaultLogEntry[]
 
+  _initing: IObservableValue<() => any>
+  _attachCounter: number
+
   onInit (): void {
-    (async () => {
-      let secretKeyBase64 = await vaultsAboutToInit[this.dataKeyHex]
-      if (secretKeyBase64 === undefined) {
-        secretKeyBase64 = await getItemAsync(`vault-${this.dataKeyHex}`)
+    this._attachCounter = 0
+    this._initing = observable.box<() => any>(null)
+  }
+
+  onAttachedToRootStore (): () => void {
+    /**
+     * WORKAROUND
+     *
+     * mobx-keystone will not execute detachment in order.
+     * It will run .onAttachedToRootStore twice before running
+     * the first "detach" function. By setting a counter,
+     * we make sure that only one .attach is run at a time.
+     */
+    if (this._attachCounter === 0) {
+      let attached = true
+      ;(async () => {
+        let vaultSecret = vaultSecrets[this.dataKeyHex]
+        if (vaultSecret === undefined) {
+          vaultSecret = getItemAsync(`vault-${this.dataKeyHex}`)
+          vaultSecrets[this.dataKeyHex] = vaultSecret
+        }
+        const secretKeyBase64 = await vaultSecret
+        if (!attached) {
+          return
+        }
+        if (secretKeyBase64 !== undefined) {
+          this._unlock(secretKeyBase64)
+        }
+        this._initing.set(null)
+      })().catch(err => {
+        if (!attached) {
+          this._initing.set(null)
+        }
+        console.log({ err })
+      })
+      this._initing.set(() => {
+        attached = false
+      })
+    }
+    this._attachCounter += 1
+    return () => {
+      this._attachCounter -= 1
+      if (this._attachCounter === 0) {
+        const deInit = this._initing.get()
+        if (deInit !== null) {
+          deInit()
+          this._initing.set(null)
+        }
+        vaultRoot.delete(this.dataKeyHex)
       }
-      if (secretKeyBase64 !== undefined) {
-        this._unlock(secretKeyBase64)
-      }
-    })().catch(err => {
-      console.log({ err })
-    })
+    }
   }
 
   findFile (modelId: string): File {
     return this.data?.findFile(modelId)
+  }
+
+  @computed get data (): VaultData {
+    return vaultRoot.get(this.dataKeyHex)
   }
 
   @computed get isClosable (): boolean {
@@ -121,7 +170,8 @@ export class Vault extends Model({
   }
 
   @modelAction _unlock (secretKeyBase64: string): void {
-    this.data = new VaultData({ secretKeyBase64, dataKeyHex: this.dataKeyHex })
+    const newVault = new VaultData({ secretKeyBase64, dataKeyHex: this.dataKeyHex })
+    vaultRoot.set(this.dataKeyHex, newVault)
   }
 
   @modelAction unlock (secretKeyBase64: string): void {
@@ -137,8 +187,18 @@ export class Vault extends Model({
     return this.state === TVaultState.pending
   }
 
+  @computed get isLoading (): boolean {
+    return this.state === TVaultState.loading
+  }
+
   @computed get state (): TVaultState {
-    if (this.data !== null) {
+    if (this._initing.get() !== null) {
+      return TVaultState.loading
+    }
+    if (this.data !== undefined) {
+      if (!this.data.loaded) {
+        return TVaultState.loading
+      }
       return TVaultState.open
     }
     const entry = this.accessLog[this.accessLog.length - 1]

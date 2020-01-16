@@ -1,4 +1,4 @@
-import { createSecureStore, ISecureStore } from '../createSecureStore'
+import { createSecureStore, ISecureStore, IStoreEntry } from '../createSecureStore'
 import { friends as crypto } from '@consento/crypto/core/friends'
 import { Buffer, bufferToString } from '@consento/crypto/util/buffer'
 
@@ -39,6 +39,20 @@ async function createStore (secretKey?: Uint8Array, dataStore?: any): Promise<{ 
             return entry.substr(base.length)
           }
         }).filter(Boolean)
+      },
+      // eslint-disable-next-line @typescript-eslint/require-await
+      async info (path: string[]): Promise<IStoreEntry> {
+        const data = dataStore[path.join('/')]
+        if (data !== undefined) {
+          return {
+            exists: true,
+            isDirectory: false
+          }
+        }
+        return {
+          exists: false,
+          isDirectory: false
+        }
       },
       // eslint-disable-next-line @typescript-eslint/require-await
       async delete (path: string[]): Promise<void> {

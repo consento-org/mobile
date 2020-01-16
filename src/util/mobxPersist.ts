@@ -57,6 +57,7 @@ export function mobxPersist <
       if (snapshot === null) {
         return patches
       }
+      // console.log({ restoring: patches.map(patch => `${patch.op} → ${patch.path}`), owner: item.$modelId, ownerType: item.$modelType })
       const { newDocument } = patcher.applyPatch(
         snapshot,
         patches
@@ -66,7 +67,6 @@ export function mobxPersist <
     if (version !== 0) {
       const snapshot = await snapshotter.read()
       if (stopped) return
-      // Don't replace the instance or the instances relations/consentos/vaults
       snapshot.$modelId = item.$modelId
       snapshotLock = true
       applySnapshot(item, prepareSnapshot(item, snapshot))

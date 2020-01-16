@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react'
+import React, { useContext } from 'react'
 import { View, ViewStyle, TouchableOpacity, Text } from 'react-native'
 import { elementTextEditor } from '../../styles/component/elementTextEditor'
 import { useVUnits } from '../../styles/Component'

@@ -69,7 +69,7 @@ const Section = function <T extends File> ({ name, items }: ISectionProps<T>): J
 
 export const FileList = withNavigation(observer(({ navigation }: { navigation: TNavigation }): JSX.Element => {
   const { vault } = useContext(VaultContext)
-  const files = vault.data?.files.items ?? []
+  const files = vault.data?.files ?? []
   const textFiles = filter(files, (item): item is TextFile => item.type === FileType.text)
   const imageFiles = filter(files, (item): item is ImageFile => item.type === FileType.image)
   const { open } = useContext(PopupContext)
@@ -79,7 +79,7 @@ export const FileList = withNavigation(observer(({ navigation }: { navigation: T
       action: () =>
         navigation.navigate('camera', {
           onPicture (input: ImageFile): void {
-            vault.data.files.add(input)
+            vault.data.addFile(input)
             navigation.navigate('editor', {
               vault: vault.$modelId,
               file: input.$modelId
@@ -87,7 +87,19 @@ export const FileList = withNavigation(observer(({ navigation }: { navigation: T
           }
         })
     },
-    { name: elementPopUpMenu.createText.text, action: () => navigation.navigate('textEditor') }
+    {
+      name: elementPopUpMenu.createText.text,
+      action: () => {
+        const textFile = new TextFile({
+          name: vault.newFilename()
+        })
+        vault.data.addFile(textFile)
+        navigation.navigate('editor', {
+          vault: vault.$modelId,
+          file: textFile.$modelId
+        })
+      }
+    }
   ]
   return <EmptyView prototype={elementVaultEmpty} onAdd={() => open(popupActions)}>
     {

@@ -134,6 +134,10 @@ export class Vault extends Model({
     return this.data?.findFile(modelId)
   }
 
+  newFilename (): string {
+    return this.data?.newFilename()
+  }
+
   @computed get data (): VaultData {
     return vaultRoot.get(this.dataKeyHex)
   }

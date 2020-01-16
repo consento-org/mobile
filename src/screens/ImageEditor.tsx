@@ -1,14 +1,14 @@
 import React from 'react'
 import { Editor } from './components/Editor'
-import { IImage } from '../model/Vault'
+import { ImageFile } from '../model/VaultData'
 import { SecureImage } from './components/SecureImage'
 
 export interface IImageEditorProps {
-  image: IImage
+  image: ImageFile
 }
 
 export const ImageEditor = ({ image }: IImageEditorProps): JSX.Element => {
-  return <Editor>
+  return <Editor file={image}>
     <SecureImage
       secretKey={image}
       resizeMode='contain'

@@ -4,6 +4,7 @@ import { elementTextEditor } from '../../styles/component/elementTextEditor'
 import { useVUnits } from '../../styles/Component'
 import { useSafeArea } from 'react-native-safe-area-context'
 import { ContextMenuContext } from './ContextMenu'
+import { File } from '../../model/VaultData'
 
 const saveSize: ViewStyle = {
   position: 'absolute',
@@ -15,7 +16,12 @@ const editSize: ViewStyle = {
   ...elementTextEditor.editSize.place.style()
 }
 
-export const Editor = ({ children }: { children?: React.ReactChild | React.ReactChild[] }): JSX.Element => {
+export interface IEditorProps {
+  file: File
+  children?: React.ReactChild | React.ReactChild[]
+}
+
+export const Editor = ({ file, children }: IEditorProps): JSX.Element => {
   const { vh, vw } = useVUnits()
   const { open } = useContext(ContextMenuContext)
   const insets = useSafeArea()

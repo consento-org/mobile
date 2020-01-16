@@ -93,7 +93,7 @@ export const Screens = observer((): JSX.Element => {
             return <ImageEditor image={file} />
           }
           if (isTextFile(file)) {
-            return <TextEditor text={file} />
+            return <TextEditor textFile={file} />
           }
           return <View /> // TODO: Return 404?
         })

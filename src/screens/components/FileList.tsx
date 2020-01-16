@@ -51,9 +51,7 @@ const FileListItem = withNavigation(observer(function <T extends File> ({ item, 
         null,
         {
           name: 'Delete',
-          action (file: File): void {
-            vault.data.deleteFile(file)
-          },
+          action: (file: File): void => vault.data.deleteFile(file),
           dangerous: true
         }
       ], item, event)} style={{ zIndex: 1 }} />

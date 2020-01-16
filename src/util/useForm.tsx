@@ -108,27 +108,34 @@ class FormField<T> implements IFormField<T> {
     this.reset = this.reset.bind(this)
     this.validate()
   }
+
   get value (): T {
     return this._value
   }
+
   set value (newValue: T) {
     this.setValue(newValue)
   }
+
   handleValue (newValue: T): void {
     this.setValue(newValue)
   }
+
   setValue (newValue: T): void {
-    if (this._value != newValue) {
+    // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+    if (!deepEqual(this._value, newValue)) {
       this._value = newValue
       this.isDirty = newValue !== this.initial
       this.validate()
       this._triggerUpdate()
     }
   }
-  reset () {
+
+  reset (): void {
     this.value = this.initial
   }
-  validate () {
+
+  validate (): void {
     if (this._validate === undefined) {
       this.isInvalid = false
       return
@@ -178,13 +185,11 @@ export function useForm (
           await save(data)
         }
         await Promise.all(ops)
-        console.log('saved')
         form.isDirty = false
         form.isSaving = false
         setUpdate(Date.now())
         return true
       } catch (error) {
-        console.log({ error })
         form.error = error
         form.isSaving = false
         setUpdate(Date.now())
@@ -201,7 +206,7 @@ export function useForm (
       async leave (next: () => any): Promise<boolean> {
         if (!form.isDirty) {
           next()
-          return true 
+          return true
         }
         if (form.isInvalid) {
           alertInvalid(next)
@@ -282,14 +287,14 @@ export function useForm (
 
   useEffect(() => {
     if (!form.isDirty) return
-    const next = () => {
+    const next = (): void => {
       if (leave !== undefined) {
         leave()
       } else {
         navigation.goBack()
       }
     }
-    const fnc = () => {
+    const fnc = (): boolean => {
       if (!form.isDirty) {
         return false
       }
@@ -308,7 +313,6 @@ export function useForm (
       )
       return true
     }
-    console.log('add back listeners')
     BackHandler.addEventListener('hardwareBackPress', fnc)
     return () => BackHandler.removeEventListener('hardwareBackPress', fnc)
   })

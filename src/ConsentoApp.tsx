@@ -35,7 +35,7 @@ export const ConsentoApp = observer((): JSX.Element => {
     }
     let address = config.address
     if (!isURL(address)) {
-      address = 'https://expo.consento.org'
+      address = 'https://notify.consento.org'
     }
     if (/^\/\//.test(address)) {
       address = `http://${address}`

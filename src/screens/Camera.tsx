@@ -3,7 +3,7 @@ import { CameraContainer } from './components/CameraContainer'
 import { elementCamera } from '../styles/component/elementCamera'
 import { ViewStyle, View } from 'react-native'
 import { Camera as NativeCamera } from 'expo-camera'
-import { TouchableWithoutFeedback } from 'react-native-gesture-handler'
+import { TouchableWithoutFeedback, TouchableOpacity } from 'react-native-gesture-handler'
 import { Polygon, ImagePlacement, useVUnits } from '../styles/Component'
 import { Asset } from '../Asset'
 import { ImageFile } from '../model/VaultData'
@@ -61,9 +61,10 @@ function FlatButton ({ item, pressed: poly, onPress }: {
 
 export interface ICameraProps {
   onPicture (capture: ImageFile): void
+  onClose (): void
 }
 
-export const Camera = ({ onPicture }: ICameraProps): JSX.Element => {
+export const Camera = ({ onPicture, onClose }: ICameraProps): JSX.Element => {
   const { vw, vh } = useVUnits()
   const [direction, setDirection] = useState(NativeCamera.Constants.Type.back)
   const [flashMode, setFlashMode] = useState<boolean>(NativeCamera.Constants.FlashMode.off)
@@ -137,14 +138,20 @@ export const Camera = ({ onPicture }: ICameraProps): JSX.Element => {
 
   return <View style={containerStyle}>
     <CameraContainer style={{ width: vw(100), height: vh(100) }} zoom={zoom} type={direction} ref={ref} flashMode={flashMode} />
-    <flash.component
-      style={{
-        position: 'absolute',
-        top: inset.top,
-        left: vw(50) - elementCamera.flash.place.width / 2
-      }}
-      onPress={toggleFlash}
-    />
+    <View style={{ position: 'absolute', left: inset.left, top: inset.top, width: vw(100) - inset.left - inset.right, height: vh(100) - inset.top - inset.bottom }}>
+      <TouchableOpacity onPress={onClose}>
+        <View style={elementCamera.closeSize.place.style()}>
+          <elementCamera.close.Render />
+        </View>
+      </TouchableOpacity>
+      <flash.component
+        style={{
+          position: 'absolute',
+          left: vw(50) - elementCamera.flash.place.width / 2
+        }}
+        onPress={toggleFlash}
+      />
+    </View>
     <View style={{ display: 'flex', flexDirection: 'row', width: vw(100), height: elementCamera.bg.place.height - (elementCamera.height - elementCamera.image.place.height), position: 'absolute', top: vh(100) - elementCamera.bg.place.height, backgroundColor: elementCamera.bg.fill.color }}>
       <FlatButton item={elementCamera.minus} pressed={elementCamera.minusBg} onPress={zoomOut} />
       <FlatButton item={elementCamera.plus} pressed={elementCamera.plusBg} onPress={zoomIn} />

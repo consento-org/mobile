@@ -202,6 +202,9 @@ export const Asset = {
   iconCrossGrey () {
     return images.fetch('iconCrossGrey', () => require('../assets/icon/cross/grey.png'))
   },
+  iconCrossWhite () {
+    return images.fetch('iconCrossWhite', () => require('../assets/icon/cross/white.png'))
+  },
   iconDeleteGrey () {
     return images.fetch('iconDeleteGrey', () => require('../assets/icon/delete/grey.png'))
   },

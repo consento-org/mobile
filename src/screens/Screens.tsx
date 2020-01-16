@@ -76,7 +76,8 @@ export const Screens = observer((): JSX.Element => {
         path: 'camera',
         screen: withNavigation(({ navigation }: { navigation: TNavigation }): JSX.Element => {
           const onPicture = navigation.state.params.onPicture
-          return <Camera onPicture={onPicture} />
+          const onClose = navigation.state.params.onClose
+          return <Camera onPicture={onPicture} onClose={onClose} />
         })
       },
       editor: {

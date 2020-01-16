@@ -1,27 +1,55 @@
-import React from 'react'
-import { TextInput } from 'react-native'
+import React, { useContext } from 'react'
+import { TextInput, Text } from 'react-native'
 import { elementTextEditor } from '../styles/component/elementTextEditor'
 import { Editor } from './components/Editor'
 import { TextFile } from '../model/VaultData'
+import { Vault } from '../model/Vault'
+import { TNavigation } from './navigation'
+import { FormContext } from '../util/useForm'
 
 export interface ITextEditorProps {
   textFile: TextFile
+  vault: Vault
+  navigation: TNavigation
 }
 
-export const TextEditor = ({ textFile }: ITextEditorProps): JSX.Element => {
-  return <Editor file={textFile}>
-    <TextInput
-      style={{
-        width: '100%',
-        height: '100%',
-        paddingLeft: elementTextEditor.readable.place.left,
-        paddingRight: elementTextEditor.width - elementTextEditor.readable.place.right,
-        ...elementTextEditor.readable.style
-      }}
-      multiline
-      defaultValue='todo'
-      selection={{ start: 0 }}
-      editable
-    />
-  </Editor>
+interface IInputProps {
+  file: TextFile
+}
+
+const inputStyle = {
+  width: '100%',
+  height: '100%',
+  paddingLeft: elementTextEditor.readable.place.left,
+  paddingRight: elementTextEditor.width - elementTextEditor.readable.place.right,
+  ...elementTextEditor.readable.style
+}
+
+const loadingStyle = {
+  left: elementTextEditor.readable.place.left,
+  ...elementTextEditor.readable.style
+}
+
+const Input = ({ file }: IInputProps): JSX.Element => {
+  const { useField } = useContext(FormContext)
+  const fullText = useField<string>(
+    'fullText',
+    async () => file.loadText().then(loaded => {
+      console.log({ loaded })
+      return loaded
+    }),
+    () => true,
+    async newText => {
+      console.log({ saving: newText })
+      return file.saveText(newText)
+    }
+  )
+  if (!fullText.loaded) {
+    return <Text style={loadingStyle}>Loading...</Text>
+  }
+  return <TextInput style={inputStyle} onChangeText={fullText.handleValue} defaultValue={fullText.value} editable multiline />
+}
+
+export const TextEditor = ({ textFile, vault, navigation }: ITextEditorProps): JSX.Element => {
+  return <Editor file={textFile} vault={vault} navigation={navigation}><Input file={textFile} /></Editor>
 }

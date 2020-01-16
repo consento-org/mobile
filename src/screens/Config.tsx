@@ -18,15 +18,17 @@ export const Config = withNavigation(
   ({ navigation }: { navigation: TNavigation }): JSX.Element => {
     const [config, setConfig] = useConfig()
     const [resetBarrier, setBarrier] = useState(true)
-    const [address, setAddress] = useState(config.address)
     const { users } = useContext(ConsentoContext)
     const [isDeleting, setDeleting] = useState(false)
-    const { setDirty, isInvalid, leave, save } = useForm(navigation, () => {
-      setConfig({
-        ...config,
-        address
-      })
-    })
+    const { leave, save, useField } = useForm(navigation,
+      ({ address }) => {
+        setConfig({
+          ...config,
+          address
+        })
+      }
+    )
+    const address = useField('address', config.address, isURL)
     useEffect(() => {
       if (isDeleting) return
       const lockBackHandler = (): boolean => true
@@ -66,12 +68,10 @@ export const Config = withNavigation(
       <BottomButtonView prototype={elementConfig} onPress={save}>
         <InputField
           proto={elementConfig.host}
-          value={address}
-          invalid={isInvalid}
-          onEdit={newAddress => {
-            setAddress(newAddress)
-            setDirty(newAddress !== config.address, !isURL(newAddress))
-          }} />
+          value={address.value}
+          invalid={address.isInvalid}
+          onEdit={address.handleValue}
+        />
         <ConsentoButton proto={resetBarrier ? elementConfig.reset1 : elementConfig.reset2} onPress={doReset} />
       </BottomButtonView>
     </View>

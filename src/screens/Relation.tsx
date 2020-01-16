@@ -32,10 +32,13 @@ function confirmDelete (user: User, relation: RelationModel, navigation: TNaviga
 export const Relation = observer(withNavigation(({ navigation }: { navigation: TNavigation }): JSX.Element => {
   const { relation } = useContext(RelationContext)
   const { user } = useContext(ConsentoContext)
-  const [name, setName] = useState<string>(relation.name)
-  const { leave, setDirty, save } = useForm(navigation, (): void => {
-    relation.setName(name)
-  })
+  const { leave, save, useField } = useForm(
+    navigation,
+    (fields: { [key: string]: any }): void => {
+      relation.setName(fields.name)
+    }
+  )
+  const name = useField('name', relation.name)
   return <View style={{ flex: 1 }}>
     <TopNavigation
       title={relation.displayName}
@@ -45,13 +48,10 @@ export const Relation = observer(withNavigation(({ navigation }: { navigation: T
     <BottomButtonView prototype={elementRelationName} onPress={save}>
       <InputField
         proto={elementRelationName.relationName}
-        value={name}
+        value={name.value}
         autoFocus
         defaultValue={relation.defaultName}
-        onEdit={value => {
-          setName(value)
-          setDirty(value !== relation.name)
-        }}
+        onEdit={name.setValue}
       />
     </BottomButtonView>
   </View>

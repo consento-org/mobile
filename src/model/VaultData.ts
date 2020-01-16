@@ -1,8 +1,9 @@
 import { model, Model, tProp, types, JsonPatch, SnapshotOutOf, modelAction, prop, objectMap, getParent } from 'mobx-keystone'
 import { mobxPersist } from '../util/mobxPersist'
 import { computed } from 'mobx'
-import { toBuffer } from '@consento/crypto/util/buffer'
+import { toBuffer, bufferToString, Buffer } from '@consento/crypto/util/buffer'
 import { find } from '../util/find'
+import { readBlob, writeBlob } from '../util/expoSecureBlobStore'
 
 export interface IFile {
   readonly secretKeyBase64: string
@@ -46,6 +47,31 @@ export class TextFile extends Model({
     return FileType.text
   }
 
+  async saveText (text: string): Promise<void> {
+    const { secretKey } = await writeBlob(text)
+    this._saveText(bufferToString(secretKey, 'base64'))
+  }
+
+  @modelAction _saveText (secretKeyBase64: string): void {
+    console.log({ persisting: secretKeyBase64 })
+    this.secretKeyBase64 = secretKeyBase64
+  }
+
+  async loadText (): Promise<string> {
+    console.log({ loading: this.secretKeyBase64 })
+    if (this.secretKeyBase64 === null) {
+      return ''
+    }
+    try {
+      const fromFs = await readBlob(Buffer.from(this.secretKeyBase64, 'base64'))
+      console.log({ fromFs })
+      return fromFs as string
+    } catch (_) {
+      console.log(_)
+      return ''
+    }
+  }
+
   @computed get secretKey (): Uint8Array {
     return toBuffer(this.secretKeyBase64)
   }
@@ -87,10 +113,13 @@ export class VaultData extends Model({
 
   @modelAction setFilename (file: File, filename: string): void {
     const parent = getParent(file)
-    console.log({ parent })
+    if (parent !== this.files) {
+      throw new Error(`Can not set file name for [${file.name}]: File not part of this vault.`)
+    }
     const existingFile = this.findFileByName(filename)
     if (existingFile === undefined) {
       file.name = filename
+      return
     }
     if (existingFile !== file) {
       throw new Error(`Can not set new file name for [${file.name}]: File with this filename [${filename}] already exists.`)

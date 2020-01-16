@@ -90,10 +90,10 @@ export const Screens = observer((): JSX.Element => {
           const fileKey = navigation.state.params.file
           const file = vault.findFile(fileKey)
           if (isImageFile(file)) {
-            return <ImageEditor image={file} />
+            return <ImageEditor image={file} vault={vault} navigation={navigation} />
           }
           if (isTextFile(file)) {
-            return <TextEditor textFile={file} />
+            return <TextEditor textFile={file} vault={vault} navigation={navigation} />
           }
           return <View /> // TODO: Return 404?
         })

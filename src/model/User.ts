@@ -5,6 +5,8 @@ import { Consento } from './Consento'
 import { computed } from 'mobx'
 import { find } from '../util/find'
 import { mobxPersist } from '../util/mobxPersist'
+import { IConsentoCrypto } from '@consento/api'
+import { Lockee } from './VaultData'
 
 function initUser (user: User): void {
   ;['My Contracts', 'My Certificates', 'My Passwords'].forEach(name => {
@@ -42,6 +44,16 @@ export class User extends Model({
   relations: prop(() => arraySet<Relation>()),
   consentos: prop(() => arraySet<Consento>())
 }) {
+  static async create (crypto: IConsentoCrypto, relation: Relation): Promise<Lockee> {
+    const handshake = await crypto.initHandshake()
+    const lockee = new Lockee({
+      relationRef: relationRefInUser(relation.$modelId),
+      initJSON: handshake.toJSON(),
+      confirmJSON: null
+    })
+    return lockee
+  }
+
   onAttachedToRootStore (): () => any {
     return mobxPersist({
       item: this,

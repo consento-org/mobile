@@ -1,4 +1,4 @@
-import { model, Model, tProp, types } from 'mobx-keystone'
+import { model, Model, tProp, types, ExtendedModel } from 'mobx-keystone'
 import { IConsentoCrypto, IReceiver, IConnection, ISender } from '@consento/api'
 
 @model('consento/Receiver')
@@ -28,6 +28,7 @@ export class Sender extends Model({
     })
   }
 }
+
 export function fromIConnection (connection: IConnection): Connection {
   const newConnection = new Connection({
     sender: new Sender(connection.sender.toJSON()),
@@ -48,3 +49,8 @@ export class Connection extends Model({
     }
   }
 }
+
+@model('consento/Vault/Lock')
+export class Lock extends ExtendedModel(Connection, {
+  partialKey: tProp(types.string)
+}) {}

@@ -1,9 +1,12 @@
-import { model, Model, tProp, types, JsonPatch, SnapshotOutOf, modelAction, prop, objectMap, getParent } from 'mobx-keystone'
+import { model, Model, tProp, types, JsonPatch, SnapshotOutOf, modelAction, prop, objectMap, getParent, Ref } from 'mobx-keystone'
 import { mobxPersist } from '../util/mobxPersist'
 import { computed } from 'mobx'
 import { toBuffer, bufferToString, Buffer } from '@consento/crypto/util/buffer'
 import { find } from '../util/find'
 import { readBlob, writeBlob } from '../util/expoSecureBlobStore'
+import { Relation } from './Relation'
+import { IHandshakeInitJSON, IConsentoCrypto, IHandshakeConfirmationJSON, IHandshakeInit } from '@consento/api'
+import { Connection } from './Connection'
 
 export interface IFile {
   readonly secretKeyBase64: string
@@ -77,12 +80,29 @@ export class TextFile extends Model({
   }
 }
 
+@model('consento/VaultData/Lockee')
+export class Lockee extends Model({
+  relationRef: prop<Ref<Relation>>(),
+  connectionRef: prop<Ref<Connection>>(),
+  initJSON: prop<IHandshakeInitJSON>(() => null),
+  confirmJSON: prop<IHandshakeConfirmationJSON>(() => null)
+}) {
+  @computed get relation (): Relation {
+    return this.relationRef.current
+  }
+
+  @computed init (crypto: IConsentoCrypto): IHandshakeInit {
+    return new crypto.HandshakeInit(this.initJSON)
+  }
+}
+
 @model('consento/VaultData')
 export class VaultData extends Model({
   secretKeyBase64: tProp(types.string),
   dataKeyHex: tProp(types.string),
   loaded: tProp(types.boolean, () => false),
-  files: prop((): File[] => [])
+  files: prop((): File[] => []),
+  lockees: prop((): Lockee[] => [])
 }) {
   findFile (modelId: string): File {
     return find(this.files, (file: File): file is File => file.$modelId === modelId)

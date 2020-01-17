@@ -5,9 +5,7 @@ import { createTabBar } from './components/createTabBar'
 import { TNavigation } from './navigation'
 import { elementSealVaultActive } from '../styles/component/elementSealVaultActive'
 import { elementSealVaultIdle } from '../styles/component/elementSealVaultIdle'
-import { elementLocksEmpty } from '../styles/component/elementLocksEmpty'
 import { ConsentoButton } from './components/ConsentoButton'
-import { EmptyView } from './components/EmptyView'
 import { Logs } from './Logs'
 import { Waiting } from './components/Waiting'
 import { withNavigation } from 'react-navigation'
@@ -18,6 +16,7 @@ import { FileList } from './components/FileList'
 import { User } from '../model/User'
 import { Vault as VaultModel } from '../model/Vault'
 import { ConsentoContext } from '../model/ConsentoContext'
+import { Locks } from './components/Locks'
 
 const lockStyle: ViewStyle = {
   height: elementSealVaultActive.height,
@@ -46,13 +45,9 @@ function confirmDelete (user: User, vault: VaultModel, navigation: TNavigation):
   )
 }
 
-const VaultData = withNavigation(({ navigation }: { navigation: TNavigation }): JSX.Element => {
-  return <FileList />
-})
-
 const VaultNavigator = createTabBar({
-  vaultData: () => <VaultData />,
-  vaultLocks: () => <EmptyView prototype={elementLocksEmpty} />,
+  vaultData: () => <FileList />,
+  vaultLocks: () => <Locks />,
   vaultLog: () => <Logs />
 })
 

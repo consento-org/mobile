@@ -1,6 +1,6 @@
 import { computed, observable, IObservableValue } from 'mobx'
 import { model, modelAction, Model, prop, tProp, types, ExtendedModel, ObjectMap, registerRootStore } from 'mobx-keystone'
-import { Connection } from './Connection'
+import { Lock } from './Connection'
 import { RequestBase } from './RequestBase'
 import { Buffer } from 'buffer'
 import randomBytes from '@consento/sync-randombytes'
@@ -53,7 +53,7 @@ registerRootStore(vaultRoot)
 @model('consento/Vault')
 export class Vault extends Model({
   name: tProp(types.maybeNull(types.string), () => randomBytes(Buffer.alloc(4)).toString('hex')),
-  connections: prop<Connection[]>(() => []),
+  locks: prop<Lock[]>(() => []),
   accessLog: prop<VaultAccessEntry[]>(() => []),
   dataKeyHex: tProp(types.string, () => {
     const dataKeyHex = randomBytes(Buffer.alloc(32)).toString('hex')
@@ -143,7 +143,7 @@ export class Vault extends Model({
   }
 
   @computed get isClosable (): boolean {
-    return this.connections.length > 0
+    return this.locks.length > 0
   }
 
   @modelAction setName (name: string): void {

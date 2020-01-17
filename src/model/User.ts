@@ -5,8 +5,10 @@ import { Consento } from './Consento'
 import { computed } from 'mobx'
 import { find } from '../util/find'
 import { mobxPersist } from '../util/mobxPersist'
+import { compareNames } from '../util/compareNames'
+import { VaultLockee } from './VaultData'
+import { Lock } from './Connection'
 import { IConsentoCrypto } from '@consento/api'
-import { Lockee } from './VaultData'
 
 function initUser (user: User): void {
   ;['My Contracts', 'My Certificates', 'My Passwords'].forEach(name => {
@@ -36,6 +38,35 @@ function isVaultPatch (patch: JsonPatch): boolean {
   return /^\/vaults\/items\/\d+\/data(\/|$)/.test(patch.path)
 }
 
+export class Lockee {
+  vaultLockee: VaultLockee
+  relation?: Relation
+  lock?: Lock
+
+  constructor (vaultLockee: VaultLockee, relation?: Relation, lock?: Lock) {
+    this.relation = relation
+    this.vaultLockee = vaultLockee
+    this.lock = lock
+  }
+
+  get displayName (): string {
+    return this.relation?.displayName
+  }
+
+  get $modelId (): string {
+    return this.vaultLockee.$modelId
+  }
+}
+
+export const createLockee = async (crypto: IConsentoCrypto, relation: Relation): Promise<VaultLockee> => {
+  const handshake = await crypto.initHandshake()
+  return new VaultLockee({
+    relationId: relation.$modelId,
+    initJSON: handshake.toJSON(),
+    confirmJSON: null
+  })
+}
+
 @model('consento/User')
 export class User extends Model({
   name: tProp(types.string),
@@ -44,16 +75,6 @@ export class User extends Model({
   relations: prop(() => arraySet<Relation>()),
   consentos: prop(() => arraySet<Consento>())
 }) {
-  static async create (crypto: IConsentoCrypto, relation: Relation): Promise<Lockee> {
-    const handshake = await crypto.initHandshake()
-    const lockee = new Lockee({
-      relationRef: relationRefInUser(relation.$modelId),
-      initJSON: handshake.toJSON(),
-      confirmJSON: null
-    })
-    return lockee
-  }
-
   onAttachedToRootStore (): () => any {
     return mobxPersist({
       item: this,
@@ -81,8 +102,22 @@ export class User extends Model({
     }
   }
 
+  getLockeesSorted (vault: Vault): Lockee[] {
+    return vault.data?.lockees.map(
+      vaultLockee => new Lockee(vaultLockee, this.findRelation(vaultLockee.relationId))).sort(compareNames
+    )
+  }
+
   @computed get relationsSorted (): Relation[] {
-    return Array.from(this.relations.values()).sort((a, b): number => a.displayName.toLowerCase().localeCompare(b.displayName.toLowerCase(), 'en-co-phonebk'))
+    return Array.from(this.relations.values()).sort(compareNames)
+  }
+
+  availableRelations (vault: Vault): Relation[] {
+    const usedRelations = vault.data?.lockees.reduce((map: { [key: string]: true }, vaultLockee) => {
+      map[vaultLockee.relationId] = true
+      return map
+    }, {})
+    return this.relationsSorted.filter(relation => usedRelations[relation.$modelId] === undefined)
   }
 
   findRelation (relationId: string): Relation {

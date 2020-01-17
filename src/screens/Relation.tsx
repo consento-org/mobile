@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react'
+import React, { useContext } from 'react'
 import { View, Alert } from 'react-native'
 import { TopNavigation } from './components/TopNavigation'
 import { observer } from 'mobx-react'
@@ -51,7 +51,7 @@ export const Relation = observer(withNavigation(({ navigation }: { navigation: T
         value={name.value}
         autoFocus
         defaultValue={relation.defaultName}
-        onEdit={name.setValue}
+        onEdit={name.handleValue}
       />
     </BottomButtonView>
   </View>

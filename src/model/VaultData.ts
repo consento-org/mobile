@@ -1,12 +1,10 @@
-import { model, Model, tProp, types, JsonPatch, SnapshotOutOf, modelAction, prop, objectMap, getParent, Ref } from 'mobx-keystone'
+import { model, Model, tProp, types, JsonPatch, SnapshotOutOf, modelAction, prop, objectMap, getParent } from 'mobx-keystone'
 import { mobxPersist } from '../util/mobxPersist'
 import { computed } from 'mobx'
 import { toBuffer, bufferToString, Buffer } from '@consento/crypto/util/buffer'
 import { find } from '../util/find'
 import { readBlob, writeBlob } from '../util/expoSecureBlobStore'
-import { Relation } from './Relation'
 import { IHandshakeInitJSON, IConsentoCrypto, IHandshakeConfirmationJSON, IHandshakeInit } from '@consento/api'
-import { Connection } from './Connection'
 
 export interface IFile {
   readonly secretKeyBase64: string
@@ -81,16 +79,12 @@ export class TextFile extends Model({
 }
 
 @model('consento/VaultData/Lockee')
-export class Lockee extends Model({
-  relationRef: prop<Ref<Relation>>(),
-  connectionRef: prop<Ref<Connection>>(),
+export class VaultLockee extends Model({
+  relationId: prop<string>(),
+  lockId: prop<string>(() => null),
   initJSON: prop<IHandshakeInitJSON>(() => null),
   confirmJSON: prop<IHandshakeConfirmationJSON>(() => null)
 }) {
-  @computed get relation (): Relation {
-    return this.relationRef.current
-  }
-
   @computed init (crypto: IConsentoCrypto): IHandshakeInit {
     return new crypto.HandshakeInit(this.initJSON)
   }
@@ -102,7 +96,7 @@ export class VaultData extends Model({
   dataKeyHex: tProp(types.string),
   loaded: tProp(types.boolean, () => false),
   files: prop((): File[] => []),
-  lockees: prop((): Lockee[] => [])
+  lockees: prop((): VaultLockee[] => [])
 }) {
   findFile (modelId: string): File {
     return find(this.files, (file: File): file is File => file.$modelId === modelId)
@@ -117,6 +111,10 @@ export class VaultData extends Model({
       }
     }
     this.files.push(file)
+  }
+
+  @modelAction addLockees (lockees: VaultLockee[]): void {
+    this.lockees = this.lockees.concat(lockees)
   }
 
   @modelAction deleteFile (file: File): void {

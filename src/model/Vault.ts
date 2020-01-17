@@ -1,13 +1,13 @@
 import { computed, observable, IObservableValue } from 'mobx'
 import { model, modelAction, Model, prop, tProp, types, ExtendedModel, ObjectMap, registerRootStore } from 'mobx-keystone'
-import { Lock } from './Connection'
-import { RequestBase } from './RequestBase'
-import { Buffer } from 'buffer'
-import randomBytes from '@consento/sync-randombytes'
-import { VaultData, File } from './VaultData'
 import { getItemAsync, setItemAsync } from 'expo-secure-store'
+import { Buffer } from 'buffer'
 import { sodium } from '@consento/crypto/core/sodium'
 import { bufferToString } from '@consento/crypto/util/buffer'
+import randomBytes from '@consento/sync-randombytes'
+import { Lock } from './Connection'
+import { RequestBase } from './RequestBase'
+import { VaultData, File } from './VaultData'
 
 export enum TVaultState {
   open = 'open',

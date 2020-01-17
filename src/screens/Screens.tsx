@@ -1,5 +1,4 @@
 import React, { useContext } from 'react'
-import { View } from 'react-native'
 import { observer } from 'mobx-react'
 import { createAppContainer, withNavigation } from 'react-navigation'
 import { createStackNavigator } from 'react-navigation-stack'
@@ -43,7 +42,8 @@ export const Screens = observer((): JSX.Element => {
             const vaultKey = navigation.state.params.vault
             const vault = user.findVault(vaultKey)
             if (!(vault instanceof VaultModel)) {
-              return <View /> // TODO: Return 404?
+              navigation.navigate('') // TODO: Return 404 alert message?
+              return <></>
             }
             return <VaultContext.Provider value={{ vault }}>
               <Vault />
@@ -57,7 +57,8 @@ export const Screens = observer((): JSX.Element => {
           const relationKey = navigation.state.params.relation
           const relation = user.findRelation(relationKey)
           if (!(relation instanceof RelationModel)) {
-            return <View /> // TODO: Return 404?
+            navigation.navigate('') // TODO: Return 404 alert message?
+            return <></>
           }
           return <RelationContext.Provider value={{ relation }}>
             <Relation />
@@ -86,7 +87,8 @@ export const Screens = observer((): JSX.Element => {
           const vaultKey = navigation.state.params.vault
           const vault = user.findVault(vaultKey)
           if (!(vault instanceof VaultModel)) {
-            return <View /> // TODO: Return 404?
+            navigation.navigate('') // TODO: Return 404 alert message?
+            return <></>
           }
           const fileKey = navigation.state.params.file
           const file = vault.findFile(fileKey)
@@ -96,7 +98,8 @@ export const Screens = observer((): JSX.Element => {
           if (isTextFile(file)) {
             return <TextEditor textFile={file} vault={vault} navigation={navigation} />
           }
-          return <View /> // TODO: Return 404?
+          navigation.navigate('') // TODO: Return 404 alert message?
+          return <></>
         })
       }
     }, {

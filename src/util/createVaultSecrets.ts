@@ -41,23 +41,25 @@ enum EPersisted {
   PERSISTED = 3
 }
 
+type ResolvePersisted = (persisted: EPersisted) => void
+
 export function createVaultSecrets ({ prefix, setItemAsync, getItemAsync, deleteItemAsync, cryptoCore }: IVaultSecretsProps): IVaultSecrets {
   if (prefix === null || prefix === undefined) {
     prefix = 'vault'
   }
   const inMemory: { [keyHex: string]: Promise<IMemory> } = {}
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   const preventDangling = (): void => {}
 
   const _setMemory = async (key: string, op: (mem: IMemory) => Promise<IMemory>): Promise<IMemory> => {
     const former = inMemory[key]
-    const p = (async () => {
-      return await op(await former)
-    })()
+    const p = (async () => op(await former))()
     inMemory[key] = p
     p.catch(preventDangling)
     return p
   }
   const setMemory = async (key: string, op: (mem: IMemory) => Promise<IMemory>): Promise<IMemory> => {
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     getMemory(key)
     return _setMemory(key, op)
   }
@@ -194,15 +196,17 @@ export function createVaultSecrets ({ prefix, setItemAsync, getItemAsync, delete
   }
   const setMemoryWithIndex = async (keyHex: string, op: (mem: IMemory, updateKeyIndex: (persisted: boolean) => void) => Promise<IMemory>): Promise<IMemory> => {
     const key = `${prefix}-${keyHex}`
-    let resolveFinish: (finish: (persisted: EPersisted) => void) => void
-    const finishIndex = new Promise<(persisted: EPersisted) => void>resolve => resolveFinish = resolve
+    let resolveFinish: (finish: ResolvePersisted) => void
+    const finishIndex = new Promise<ResolvePersisted>((resolve) => {
+      resolveFinish = resolve
+    })
     setMemory(indexKey, async (indexMem) => {
       return new Promise(resolve => {
         resolveFinish((persisted: EPersisted) => {
           resolve(applyIndex(indexMem, keyHex, persisted))
         })
       })
-    })
+    }).catch(preventDangling)
     let persisted: EPersisted = EPersisted.NO_CHANGE
     let newValue: IMemory
     try {
@@ -216,7 +220,7 @@ export function createVaultSecrets ({ prefix, setItemAsync, getItemAsync, delete
     }
     return newValue
   }
-  const persistedKeys = async () => getEntry(indexKey).then(data => data === undefined ? [] : data.split(';'))
+  const persistedKeys = async (): Promise<string[]> => getEntry(indexKey).then(data => data === undefined ? [] : data.split(';'))
   return {
     create: (): { keyHex: string, secretKeyBase64: Promise<string> } => {
       const keyHex = randomBytes(Buffer.alloc(6)).toString('hex')
@@ -238,21 +242,21 @@ export function createVaultSecrets ({ prefix, setItemAsync, getItemAsync, delete
           continue
         }
         const keyHex = key.substr(prefix.length + 1)
-        deleteKey(keyHex)
+        deleteKey(keyHex).catch(preventDangling)
         keysHex.delete(keyHex)
       }
       for (const keyHex of keysHex) {
-        deleteKey(keyHex)
+        deleteKey(keyHex).catch(preventDangling)
       }
       await persistedKeys()
     },
     set: setKey,
     persistedKeys,
-    get: (keyHex: string) => getEntry(`${prefix}-${keyHex}`),
+    get: async (keyHex: string): Promise<string> => getEntry(`${prefix}-${keyHex}`),
     delete: deleteKey,
-    isPersistedOnDevice: (keyHex: string) => isPersistedOnDevice(`${prefix}-${keyHex}`),
+    isPersistedOnDevice: async (keyHex: string): Promise<boolean> => isPersistedOnDevice(`${prefix}-${keyHex}`),
     toggleDevicePersistence,
-    persistOnDevice: (keyHex: string): Promise<string> => toggleDevicePersistence(keyHex, true),
-    removeFromDevice: (keyHex: string): Promise<string> => toggleDevicePersistence(keyHex, false)
+    persistOnDevice: async (keyHex: string): Promise<string> => toggleDevicePersistence(keyHex, true),
+    removeFromDevice: async (keyHex: string): Promise<string> => toggleDevicePersistence(keyHex, false)
   }
 }

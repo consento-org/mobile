@@ -1,4 +1,5 @@
 import { readDirectoryAsync, deleteAsync, documentDirectory } from 'expo-file-system'
+import { expoVaultSecrets } from './expoVaultSecrets'
 
 export interface IDeleteState {
   total: number
@@ -15,5 +16,8 @@ async function _rimraf (folder: string): Promise<void> {
 }
 
 export async function rimraf (folder: string): Promise<void> {
-  await _rimraf(`file://${documentDirectory}/${folder}`)
+  await Promise.all([
+    _rimraf(`file://${documentDirectory}/${folder}`),
+    expoVaultSecrets.clear()
+  ])
 }

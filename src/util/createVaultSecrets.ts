@@ -45,7 +45,7 @@ export function createVaultSecrets ({ prefix, setItemAsync, getItemAsync, delete
   if (prefix === null || prefix === undefined) {
     prefix = 'vault'
   }
-  let inMemory: { [keyHex: string]: Promise<IMemory> } = {}
+  const inMemory: { [keyHex: string]: Promise<IMemory> } = {}
   const preventDangling = (): void => {}
 
   const _setMemory = async (key: string, op: (mem: IMemory) => Promise<IMemory>): Promise<IMemory> => {
@@ -62,7 +62,7 @@ export function createVaultSecrets ({ prefix, setItemAsync, getItemAsync, delete
     return _setMemory(key, op)
   }
   const getMemory = async (key: string): Promise<IMemory> => {
-    let read = inMemory[key]
+    const read = inMemory[key]
     if (read === undefined) {
       return _setMemory(key, async () => {
         const value = await getItemAsync(key)
@@ -195,7 +195,7 @@ export function createVaultSecrets ({ prefix, setItemAsync, getItemAsync, delete
   const setMemoryWithIndex = async (keyHex: string, op: (mem: IMemory, updateKeyIndex: (persisted: boolean) => void) => Promise<IMemory>): Promise<IMemory> => {
     const key = `${prefix}-${keyHex}`
     let resolveFinish: (finish: (persisted: EPersisted) => void) => void
-    let finishIndex = new Promise<(persisted: EPersisted) => void>(resolve => resolveFinish = resolve)
+    const finishIndex = new Promise<(persisted: EPersisted) => void>resolve => resolveFinish = resolve
     setMemory(indexKey, async (indexMem) => {
       return new Promise(resolve => {
         resolveFinish((persisted: EPersisted) => {

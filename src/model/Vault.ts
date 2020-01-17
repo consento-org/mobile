@@ -1,13 +1,11 @@
 import { computed, observable, IObservableValue } from 'mobx'
 import { model, modelAction, Model, prop, tProp, types, ExtendedModel, ObjectMap, registerRootStore } from 'mobx-keystone'
-import { getItemAsync, setItemAsync } from 'expo-secure-store'
 import { Buffer } from 'buffer'
-import { sodium } from '@consento/crypto/core/sodium'
-import { bufferToString } from '@consento/crypto/util/buffer'
 import randomBytes from '@consento/sync-randombytes'
 import { Lock } from './Connection'
 import { RequestBase } from './RequestBase'
 import { VaultData, File } from './VaultData'
+import { expoVaultSecrets } from '../util/expoVaultSecrets'
 
 export enum TVaultState {
   open = 'open',
@@ -46,7 +44,6 @@ export type VaultAccessEntry = typeof VaultOpenRequest | VaultClose | VaultOpen
 export class AccessOperation extends Model({
 }) {}
 
-const vaultSecrets: { [dataKeyHex: string]: Promise<string>} = {}
 const vaultRoot = new ObjectMap<VaultData>({})
 registerRootStore(vaultRoot)
 
@@ -55,20 +52,7 @@ export class Vault extends Model({
   name: tProp(types.maybeNull(types.string), () => randomBytes(Buffer.alloc(4)).toString('hex')),
   locks: prop<Lock[]>(() => []),
   accessLog: prop<VaultAccessEntry[]>(() => []),
-  dataKeyHex: tProp(types.string, () => {
-    const dataKeyHex = randomBytes(Buffer.alloc(32)).toString('hex')
-    const initProcess = (async (): Promise<string> => {
-      const secretKey = await sodium.createSecretKey()
-      const secretKeyBase64 = bufferToString(secretKey, 'base64')
-      await setItemAsync(`vault-${dataKeyHex}`, secretKeyBase64)
-      return secretKeyBase64
-    })().catch((err): undefined => {
-      console.log({ err })
-      return undefined
-    })
-    vaultSecrets[dataKeyHex] = initProcess
-    return dataKeyHex
-  })
+  dataKeyHex: tProp(types.string, () => expoVaultSecrets.create().keyHex)
 }) {
   // root: Folder
   log: VaultLogEntry[]
@@ -93,12 +77,7 @@ export class Vault extends Model({
     if (this._attachCounter === 0) {
       let attached = true
       ;(async () => {
-        let vaultSecret = vaultSecrets[this.dataKeyHex]
-        if (vaultSecret === undefined) {
-          vaultSecret = getItemAsync(`vault-${this.dataKeyHex}`)
-          vaultSecrets[this.dataKeyHex] = vaultSecret
-        }
-        const secretKeyBase64 = await vaultSecret
+        const secretKeyBase64 = await expoVaultSecrets.get(this.dataKeyHex)
         if (!attached) {
           return
         }

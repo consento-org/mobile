@@ -10,7 +10,7 @@ import { Color } from '../Color'
 /* eslint-disable lines-between-class-members */
 export class ElementLocksNoLockeeCopyClass extends Component {
   bottomButton = new Link(elementBottomButton, { x: 0, y: 870, w: 375, h: 100 }, {
-    buttonLabel: 'ADD'
+    buttonLabel: 'save'
   })
   revoke = new Link(elementRelationSelectListRevoke, { x: 0, y: 335, w: 375, h: 100 }, {})
   selected = new Link(elementRelationSelectListSelected, { x: 0, y: 535, w: 375, h: 100 }, {})

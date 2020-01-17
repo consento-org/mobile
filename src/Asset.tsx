@@ -208,6 +208,9 @@ export const Asset = {
   iconDeleteGrey () {
     return images.fetch('iconDeleteGrey', () => require('../assets/icon/delete/grey.png'))
   },
+  iconDeleteRed () {
+    return images.fetch('iconDeleteRed', () => require('../assets/icon/delete/red.png'))
+  },
   iconDotsHorizontal () {
     return images.fetch('iconDotsHorizontal', () => require('../assets/icon/dots/horizontal.png'))
   },
@@ -225,6 +228,12 @@ export const Asset = {
   },
   iconRelationsIdle () {
     return images.fetch('iconRelationsIdle', () => require('../assets/icon/relations/idle.png'))
+  },
+  iconToggleCheckedGreen () {
+    return images.fetch('iconToggleCheckedGreen', () => require('../assets/icon/toggle-checked/green.png'))
+  },
+  iconToggleUncheckedGrey () {
+    return images.fetch('iconToggleUncheckedGrey', () => require('../assets/icon/toggle-unchecked/grey.png'))
   },
   iconVaultActive () {
     return images.fetch('iconVaultActive', () => require('../assets/icon/vault/active.png'))

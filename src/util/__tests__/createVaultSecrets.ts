@@ -53,7 +53,7 @@ describe('secrets', () => {
     const receivedSecretKeyBase64 = await secretKeyBase64
     await vaultSecrets.persistedKeys()
     expect(store).toEqual({
-      vault$: keyHex,
+      'vault-': keyHex,
       [`vault-${keyHex}`]: receivedSecretKeyBase64
     })
     expect(await vaultSecrets.isPersistedOnDevice(keyHex)).toBe(true)
@@ -109,7 +109,7 @@ describe('secrets', () => {
     expect(await vaultSecrets.set(keyHex, secretKeyBase64, true)).toBe(secretKeyBase64)
     expect(await vaultSecrets.set(keyHex, secretKeyBase64, true)).toBe(secretKeyBase64)
     expect(await vaultSecrets.persistedKeys()).toEqual([keyHex])
-    expect(store).toEqual({ [`vault-${keyHex}`]: secretKeyBase64, 'vault$': keyHex })
+    expect(store).toEqual({ [`vault-${keyHex}`]: secretKeyBase64, 'vault-': keyHex })
     expect(await vaultSecrets.isPersistedOnDevice(keyHex)).toBe(true)
   })
   it('secrets stored on device can be deleted', async () => {
@@ -191,14 +191,14 @@ describe('secrets', () => {
     await vaultSecrets.delete('a')
     await vaultSecrets.set('a', '1', true)
     expect(await vaultSecrets.persistedKeys()).toEqual(['b', 'a'])
-    expect(store).toEqual({ 'vault$': 'b;a', 'vault-b': '2', 'vault-a': '1' })
+    expect(store).toEqual({ 'vault-': 'b;a', 'vault-b': '2', 'vault-a': '1' })
   })
   it('repeated setting of secrets will list only once', async () => {
     const { vaultSecrets, store } = factory()
     await vaultSecrets.set('a', '1', true)
     await vaultSecrets.set('a', '2', true)
     expect(await vaultSecrets.persistedKeys()).toEqual(['a'])
-    expect(store).toEqual({ 'vault$': 'a', 'vault-a': '2' })
+    expect(store).toEqual({ 'vault-': 'a', 'vault-a': '2' })
   })
   it('filling and clearing an index', async () => {
     const { vaultSecrets, store } = factory()
@@ -217,21 +217,21 @@ describe('secrets', () => {
   })
   it('stored index item not read', async () => {
     const { vaultSecrets, store } = factory({
-      'vault$': 'a',
+      'vault-': 'a',
       'vault-a': '1'
     })
     expect(await vaultSecrets.persistedKeys()).toEqual(['a'])
     await vaultSecrets.set('b', '2', true)
     expect(await vaultSecrets.persistedKeys()).toEqual(['a', 'b'])
     expect(store).toEqual({
-      'vault$': 'a;b',
+      'vault-': 'a;b',
       'vault-a': '1',
       'vault-b': '2'
     })
   })
   it('clearing items from store and in memory', async () => {
     const { vaultSecrets, store } = factory({
-      'vault$': 'a',
+      'vault-': 'a',
       'vault-a': '1'
     })
     await vaultSecrets.set('b', '2', true)

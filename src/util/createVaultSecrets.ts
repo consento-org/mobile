@@ -41,6 +41,15 @@ enum EPersisted {
   PERSISTED = 3
 }
 
+function assertHexKey (keyHex: string): void {
+  if (keyHex === null || keyHex === undefined) {
+    throw Object.assign(new Error('The key needs to be defined!'), { code: 'key-missing' })
+  }
+  if (keyHex === '') {
+    throw Object.assign(new Error('The key needs to be defined!'), { code: 'key-empty' })
+  }
+}
+
 type ResolvePersisted = (persisted: EPersisted) => void
 
 export function createVaultSecrets ({ prefix, setItemAsync, getItemAsync, deleteItemAsync, cryptoCore }: IVaultSecretsProps): IVaultSecrets {
@@ -67,7 +76,6 @@ export function createVaultSecrets ({ prefix, setItemAsync, getItemAsync, delete
     const read = inMemory[key]
     if (read === undefined) {
       return _setMemory(key, async () => {
-        console.log({ read: key })
         const value = await getItemAsync(key)
         if (value === undefined) {
           return
@@ -103,6 +111,7 @@ export function createVaultSecrets ({ prefix, setItemAsync, getItemAsync, delete
     }
   }
   const setKey = async (keyHex: string, secretKeyBase64: string, persistOnDevice: boolean): Promise<string> => {
+    assertHexKey(keyHex)
     const key = `${prefix}-${keyHex}`
     const mem = (await setMemoryWithIndex(keyHex, async (mem, updateKeyIndex) => {
       const newMem = _setInternal(mem, key, secretKeyBase64, persistOnDevice)
@@ -122,6 +131,7 @@ export function createVaultSecrets ({ prefix, setItemAsync, getItemAsync, delete
     return deleted
   }
   const deleteKey = async (keyHex: string): Promise<boolean> => {
+    assertHexKey(keyHex)
     let deleted: boolean = false
     return setMemoryWithIndex(keyHex, async (mem, updateKeyIndex): Promise<IMemory> => {
       const key = `${prefix}-${keyHex}`
@@ -134,6 +144,7 @@ export function createVaultSecrets ({ prefix, setItemAsync, getItemAsync, delete
     }).then(() => deleted)
   }
   const toggleDevicePersistence = async (keyHex: string, persistOnDevice: boolean): Promise<string> => {
+    assertHexKey(keyHex)
     const key = `${prefix}-${keyHex}`
     const read = inMemory[key]
     if (read === undefined) {
@@ -243,17 +254,20 @@ export function createVaultSecrets ({ prefix, setItemAsync, getItemAsync, delete
           continue
         }
         const keyHex = key.substr(prefix.length + 1)
-        deleteKey(keyHex).catch(preventDangling)
+        await deleteKey(keyHex).catch(preventDangling)
         keysHex.delete(keyHex)
       }
       for (const keyHex of keysHex) {
-        deleteKey(keyHex).catch(preventDangling)
+        await deleteKey(keyHex).catch(preventDangling)
       }
       await persistedKeys()
     },
     set: setKey,
     persistedKeys,
-    get: async (keyHex: string): Promise<string> => getEntry(`${prefix}-${keyHex}`),
+    get: async (keyHex: string): Promise<string> => {
+      assertHexKey(keyHex)
+      return getEntry(`${prefix}-${keyHex}`)
+    },
     delete: deleteKey,
     isPersistedOnDevice: async (keyHex: string): Promise<boolean> => isPersistedOnDevice(`${prefix}-${keyHex}`),
     toggleDevicePersistence,

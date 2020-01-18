@@ -1,5 +1,5 @@
 import randomBytes from '@consento/sync-randombytes'
-import { bufferToString } from '@consento/crypto/util/buffer'
+import { bufferToString, Buffer } from '@consento/crypto/util/buffer'
 import { ICryptoCore } from '@consento/crypto/core/types'
 
 export interface IVaultSecretsProps {
@@ -67,6 +67,7 @@ export function createVaultSecrets ({ prefix, setItemAsync, getItemAsync, delete
     const read = inMemory[key]
     if (read === undefined) {
       return _setMemory(key, async () => {
+        console.log({ read: key })
         const value = await getItemAsync(key)
         if (value === undefined) {
           return
@@ -158,7 +159,7 @@ export function createVaultSecrets ({ prefix, setItemAsync, getItemAsync, delete
     })
     return resultPromise
   }
-  const indexKey = `${prefix}$`
+  const indexKey = `${prefix}-`
   const applyIndex = (indexMem: IMemory, keyHex: string, persisted: EPersisted): IMemory | Promise<IMemory> => {
     if (persisted === EPersisted.NO_CHANGE) {
       // No change in persistence
@@ -169,7 +170,7 @@ export function createVaultSecrets ({ prefix, setItemAsync, getItemAsync, delete
         // Item isn't persisted but we don't have a persisted item anyways
         return indexMem
       }
-      const keysHex = indexMem.value.split(';')
+      const keysHex = indexMem.value?.split(';') ?? []
       const index = keysHex.indexOf(keyHex)
       if (index === -1) {
         // No change here as well, as the index isn't empty but doesn't contain the key
@@ -187,7 +188,7 @@ export function createVaultSecrets ({ prefix, setItemAsync, getItemAsync, delete
       // Storing the key as first entry
       return _setInternal(indexMem, indexKey, keyHex, true)
     }
-    const keysHex = indexMem.value.split(';')
+    const keysHex = indexMem.value?.split(';') ?? []
     if (keysHex.indexOf(keyHex) === -1) {
       // Removing the key from the index
       return _setInternal(indexMem, indexKey, keysHex.concat(keyHex).join(';'), true)
@@ -220,7 +221,7 @@ export function createVaultSecrets ({ prefix, setItemAsync, getItemAsync, delete
     }
     return newValue
   }
-  const persistedKeys = async (): Promise<string[]> => getEntry(indexKey).then(data => data === undefined ? [] : data.split(';'))
+  const persistedKeys = async (): Promise<string[]> => getEntry(indexKey).then(data => data?.split(';') ?? [])
   return {
     create: (): { keyHex: string, secretKeyBase64: Promise<string> } => {
       const keyHex = randomBytes(Buffer.alloc(6)).toString('hex')

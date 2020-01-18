@@ -17,10 +17,6 @@ export class Relation extends Model({
   name: tProp(types.maybeNull(types.string)),
   connection: tProp(types.model<Connection>(Connection))
 }) {
-  onAttachedToRootStore (): void {
-    console.log(`Attached: ${this.$modelType}#${this.$modelId}`)
-  }
-
   @computed get displayName (): string {
     if (this.name !== null) {
       return this.name

@@ -18,7 +18,7 @@ export class Relation extends Model({
   connection: tProp(types.model<Connection>(Connection))
 }) {
   @computed get displayName (): string {
-    if (this.name !== null) {
+    if (this.name !== null && this.name !== '') {
       return this.name
     }
     return this.defaultName

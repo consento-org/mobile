@@ -1,5 +1,5 @@
-import React, { useState, createRef } from 'react'
-import { TextInput, View, ViewStyle } from 'react-native'
+import React, { useState } from 'react'
+import { View, ViewStyle } from 'react-native'
 import { elementTopNavEmpty } from '../../styles/component/elementTopNavEmpty'
 import { elementTopNavItem } from '../../styles/component/elementTopNavItem'
 import { elementTopNavEdit } from '../../styles/component/elementTopNavEdit'
@@ -18,15 +18,19 @@ export type THandler = () => any
 
 export interface ITopNavigationProps {
   title: string
+  titlePlaceholder?: string
   back?: string | THandler
   navigation: TNavigation
   onEdit?: (text: string) => any
   onDelete?: () => any
 }
 
+function isEmpty (value: string): boolean {
+  return value === null || value === undefined || /^\s*$/.test(value)
+}
+
 export const TopNavigation = withNavigation((props: ITopNavigationProps) => {
   const [editing, setEditing] = useState(false)
-  const textEdit = createRef<TextInput>()
   const inset = useSafeArea()
   return <View style={{ ...topNav, height: elementTopNavEmpty.height + inset.top }}>
     <View style={{ position: 'relative', top: inset.top }}>
@@ -60,14 +64,16 @@ export const TopNavigation = withNavigation((props: ITopNavigationProps) => {
           <elementTopNavEdit.title.Render
             horz='stretch'
             value={props.title}
+            placeholder={props.titlePlaceholder}
             onEdit={props.onEdit}
-            targetRef={textEdit}
-            onLayout={() => { if (exists(textEdit.current)) textEdit.current.focus() }}
-            onBlur={() => setEditing(false)} />
+            targetRef={textEdit => textEdit?.focus()}
+            onBlur={() => {
+              setEditing(false)
+            }} />
         </View>
         : exists(props.onEdit)
-          ? <elementTopNavItem.title.Render horz='stretch' value={props.title} onPress={() => { setEditing(true) }} />
-          : <elementTopNavEmpty.title.Render horz='stretch' value={props.title} />}
+          ? <elementTopNavItem.title.Render horz='stretch' value={isEmpty(props.title) ? props.titlePlaceholder : props.title} onPress={() => { setEditing(true) }} />
+          : <elementTopNavEmpty.title.Render horz='stretch' value={isEmpty(props.title) ? props.titlePlaceholder : props.title} />}
       {(exists(props.onEdit) && !editing) ? <elementTopNavItem.edit.Render horz='end' onPress={() => setEditing(true)} /> : null}
       {exists(props.onDelete) ? <elementTopNavItem.delete.Render horz='end' onPress={props.onDelete} /> : null}
     </View>

@@ -49,7 +49,7 @@ registerRootStore(vaultRoot)
 
 @model('consento/Vault')
 export class Vault extends Model({
-  name: tProp(types.maybeNull(types.string), () => randomBytes(Buffer.alloc(4)).toString('hex')),
+  name: tProp(types.maybeNull(types.string), () => null),
   locks: prop<Lock[]>(() => []),
   accessLog: prop<VaultAccessEntry[]>(() => []),
   dataKeyHex: tProp(types.string, () => expoVaultSecrets.create().keyHex)
@@ -63,6 +63,18 @@ export class Vault extends Model({
   onInit (): void {
     this._attachCounter = 0
     this._initing = observable.box<() => any>(null)
+  }
+
+  @computed get displayName (): string {
+    if (this.name !== null && this.name !== '') {
+      return this.name
+    }
+    return this.defaultName
+  }
+
+  @computed get defaultName (): string {
+    const idBuffer = Buffer.from(this.$modelId, 'utf8')
+    return `${idBuffer.readUInt16BE(0).toString(16)}-${idBuffer.readUInt16BE(1).toString(16)}-${idBuffer.readUInt16BE(2).toString(16)}-${idBuffer.readUInt16BE(3).toString(16)}`.toUpperCase()
   }
 
   onAttachedToRootStore (): () => void {

@@ -63,7 +63,7 @@ export const Vault = withNavigation(observer(({ navigation }: { navigation: TNav
   const { vault } = useContext(VaultContext)
   return <PopupMenu>
     <View style={{ position: 'absolute', width: '100%', height: '100%' }}>
-      <TopNavigation title={vault.name} back='vaults' onEdit={vault.isOpen ? newName => vault.setName(newName) : undefined} onDelete={() => confirmDelete(user, vault, navigation)} />
+      <TopNavigation title={vault.name} titlePlaceholder={vault.defaultName} back='vaults' onEdit={vault.isOpen ? newName => vault.setName(newName) : undefined} onDelete={() => confirmDelete(user, vault, navigation)} />
       {
         vault.isOpen ? [
           <LockButton key='lock' />,

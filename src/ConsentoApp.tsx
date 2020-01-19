@@ -9,8 +9,6 @@ import { ContextMenu } from './screens/components/ContextMenu'
 export const ConsentoApp = observer((): JSX.Element => {
   const [consento] = useState<Consento>(() => new Consento({}))
 
-  console.log('Consento APP rendered!')
-
   useEffect(() => {
     registerRootStore(consento)
     return () => unregisterRootStore(consento)

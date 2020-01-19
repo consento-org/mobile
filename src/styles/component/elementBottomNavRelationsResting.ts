@@ -1,4 +1,4 @@
-// This file has been generated with expo-export@3.6.0, a Sketch plugin.
+// This file has been generated with expo-export@3.6.1, a Sketch plugin.
 import { Component, ImagePlacement, Text } from '../Component'
 import { Asset } from '../../Asset'
 import { TextStyles } from '../TextStyles'

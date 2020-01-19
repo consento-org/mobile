@@ -6,9 +6,9 @@ import { EmptyView } from './components/EmptyView'
 import { elementRelationsEmpty } from '../styles/component/elementRelationsEmpty'
 import { Asset } from '../Asset'
 import { withNavigation, TNavigation } from './navigation'
-import { ConsentoContext } from '../model/ConsentoContext'
 import { elementRelationListItem } from '../styles/component/elementRelationListItem'
 import { RelationListEntry, IRelationEntry } from './components/RelationListEntry'
+import { ConsentoContext } from '../model/Consento'
 
 const AddButton = Asset.buttonAddRound().component
 

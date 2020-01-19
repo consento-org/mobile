@@ -1,9 +1,9 @@
 import { useContext } from 'react'
 import { Buffer } from 'buffer'
-import { IAPI, IConnection, IEncodable, IHandshakeAcceptMessage, IHandshakeConfirmation, cancelable, CancelError, ICancelable, IHandshakeInit, IHandshakeAccept } from '@consento/api'
+import { IConnection, IEncodable, IHandshakeAcceptMessage, IHandshakeConfirmation, cancelable, CancelError, ICancelable, IHandshakeInit, IHandshakeAccept } from '@consento/api'
 import { bufferToString } from '@consento/crypto/util/buffer'
-import { ConsentoContext } from './ConsentoContext'
 import { useStateMachine, IStateMachine, IState } from '../util/useStateMachine'
+import { ConsentoContext, Consento } from './Consento'
 
 function isAcceptMessage (body: IEncodable): body is IHandshakeAcceptMessage {
   if (typeof body === 'object' && !(body instanceof Uint8Array)) {
@@ -45,7 +45,7 @@ export enum IncomingState {
   confirming = 'confirming'
 }
 
-type InitData = [ (connection: IConnection) => any, IAPI ]
+type InitData = [ (connection: IConnection) => any, Consento]
 
 function incomingMachine (
   updateState: (state: IncomingState, ops?: string) => void,
@@ -69,10 +69,10 @@ function incomingMachine (
         return
       }
       console.log({
-        message: 'Error incoming handshake',
-        error: error.stack !== undefined ? error.stack : error
+        message: 'Error incoming handshake'
       })
-      reset()
+      console.error(error)
+      setTimeout(reset, 1000)
     }
   )
   return {
@@ -132,10 +132,10 @@ function outgoingMachine (
               return
             }
             console.log({
-              message: 'Error outgoing handshake',
-              error: error.stack !== undefined ? error.stack : error
+              message: 'Error outgoing handshake'
             })
-            reset()
+            console.error(error)
+            setTimeout(reset, 1000)
           })
         return true
       }
@@ -150,7 +150,9 @@ export function useHandshake (onHandshake: (connection: IConnection) => any): {
   outgoing: IState<OutgoingState, any>
   connect (initLink: string): void
 } {
-  const stateOps = [onHandshake, useContext(ConsentoContext).api]
+  const api = useContext(ConsentoContext)
+  api.assertReady()
+  const stateOps = [onHandshake, api]
   const [incoming] = useStateMachine(incomingMachine, stateOps)
   const [outgoing, outgoingManager] = useStateMachine(outgoingMachine, stateOps)
   return {

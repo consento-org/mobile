@@ -1,47 +1,32 @@
-import React, { useState, useContext, useEffect } from 'react'
-import { View, Alert, BackHandler } from 'react-native'
+import React, { useState, useContext } from 'react'
+import { View, Alert } from 'react-native'
 import { TopNavigation } from './components/TopNavigation'
 import { InputField } from './components/InputField'
 import { elementConfig } from '../styles/component/elementConfig'
 import { BottomButtonView } from './components/BottomButtonView'
-import { useConfig } from '../util/useConfig'
 import { TNavigation, withNavigation } from './navigation'
 import { useForm } from '../util/useForm'
 import isURL from 'is-url-superb'
 import { ConsentoButton } from './components/ConsentoButton'
-import { ConsentoContext } from '../model/ConsentoContext'
-import { rimraf } from '../util/expoRimraf'
-import { createDefaultUser } from '../model/User'
-import { Loading } from './Loading'
+import { ConsentoContext } from '../model/Consento'
+import { observer } from 'mobx-react'
 
-export const Config = withNavigation(
+export const Config = withNavigation(observer(
   ({ navigation }: { navigation: TNavigation }): JSX.Element => {
-    const [config, setConfig] = useConfig()
     const [resetBarrier, setBarrier] = useState(true)
-    const { users } = useContext(ConsentoContext)
-    const [isDeleting, setDeleting] = useState(false)
+    const { config, updateConfig, deleteEverything } = useContext(ConsentoContext)
     const { leave, save, useField } = useForm(navigation,
-      ({ address }) => {
-        setConfig({
-          ...config,
-          address
-        })
+      (config) => {
+        setTimeout(() => {
+          try {
+            updateConfig(config)
+          } catch (updateConfigError) {
+            console.error(updateConfigError)
+          }
+        }, 0)
       }
     )
     const address = useField('address', config.address, isURL)
-    useEffect(() => {
-      if (isDeleting) return
-      const lockBackHandler = (): boolean => true
-      BackHandler.addEventListener('hardwareBackPress', lockBackHandler)
-      return () => {
-        BackHandler.removeEventListener('hardwareBackPress', lockBackHandler)
-      }
-    }, [isDeleting])
-
-    if (isDeleting) {
-      return <Loading />
-    }
-
     const doReset = (): void => {
       if (resetBarrier) {
         return setBarrier(false)
@@ -49,15 +34,7 @@ export const Config = withNavigation(
       Alert.alert('WARNING!!!', 'Do you really want to delete all data!\nThis can not be restored!', [
         {
           text: 'Yes! I want to delete everything!',
-          onPress: () => {
-            setDeleting(true)
-            // eslint-disable-next-line @typescript-eslint/no-floating-promises
-            rimraf('').finally(() => {
-              const user = users.items[0]
-              users.add(createDefaultUser())
-              users.delete(user)
-            })
-          }
+          onPress: deleteEverything
         },
         { text: 'No, abort!', onPress: () => setBarrier(false) }
       ])
@@ -76,4 +53,4 @@ export const Config = withNavigation(
       </BottomButtonView>
     </View>
   }
-)
+))

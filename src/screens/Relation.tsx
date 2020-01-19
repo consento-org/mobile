@@ -2,7 +2,6 @@ import React, { useContext } from 'react'
 import { View, Alert } from 'react-native'
 import { TopNavigation } from './components/TopNavigation'
 import { observer } from 'mobx-react'
-import { ConsentoContext } from '../model/ConsentoContext'
 import { User } from '../model/User'
 import { withNavigation, TNavigation } from './navigation'
 import { elementRelationName } from '../styles/component/elementRelationName'
@@ -11,6 +10,7 @@ import { RelationContext } from '../model/RelationContext'
 import { InputField } from './components/InputField'
 import { useForm } from '../util/useForm'
 import { Relation as RelationModel } from '../model/Relation'
+import { ConsentoContext } from '../model/Consento'
 
 function confirmDelete (user: User, relation: RelationModel, navigation: TNavigation): void {
   Alert.alert(
@@ -29,14 +29,12 @@ function confirmDelete (user: User, relation: RelationModel, navigation: TNaviga
   )
 }
 
-export const Relation = observer(withNavigation(({ navigation }: { navigation: TNavigation }): JSX.Element => {
+export const Relation = withNavigation(observer(({ navigation }: { navigation: TNavigation }): JSX.Element => {
   const { relation } = useContext(RelationContext)
   const { user } = useContext(ConsentoContext)
   const { leave, save, useField } = useForm(
     navigation,
-    (fields: { [key: string]: any }): void => {
-      relation.setName(fields.name)
-    }
+    fields => relation.setName(fields.name)
   )
   const name = useField('name', relation.name)
   return <View style={{ flex: 1 }}>

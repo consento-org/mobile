@@ -3,13 +3,13 @@ import { View, ViewStyle, ScrollView } from 'react-native'
 import { VaultCard } from './components/VaultCard'
 import { TopNavigation } from './components/TopNavigation'
 import { Asset } from '../Asset'
-import { ConsentoContext } from '../model/ConsentoContext'
 import { observer } from 'mobx-react'
 import { map } from '../util/map'
 import { Vault } from '../model/Vault'
 import { withNavigation, TNavigation } from './navigation'
 import { useVUnits } from '../styles/Component'
 import { elementCardVaultClose } from '../styles/component/elementCardVaultClose'
+import { ConsentoContext } from '../model/Consento'
 
 const listStyle: ViewStyle = {
   display: 'flex',

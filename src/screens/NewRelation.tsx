@@ -9,9 +9,9 @@ import { CameraContainer } from './components/CameraContainer'
 import { exists } from '../util/exists'
 import QRCode from 'react-native-qrcode-svg'
 import Svg, { Path } from 'react-native-svg'
-import { ConsentoContext } from '../model/ConsentoContext'
 import { fromConnection } from '../model/Relation'
 import { useSafeArea } from 'react-native-safe-area-context'
+import { ConsentoContext } from '../model/Consento'
 
 const barContainer: ViewStyle = {
   position: 'absolute',

@@ -1,14 +1,13 @@
 import { model, Model, prop, arraySet, Ref, findParent, tProp, types, modelAction, customRef, JsonPatch, SnapshotOutOf } from 'mobx-keystone'
 import { Vault } from './Vault'
 import { Relation } from './Relation'
-import { Consento } from './Consento'
+import { Consentos } from './Consentos'
 import { computed } from 'mobx'
 import { find } from '../util/find'
 import { mobxPersist } from '../util/mobxPersist'
 import { compareNames } from '../util/compareNames'
 import { VaultLockee } from './VaultData'
 import { Lock } from './Connection'
-import { IConsentoCrypto } from '@consento/api'
 
 function initUser (user: User): void {
   ;['My Contracts', 'My Certificates', 'My Passwords'].forEach(name => {
@@ -58,22 +57,13 @@ export class Lockee {
   }
 }
 
-export const createLockee = async (crypto: IConsentoCrypto, relation: Relation): Promise<VaultLockee> => {
-  const handshake = await crypto.initHandshake()
-  return new VaultLockee({
-    relationId: relation.$modelId,
-    initJSON: handshake.toJSON(),
-    confirmJSON: null
-  })
-}
-
 @model('consento/User')
 export class User extends Model({
   name: tProp(types.string),
   loaded: tProp(types.boolean, false),
   vaults: prop(() => arraySet<Vault>()),
   relations: prop(() => arraySet<Relation>()),
-  consentos: prop(() => arraySet<Consento>())
+  consentos: prop(() => arraySet<Consentos>())
 }) {
   onAttachedToRootStore (): () => any {
     return mobxPersist({

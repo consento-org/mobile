@@ -41,6 +41,7 @@ export interface IFormField <T> {
   readonly loaded: boolean
   setValue (newValue: T): void
   handleValue (newValue: T): void
+  setInitial (initial: TInitiator<T>): void
   reset (): void
 }
 
@@ -80,25 +81,11 @@ class FormField<T> implements IFormField<T> {
   _value: T
   _validate: (defaultValue: T) => boolean | string
   _triggerUpdate: () => void
+  _currentInitial: number = 0
+  _initialValue: boolean = false
 
-  constructor (initial: TInitiator<T>, validate: (defaultValue: T) => boolean | string, triggerUpdate: () => void, save: (newValue: T) => void | Promise<void>) {
-    const valOrPromise = isInitiatorFn(initial) ? initial() : initial
-    if (isPromiseLike(valOrPromise)) {
-      this.loaded = false
-      valOrPromise
-        .then(initial => {
-          this._value = initial
-          this.initial = initial
-          this.loaded = true
-          this.validate()
-          triggerUpdate()
-        })
-        .catch(error => console.error(error))
-    } else {
-      this._value = valOrPromise
-      this.initial = valOrPromise
-      this.loaded = true
-    }
+  constructor (validate: (defaultValue: T) => boolean | string, triggerUpdate: () => void, save: (newValue: T) => void | Promise<void>) {
+    this._triggerUpdate = triggerUpdate
     this._validate = validate
     this._triggerUpdate = triggerUpdate
     this.save = save
@@ -106,7 +93,38 @@ class FormField<T> implements IFormField<T> {
     this.setValue = this.setValue.bind(this)
     this.handleValue = this.handleValue.bind(this)
     this.reset = this.reset.bind(this)
-    this.validate()
+  }
+
+  setInitial (initial: TInitiator<T>): void {
+    const valOrPromise = isInitiatorFn(initial) ? initial() : initial
+    const initialId = ++this._currentInitial
+    if (isPromiseLike(valOrPromise)) {
+      this.loaded = false
+      valOrPromise
+        .then(initial => {
+          if (initialId === this._currentInitial) {
+            return // Another initial value was set meanwhile
+          }
+          this.setInitial(initial)
+        })
+        .catch(error => console.error(error))
+      this._triggerUpdate()
+    } else {
+      if (this.initial !== valOrPromise || !this._initialValue) {
+        this.loaded = true
+        this.initial = valOrPromise
+        if (!this._initialValue) {
+          this._initialValue = true
+          this._value = valOrPromise
+        }
+        if (this.updateState()) {
+          this._triggerUpdate()
+        }
+      } else if (!this.loaded) {
+        this.loaded = true
+        this._triggerUpdate()
+      }
+    }
   }
 
   get value (): T {
@@ -125,8 +143,7 @@ class FormField<T> implements IFormField<T> {
     // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     if (!deepEqual(this._value, newValue)) {
       this._value = newValue
-      this.isDirty = newValue !== this.initial
-      this.validate()
+      this.updateState()
       this._triggerUpdate()
     }
   }
@@ -135,18 +152,35 @@ class FormField<T> implements IFormField<T> {
     this.value = this.initial
   }
 
-  validate (): void {
+  updateState (): boolean {
+    const newState = {
+      isDirty: this.value !== this.initial,
+      ...this.validate()
+    }
+    if (
+      newState.isDirty !== this.isDirty ||
+      newState.isInvalid !== this.isInvalid ||
+      newState.invalid !== this.invalid
+    ) {
+      this.isDirty = newState.isDirty
+      this.isInvalid = newState.isInvalid
+      this.invalid = newState.invalid
+      return true
+    }
+    return false
+  }
+
+  validate (): { isInvalid: boolean, invalid?: string } {
     if (this._validate === undefined) {
-      this.isInvalid = false
-      return
+      return { isInvalid: false }
     }
     const valid = this._validate(this._value)
     if (typeof valid === 'string') {
-      this.invalid = valid
-      this.isInvalid = true
-    } else {
-      this.invalid = valid ? undefined : 'invalid'
-      this.isInvalid = !valid
+      return { isInvalid: true, invalid: valid }
+    }
+    return {
+      invalid: valid ? undefined : 'invalid',
+      isInvalid: !valid
     }
   }
 }
@@ -234,13 +268,14 @@ export function useForm (
           if (fields[key] !== undefined) {
             throw new Error(`Form field [${key}] already exists.`)
           }
-          const field = new FormField(initial, validate, () => {
+          const field = new FormField(validate, () => {
             triggerUpdate()
             setUpdate(Date.now())
           }, save)
           fields[key] = field
           return field
         })[0]
+        field.setInitial(initial)
         return field
       },
       Form ({ children }: { children?: React.ReactChild | React.ReactChild[] }) {

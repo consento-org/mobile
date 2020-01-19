@@ -4,15 +4,15 @@ import { observer } from 'mobx-react'
 import { EmptyView } from './components/EmptyView'
 import { TopNavigation } from './components/TopNavigation'
 import { elementConsentosEmpty } from '../styles/component/elementConsentosEmpty'
-import { Consento as ConsentoModel, ConsentoBecomeLockee, ConsentoUnlockVault } from '../model/Consento'
+import { Consentos, ConsentoBecomeLockee, ConsentoUnlockVault } from '../model/Consentos'
 import { elementConsentosBase } from '../styles/component/elementConsentosBase'
 import { elementConsentosAccessAccepted } from '../styles/component/elementConsentosAccessAccepted'
 import { screen02Consentos } from '../styles/component/screen02Consentos'
 import { ConsentoState } from './components/ConsentoState'
 import Svg, { Circle, Rect, G } from 'react-native-svg'
 import { elementConsentosLockeeIdle } from '../styles/component/elementConsentosLockeeIdle'
-import { ConsentoContext } from '../model/ConsentoContext'
 import { map } from '../util/map'
+import { ConsentoContext } from '../model/Consento'
 
 const cardMargin = screen02Consentos.b.place.top - screen02Consentos.a.place.bottom
 
@@ -41,7 +41,7 @@ const lockeeCardStyle: ViewStyle = {
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 const noop = (): void => {}
 
-const Consento = observer(({ consento }: { consento: ConsentoModel }) => {
+const Consento = observer(({ consento }: { consento: Consentos }) => {
   if (consento instanceof ConsentoUnlockVault) {
     return <View style={accessCardStyle}>
       <elementConsentosBase.lastAccess.Render value={humanTime(consento.time)} />

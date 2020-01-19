@@ -28,7 +28,7 @@
     "fbemitter": "^2.1.1",
     "is-url-superb": "^3.0.0",
     "mobx": "^5.15.2",
-    "mobx-keystone": "^0.34.0",
+    "mobx-keystone": "^0.35.0",
     "mobx-react": "^6.1.5",
     "react": "16.9.0",
     "react-dom": "16.9.0",

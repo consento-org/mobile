@@ -13,13 +13,13 @@ import { NewRelation } from './NewRelation'
 import { Vault as VaultModel } from '../model/Vault'
 import { isImageFile, isTextFile } from '../model/VaultData'
 import { Relation as RelationModel } from '../model/Relation'
-import { ConsentoContext } from '../model/ConsentoContext'
 import { RelationContext } from '../model/RelationContext'
 import { VaultContext } from '../model/VaultContext'
 import { Config } from './Config'
 import { Camera } from './Camera'
 import { TextEditor } from './TextEditor'
 import { ImageEditor } from './ImageEditor'
+import { ConsentoContext } from '../model/Consento'
 
 export const Screens = observer((): JSX.Element => {
   const { user } = useContext(ConsentoContext)

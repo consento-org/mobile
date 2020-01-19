@@ -7,12 +7,11 @@ import { elementLocksNoLockee } from '../../styles/component/elementLocksNoLocke
 import { elementRelationSelectListAdd } from '../../styles/component/elementRelationSelectListAdd'
 import { elementRelationSelectListDisplay } from '../../styles/component/elementRelationSelectListDisplay'
 import { VaultContext } from '../../model/VaultContext'
-import { ConsentoContext } from '../../model/ConsentoContext'
 import { withNavigation, TNavigation } from '../navigation'
 import { BottomButtonView } from './BottomButtonView'
 import { RelationListEntry, IRelationListEntryProps, IRelationEntry } from './RelationListEntry'
 import { Relation } from '../../model/Relation'
-import { createLockee } from '../../model/User'
+import { ConsentoContext } from '../../model/Consento'
 
 export interface ILocksProps {
   navigation: TNavigation
@@ -38,7 +37,7 @@ const SelectEntry = ({ entry, onSelect }: ISelectEntryProps): JSX.Element => {
 const LockeeList = (): JSX.Element => {
   const [isSelectionActive, setSelectionActive] = useState<boolean>(false)
   const [isAddingLockees, setAddingLockees] = useState<boolean>(false)
-  const { user, api } = useContext(ConsentoContext)
+  const { user, createLockee } = useContext(ConsentoContext)
   const { vault } = useContext(VaultContext)
   const selection: { [modelId: string]: IRelationEntry } = {}
 
@@ -72,7 +71,7 @@ const LockeeList = (): JSX.Element => {
       const relations = Object.values(selection) as Relation[]
       const lockees = await Promise.all(
         // eslint-disable-next-line @typescript-eslint/require-await
-        relations.map(async relation => createLockee(api.crypto, relation))
+        relations.map(async relation => createLockee(relation))
       )
       vault.data.addLockees(lockees)
       setSelectionActive(false)

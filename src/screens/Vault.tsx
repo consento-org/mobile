@@ -15,8 +15,8 @@ import { PopupMenu } from './components/PopupMenu'
 import { FileList } from './components/FileList'
 import { User } from '../model/User'
 import { Vault as VaultModel } from '../model/Vault'
-import { ConsentoContext } from '../model/ConsentoContext'
 import { Locks } from './components/Locks'
+import { ConsentoContext } from '../model/Consento'
 
 const lockStyle: ViewStyle = {
   height: elementSealVaultActive.height,

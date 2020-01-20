@@ -1,9 +1,9 @@
 // This file has been generated with expo-export@3.6.1, a Sketch plugin.
 import { Component, Text, ImagePlacement, Link } from '../Component'
 import { TextStyles } from '../TextStyles'
+import { Color } from '../Color'
 import { Asset } from '../../Asset'
 import { elementBottomButton } from './elementBottomButton'
-import { Color } from '../Color'
 
 /* eslint-disable lines-between-class-members */
 export class ElementLocksEmptyClass extends Component {
@@ -15,7 +15,10 @@ export class ElementLocksEmptyClass extends Component {
   })
   constructor () {
     super('elementLocksEmpty', 375.0000000000001, 970, Color.lightGrey)
-    this.description = new Text('Dummy text to explain that to lock the vault, you need one ‘lockee’ at least. \n\nAdditional dummy text to guide how to choose a ‘good’ lockee ; available, trustworhy, etc. \n\nAdditional dummy test to access the list of reliable professional trustees near you.', TextStyles.BodyRobotoRegular18BlueCenter, { x: 52, y: 464, w: 270, h: 196 }, this)
+    this.description = new Text('This vault is not locked yet. \n\nTo lock it out, you need at least one connection\nand add it as a ‘lockee’ here. \n\nAny connection of your choice can be a lockee. Just choose someone who will respond quickly when you need it.\n\nThat person will not be able to access your data. ', {
+      ...TextStyles.BodyRobotoRegular18BlueCenter,
+      color: Color.black
+    }, { x: 52, y: 410, w: 270, h: 380 }, this)
     this.title = new Text('No lock yet…', TextStyles.H2PalanquinDarkMedium36BlackCenter, { x: 84.5, y: 358, w: 206, h: 36 }, this)
     this.illustration = new ImagePlacement(Asset.illustrationLock, { x: 145.5, y: 271, w: 80, h: 80 }, this)
   }

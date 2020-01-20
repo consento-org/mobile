@@ -16,6 +16,7 @@
     "@consento/api": "0.0.19",
     "@consento/crypto": "0.0.12",
     "@consento/notification-server": "0.0.15",
+    "@consento/shamirs-secret-sharing": "^1.0.4",
     "@use-it/interval": "^0.1.3",
     "acorn": "^7.1.0",
     "expo": "^36.0.2",

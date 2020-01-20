@@ -206,12 +206,17 @@ export function createSecureStore <LogEntry> (secretKey: Uint8Array, options: IS
       async update (entry: LogEntry) {
         const { state, release } = await lockIndex()
         const version = state.version + 1
-        release({
-          dirty: true,
-          version,
-          persistedVersion: state.persistedVersion,
-          data: merge(state.data, entry, version)
-        })
+        try {
+          release({
+            dirty: true,
+            version,
+            persistedVersion: state.persistedVersion,
+            data: merge(state.data, entry, version)
+          })
+        } catch (err) {
+          console.log(entry)
+          throw err
+        }
       },
       async persistedVersion () {
         return (await indexLock).persistedVersion

@@ -1,6 +1,6 @@
 import { computed } from 'mobx'
 import { model, tProp, Model, types, modelAction } from 'mobx-keystone'
-import { IConsentoCrypto, IReceiver, ISender, IConnection } from '@consento/api'
+import { IReceiver, ISender, IConnection } from '@consento/api'
 import { Buffer } from '@consento/crypto/util/buffer'
 import { Connection, fromIConnection } from './Connection'
 
@@ -34,11 +34,11 @@ export class Relation extends Model({
     this.name = name
   }
 
-  receiver (crypto: IConsentoCrypto): IReceiver | null {
-    return this.connection.receiver.receiver(crypto)
+  get receiver (): IReceiver | null {
+    return this.connection.receiver.receiver
   }
 
-  sender (crypto: IConsentoCrypto): ISender | null {
-    return this.connection.sender.sender(crypto)
+  get sender (): ISender | null {
+    return this.connection.sender.sender
   }
 }

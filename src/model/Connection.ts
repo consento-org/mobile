@@ -1,12 +1,15 @@
-import { model, Model, tProp, types, ExtendedModel } from 'mobx-keystone'
-import { IConsentoCrypto, IReceiver, IConnection, ISender } from '@consento/api'
+import { model, Model, tProp, types } from 'mobx-keystone'
+import { IReceiver, IConnection, ISender } from '@consento/api'
+import { requireAPI } from './Consento.types'
+import { computed } from 'mobx'
 
 @model('consento/Receiver')
 export class Receiver extends Model({
   receiveKey: tProp(types.string),
   id: tProp(types.string)
 }) {
-  receiver (crypto: IConsentoCrypto): IReceiver {
+  @computed get receiver (): IReceiver {
+    const { crypto } = requireAPI(this)
     return new crypto.Receiver({
       id: this.id,
       receiveKey: this.receiveKey
@@ -20,7 +23,8 @@ export class Sender extends Model({
   sendKey: tProp(types.string),
   receiveKey: tProp(types.string)
 }) {
-  sender (crypto: IConsentoCrypto): ISender {
+  @computed get sender (): ISender {
+    const { crypto } = requireAPI(this)
     return new crypto.Sender({
       id: this.id,
       receiveKey: this.receiveKey,
@@ -42,15 +46,10 @@ export class Connection extends Model({
   sender: tProp(types.model<Sender>(Sender)),
   receiver: tProp(types.model<Receiver>(Receiver))
 }) {
-  connection (crypto: IConsentoCrypto): IConnection {
+  @computed get connection (): IConnection {
     return {
-      sender: this.sender.sender(crypto),
-      receiver: this.receiver.receiver(crypto)
+      sender: this.sender.sender,
+      receiver: this.receiver.receiver
     }
   }
 }
-
-@model('consento/Vault/Lock')
-export class Lock extends ExtendedModel(Connection, {
-  partialKey: tProp(types.string)
-}) {}

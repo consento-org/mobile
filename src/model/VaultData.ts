@@ -3,7 +3,9 @@ import { computed } from 'mobx'
 import { toBuffer, bufferToString, Buffer } from '@consento/crypto/util/buffer'
 import { find } from '../util/find'
 import { readBlob, writeBlob } from '../util/expoSecureBlobStore'
-import { IHandshakeInitJSON, IConsentoCrypto, IHandshakeConfirmationJSON, IHandshakeInit } from '@consento/api'
+import { IHandshakeInitJSON, IHandshakeAcceptMessage, ISenderJSON, IReceiverJSON } from '@consento/api'
+import { requireAPI } from './Consento.types'
+import { Sender } from './Connection'
 
 export interface IFile {
   readonly secretKeyBase64: string
@@ -80,12 +82,48 @@ export class TextFile extends Model({
 @model('consento/VaultData/Lockee')
 export class VaultLockee extends Model({
   relationId: prop<string>(),
-  lockId: prop<string>(() => null),
+  shareHex: prop<string>(() => null),
   initJSON: prop<IHandshakeInitJSON>(() => null),
-  confirmJSON: prop<IHandshakeConfirmationJSON>(() => null)
+  sender: prop<Sender>(() => null)
 }) {
-  @computed init (crypto: IConsentoCrypto): IHandshakeInit {
-    return new crypto.HandshakeInit(this.initJSON)
+  _lock: boolean
+
+  get isConfirmed (): boolean {
+    return this.sender !== null
+  }
+
+  get initPending (): boolean {
+    return this.initJSON !== null
+  }
+
+  async confirm (acceptMessage: IHandshakeAcceptMessage): Promise<{
+    receiverJSON: IReceiverJSON
+    shareHex: string
+    finalMessage: Uint8Array
+  }> {
+    if (!this.initPending) {
+      return
+    }
+    if (this._lock) {
+      throw new Error('Operation locked! Can not confirm lockee')
+    }
+    this._lock = true
+    const { crypto } = requireAPI(this)
+    const init = new crypto.HandshakeInit(this.initJSON)
+    const { finalMessage, connection } = await init.confirm(acceptMessage)
+    const shareHex = this._confirm(connection.sender.toJSON())
+    return {
+      receiverJSON: connection.receiver.toJSON(),
+      finalMessage,
+      shareHex
+    }
+  }
+
+  @modelAction _confirm (senderJSON: ISenderJSON): string {
+    this.sender = new Sender(senderJSON)
+    const { shareHex } = this
+    delete this.shareHex
+    return shareHex
   }
 }
 

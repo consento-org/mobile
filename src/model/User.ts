@@ -7,6 +7,8 @@ import { find } from '../util/find'
 import { mobxPersist } from '../util/mobxPersist'
 import { compareNames } from '../util/compareNames'
 import { VaultLockee } from './VaultData'
+import { ISuccessNotification } from '@consento/api'
+import { ISubscription } from './Consento.types'
 
 function initUser (user: User): void {
   ;['My Contracts', 'My Certificates', 'My Passwords'].forEach(name => {
@@ -83,6 +85,39 @@ export class User extends Model({
     })
   }
 
+  @computed get relationSubscriptions (): { [receiveKey: string]: ISubscription } {
+    const map: { [receiveKey: string]: ISubscription } = {}
+    for (const relation of this.relations) {
+      map[relation.connection.receiver.receiveKey] = {
+        receiver: relation.connection.receiver,
+        action: this.processConsento.bind(this, relation)
+      }
+    }
+    return map
+  }
+
+  @computed get vaultSubscriptions (): { [receiveKey: string]: ISubscription } {
+    let map: { [receiveKey: string]: ISubscription } = {}
+    for (const vault of this.vaults) {
+      map = {
+        ...map,
+        ...vault.subscriptions
+      }
+    }
+    return map
+  }
+
+  processConsento (relation: Relation, notification: ISuccessNotification): void {
+    console.log('TODO processing of relation messages')
+  }
+
+  @computed get subscriptions (): { [receiveKey: string]: ISubscription } {
+    return {
+      ...this.relationSubscriptions,
+      ...this.vaultSubscriptions
+    }
+  }
+
   @modelAction _markLoaded (): void {
     if (this.loaded === false) {
       this.loaded = true
@@ -91,8 +126,8 @@ export class User extends Model({
 
   getLockeesSorted (vault: Vault): Lockee[] {
     return vault.data?.lockees.map(
-      vaultLockee => new Lockee(vaultLockee, this.findRelation(vaultLockee.relationId))).sort(compareNames
-    )
+      vaultLockee => new Lockee(vaultLockee, this.findRelation(vaultLockee.relationId))
+    ).sort(compareNames)
   }
 
   @computed get relationsSorted (): Relation[] {

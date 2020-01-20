@@ -9,12 +9,11 @@ import { User, createDefaultUser } from './User'
 import { getExpoToken } from '../util/getExpoToken'
 import { cryptoCore } from '../cryptoCore'
 import { safeAutorun } from '../util/safeAutorun'
-import { Relation } from './Relation'
-import { VaultLockee } from './VaultData'
 import { rimraf } from '../util/expoRimraf'
 import { first } from '../util/first'
 import { combinedDispose } from '../util/combinedDispose'
 import { vaultStore } from './VaultStore'
+import { IConsentoModel, CONSENTO } from './Consento.types'
 
 export const ConsentoContext = createContext<Consento>(null)
 
@@ -91,39 +90,23 @@ function createTransport (address: string): {
   }
 }
 
-async function createLockee ({ crypto, notifications }: IAPI, relation: Relation): Promise<VaultLockee> {
-  const handshake = await crypto.initHandshake()
-
-  return new VaultLockee({
-    relationId: relation.$modelId,
-    initJSON: handshake.toJSON(),
-    confirmJSON: null
-  })
-}
-
-@model('consento')
+@model(CONSENTO)
 export class Consento extends Model({
   users: prop<ArraySet<User>>(() => arraySet()),
   config: prop<Config>(() => null)
-}) {
+}) implements IConsentoModel {
   _apiReady = observable.box(Date.now())
   _api: IAPI
 
   onInit (): void {
     this.deleteEverything = this.deleteEverything.bind(this)
     this.updateConfig = this.updateConfig.bind(this)
-    this.createLockee = this.createLockee.bind(this)
     loadConfig()
       .then(config => this._setConfig(config))
       .catch(error => {
         this.updateConfig({})
         console.log({ loadConfigError: error })
       })
-  }
-
-  async createLockee (relation: Relation): Promise<VaultLockee> {
-    this.assertReady()
-    return createLockee(this.api, relation)
   }
 
   assertReady (): void {

@@ -1,11 +1,17 @@
-import { computed } from 'mobx'
-import { model, modelAction, Model, prop, tProp, types, ExtendedModel } from 'mobx-keystone'
-import { Buffer } from 'buffer'
-import { Lock } from './Connection'
+import { model, Model, prop, ExtendedModel, tProp, types, ArraySet, arraySet, modelAction, findParent, BaseModel } from 'mobx-keystone'
 import { RequestBase } from './RequestBase'
-import { VaultData, File } from './VaultData'
+import { Receiver } from './Connection'
+import { ISuccessNotification } from '@consento/api'
+import { ISubscription, IConfirmLockeeMessage, IRequestLockeeMessage, MessageType, Message, requireAPI } from './Consento.types'
+import { VaultLockee, VaultData, File } from './VaultData'
+import { bufferToString, Buffer } from '@consento/crypto/util/buffer'
 import { expoVaultSecrets } from '../util/expoVaultSecrets'
+import { computed, when } from 'mobx'
+import { Relation } from './Relation'
 import { vaultStore } from './VaultStore'
+import sss from '@consento/shamirs-secret-sharing'
+import { mapSubscriptions } from './mapSubscriptions'
+import { find } from '../util/find'
 
 export enum TVaultState {
   open = 'open',
@@ -44,10 +50,54 @@ export type VaultAccessEntry = typeof VaultOpenRequest | VaultClose | VaultOpen
 export class AccessOperation extends Model({
 }) {}
 
+function findParentVault (item: BaseModel<any, any>): Vault {
+  return findParent(
+    item,
+    (parent: BaseModel<any, any>): parent is Vault => parent.$modelType === Vault.$modelType
+  )
+}
+
+function findVaultLockee (item: BaseModel<any, any>, lockeeId: string): VaultLockee {
+  const vault = findParentVault(item)
+  return find(vault?.data.lockees, (lockee): lockee is VaultLockee => lockee.$modelId === lockeeId)
+}
+
+@model('consento/Vault/Lock')
+export class Lock extends ExtendedModel(Receiver, {
+  shareHex: tProp(types.string),
+  lockeeId: tProp(types.string)
+}) {
+  @computed get vaultLockee (): VaultLockee {
+    return findVaultLockee(this, this.lockeeId)
+  }
+}
+
+@model('consento/Vault/PendingLock')
+export class PendingLock extends Model({
+  receiver: tProp(types.model<Receiver>(Receiver)),
+  lockeeId: tProp(types.string)
+}) {
+  @computed get vaultLockee (): VaultLockee {
+    return findVaultLockee(this, this.lockeeId)
+  }
+}
+
+function requestLockeeMessage (pendingLock: PendingLock, vault: Vault, firstMessage: Uint8Array, share: Buffer): IRequestLockeeMessage {
+  return {
+    version: 1,
+    type: MessageType.lockeeRequest,
+    pendingLockId: pendingLock.$modelId,
+    firstMessageBase64: bufferToString(firstMessage, 'base64'),
+    shareHex: bufferToString(share, 'hex')
+  }
+}
+
 @model('consento/Vault')
 export class Vault extends Model({
   name: tProp(types.maybeNull(types.string), () => null),
-  locks: prop<Lock[]>(() => []),
+  locks: prop<ArraySet<Lock>>(() => arraySet()),
+  pendingLocks: prop<ArraySet<PendingLock>>(() => arraySet()),
+  pendingNotifications: prop<ArraySet<ISuccessNotification>>(() => arraySet()),
   accessLog: prop<VaultAccessEntry[]>(() => []),
   dataKeyHex: tProp(types.string, () => expoVaultSecrets.createDataKeyHex())
 }) {
@@ -60,9 +110,132 @@ export class Vault extends Model({
     return this.defaultName
   }
 
+  @computed get lockSubscriptions (): { [key: string]: ISubscription } {
+    return mapSubscriptions(
+      this.locks,
+      lock => lock,
+      (lock, notification) => {
+        const message = notification.body as Message
+        if (message.type === MessageType.unlock) {
+          const secret = sss.combine([lock.shareHex, message.shareHex])
+          this.unlock(bufferToString(secret, 'base64'), false)
+            .catch(unlockError => unlockError)
+        }
+      }
+    )
+  }
+
+  onInit (): void {
+    when(
+      () => this.isOpen,
+      () => {
+        for (const notification of this.pendingNotifications) {
+          this.pendingNotifications.delete(notification)
+          const message = notification.body as Message
+          if (message.type !== MessageType.confirmLockee) {
+            continue
+          }
+          for (const pendingLock of this.pendingLocks) {
+            if (pendingLock.lockeeId === message.pendingLockId) {
+              this.processPendingNotification(pendingLock, notification)
+              break
+            }
+          }
+        }
+      }
+    )
+  }
+
+  processPendingNotification (pendingLock: PendingLock, notification: ISuccessNotification): void {
+    if (this.isOpen) {
+      const message = notification.body as Message
+      if (message.type === MessageType.confirmLockee) {
+        this.confirmLockee(pendingLock, message)
+          .catch(confirmLockeeError => console.error({ confirmLockeeError }))
+      }
+    } else {
+      this.pendingNotifications.add(notification)
+    }
+  }
+
+  @computed get pendingLockSubscriptions (): { [key: string]: ISubscription } {
+    return mapSubscriptions(
+      this.pendingLocks,
+      pendingLock => pendingLock.receiver,
+      (pendingLock, notification) => this.processPendingNotification(pendingLock, notification)
+    )
+  }
+
+  @computed get subscriptions (): { [key: string]: ISubscription } {
+    return {
+      ...this.lockSubscriptions,
+      ...this.pendingLockSubscriptions
+    }
+  }
+
   @computed get defaultName (): string {
     const idBuffer = Buffer.from(this.$modelId, 'utf8')
     return `${idBuffer.readUInt16BE(0).toString(16)}-${idBuffer.readUInt16BE(1).toString(16)}-${idBuffer.readUInt16BE(2).toString(16)}-${idBuffer.readUInt16BE(3).toString(16)}`.toUpperCase()
+  }
+
+  @computed get secretKeyBase64 (): string {
+    return expoVaultSecrets.secretsBase64.get(this.dataKeyHex)
+  }
+
+  async addLockee (relation: Relation): Promise<void> {
+    const { crypto, notifications } = requireAPI(this)
+    const handshake = await crypto.initHandshake()
+    const { sender } = relation
+    if (!this.isOpen) {
+      throw new Error('Cant add lockee on closed vault!')
+    }
+    const [myShare, theirShare] = sss.split(
+      this.secretKeyBase64,
+      { shares: 2, threshold: 2 }
+    )
+    const lockee = new VaultLockee({
+      relationId: relation.$modelId,
+      shareHex: bufferToString(myShare, 'hex'),
+      initJSON: handshake.toJSON()
+    })
+    const pendingLock = new PendingLock({
+      lockeeId: lockee.$modelId,
+      receiver: new Receiver(handshake.receiver.toJSON())
+    })
+    this._addLockee(lockee, pendingLock)
+    await notifications.send(sender, requestLockeeMessage(pendingLock, this, handshake.firstMessage, theirShare))
+  }
+
+  @modelAction _addLockee (lockee: VaultLockee, pendingLock: PendingLock): void {
+    this.data.lockees.push(lockee)
+    this.pendingLocks.add(pendingLock)
+  }
+
+  async confirmLockee (pendingLock: PendingLock, confirm: IConfirmLockeeMessage): Promise<void> {
+    const { vaultLockee } = pendingLock
+    if (!vaultLockee.initPending) {
+      console.log(`Warning: Repeat confirmation for vaultLockee ${vaultLockee.$modelId}`)
+      return
+    }
+    try {
+      const { notifications } = requireAPI(this)
+      const confirmation = await vaultLockee.confirm(confirm.acceptMessage)
+      if (confirmation === undefined) {
+        console.log(`Warning: Couldn't confirm ${vaultLockee.$modelId}`)
+        return
+      }
+      const { receiverJSON, shareHex, finalMessage } = confirmation
+      this.pendingLocks.delete(pendingLock)
+      const lock = new Lock({
+        ...receiverJSON,
+        lockeeId: vaultLockee.$modelId,
+        shareHex
+      })
+      this.locks.add(lock)
+      await notifications.send(vaultLockee.sender.sender, finalMessage)
+    } catch (err) {
+      console.log(`Warning: Couldn't unlock ${vaultLockee.$modelId} properly`)
+    }
   }
 
   findFile (modelId: string): File {
@@ -78,7 +251,7 @@ export class Vault extends Model({
   }
 
   @computed get isClosable (): boolean {
-    return this.locks.length > 0
+    return this.locks.size > 0
   }
 
   @modelAction setName (name: string): void {

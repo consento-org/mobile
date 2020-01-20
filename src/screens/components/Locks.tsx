@@ -37,7 +37,7 @@ const SelectEntry = ({ entry, onSelect }: ISelectEntryProps): JSX.Element => {
 const LockeeList = (): JSX.Element => {
   const [isSelectionActive, setSelectionActive] = useState<boolean>(false)
   const [isAddingLockees, setAddingLockees] = useState<boolean>(false)
-  const { user, createLockee } = useContext(ConsentoContext)
+  const { user } = useContext(ConsentoContext)
   const { vault } = useContext(VaultContext)
   const selection: { [modelId: string]: IRelationEntry } = {}
 
@@ -69,11 +69,10 @@ const LockeeList = (): JSX.Element => {
     setAddingLockees(true)
     ;(async () => {
       const relations = Object.values(selection) as Relation[]
-      const lockees = await Promise.all(
+      await Promise.all(
         // eslint-disable-next-line @typescript-eslint/require-await
-        relations.map(async relation => createLockee(relation))
+        relations.map(async relation => vault.addLockee(relation))
       )
-      vault.data.addLockees(lockees)
       setSelectionActive(false)
       setAddingLockees(false)
     })().catch(error => {

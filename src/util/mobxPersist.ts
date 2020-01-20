@@ -2,12 +2,10 @@ import { getSnapshot, applySnapshot, onPatches, patchToJsonPatch, BaseModel, Jso
 import { getExpoSecureStore, expoSecureStore } from './expoSecureStore'
 import { ISecureStore, IIndexer } from './createSecureStore'
 import { jsonEncoding } from './jsonEncoding'
-import patcher from 'fast-json-patch'
+import patcher, { deepClone } from 'fast-json-patch'
 import { sodium as cryptoCore } from '@consento/crypto/core/sodium'
 
 type IJsonStore = ISecureStore<any>
-
-const cloneJSON = (item: any): any => JSON.parse(JSON.stringify(item))
 
 function displayError (error: Error): void {
   setTimeout(() => {
@@ -51,18 +49,25 @@ export function mobxPersist <
     if (stopped) return
     const initSnapshot = getSnapshot(item)
     snapshotter = store.defineIndex('snapshot', () => {
-      const cloned = cloneJSON(initSnapshot)
+      const cloned = deepClone(initSnapshot)
       delete cloned.$modelId
       return clearClone(cloned)
     }, jsonEncoding, (snapshot, patches) => {
       if (snapshot === null) {
         return patches
       }
-      const { newDocument } = patcher.applyPatch(
-        snapshot,
-        patches
-      )
-      return newDocument
+      try {
+        const { newDocument } = patcher.applyPatch(
+          snapshot,
+          deepClone(patches)
+        )
+        return newDocument
+      } catch (err) {
+        console.log('Error while atttempting to apply patches')
+        console.log(snapshot)
+        console.log(patches)
+        throw err
+      }
     })
     if (version !== 0) {
       const snapshot = await snapshotter.read()

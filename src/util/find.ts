@@ -1,4 +1,7 @@
 export function find <In, Out extends In> (iterable: Iterable<In>, match: (input: In) => input is Out): Out | undefined {
+  if (iterable === null || iterable === undefined) {
+    return
+  }
   const iterator = iterable[Symbol.iterator]()
   while (true) {
     const next = iterator.next()

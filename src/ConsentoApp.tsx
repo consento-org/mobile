@@ -3,18 +3,33 @@ import { Screens } from './screens/Screens'
 import { Consento, ConsentoContext } from './model/Consento'
 import { registerRootStore, unregisterRootStore } from 'mobx-keystone'
 import { Loading } from './screens/Loading'
-import { observer } from 'mobx-react'
 import { ContextMenu } from './screens/components/ContextMenu'
+import { autorun } from 'mobx'
 
-export const ConsentoApp = observer((): JSX.Element => {
-  const [consento] = useState<Consento>(() => new Consento({}))
+export const ConsentoApp = (): JSX.Element => {
+  const [consento, setConsento] = useState<Consento>(() => new Consento({}))
+  const [ready, setReady] = useState<boolean>(false)
 
-  useEffect(() => {
-    registerRootStore(consento)
-    return () => unregisterRootStore(consento)
-  }, [])
+  useEffect(
+    () => {
+      registerRootStore(consento)
+      return () => unregisterRootStore(consento)
+    },
+    [Consento]
+  )
 
-  if (!consento.ready) {
+  useEffect(
+    () => autorun(() => setReady(consento.ready)),
+    [Consento]
+  )
+
+  if (!(consento instanceof Consento)) {
+    setReady(false)
+    setConsento(new Consento({}))
+    return <Loading />
+  }
+
+  if (!ready) {
     return <Loading />
   }
 
@@ -23,6 +38,6 @@ export const ConsentoApp = observer((): JSX.Element => {
       <Screens />
     </ConsentoContext.Provider>
   </ContextMenu>
-})
+}
 
 export default ConsentoApp

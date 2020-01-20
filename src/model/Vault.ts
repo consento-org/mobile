@@ -1,11 +1,11 @@
-import { computed, observable, IObservableValue } from 'mobx'
-import { model, modelAction, Model, prop, tProp, types, ExtendedModel, ObjectMap, registerRootStore } from 'mobx-keystone'
+import { computed } from 'mobx'
+import { model, modelAction, Model, prop, tProp, types, ExtendedModel } from 'mobx-keystone'
 import { Buffer } from 'buffer'
-import randomBytes from '@consento/sync-randombytes'
 import { Lock } from './Connection'
 import { RequestBase } from './RequestBase'
 import { VaultData, File } from './VaultData'
 import { expoVaultSecrets } from '../util/expoVaultSecrets'
+import { vaultStore } from './VaultStore'
 
 export enum TVaultState {
   open = 'open',
@@ -44,26 +44,14 @@ export type VaultAccessEntry = typeof VaultOpenRequest | VaultClose | VaultOpen
 export class AccessOperation extends Model({
 }) {}
 
-const vaultRoot = new ObjectMap<VaultData>({})
-registerRootStore(vaultRoot)
-
 @model('consento/Vault')
 export class Vault extends Model({
   name: tProp(types.maybeNull(types.string), () => null),
   locks: prop<Lock[]>(() => []),
   accessLog: prop<VaultAccessEntry[]>(() => []),
-  dataKeyHex: tProp(types.string, () => expoVaultSecrets.create().keyHex)
+  dataKeyHex: tProp(types.string, () => expoVaultSecrets.createDataKeyHex())
 }) {
-  // root: Folder
   log: VaultLogEntry[]
-
-  _initing: IObservableValue<() => any>
-  _attachCounter: number
-
-  onInit (): void {
-    this._attachCounter = 0
-    this._initing = observable.box<() => any>(null)
-  }
 
   @computed get displayName (): string {
     if (this.name !== null && this.name !== '') {
@@ -77,50 +65,6 @@ export class Vault extends Model({
     return `${idBuffer.readUInt16BE(0).toString(16)}-${idBuffer.readUInt16BE(1).toString(16)}-${idBuffer.readUInt16BE(2).toString(16)}-${idBuffer.readUInt16BE(3).toString(16)}`.toUpperCase()
   }
 
-  onAttachedToRootStore (): () => void {
-    /**
-     * WORKAROUND
-     *
-     * mobx-keystone will not execute detachment in order.
-     * It will run .onAttachedToRootStore twice before running
-     * the first "detach" function. By setting a counter,
-     * we make sure that only one .attach is run at a time.
-     */
-    if (this._attachCounter === 0) {
-      let attached = true
-      ;(async () => {
-        const secretKeyBase64 = await expoVaultSecrets.get(this.dataKeyHex)
-        if (!attached) {
-          return
-        }
-        if (secretKeyBase64 !== undefined) {
-          this._unlock(secretKeyBase64)
-        }
-        this._initing.set(null)
-      })().catch(err => {
-        if (!attached) {
-          this._initing.set(null)
-        }
-        console.log({ err })
-      })
-      this._initing.set(() => {
-        attached = false
-      })
-    }
-    this._attachCounter += 1
-    return () => {
-      this._attachCounter -= 1
-      if (this._attachCounter === 0) {
-        const deInit = this._initing.get()
-        if (deInit !== null) {
-          deInit()
-          this._initing.set(null)
-        }
-        vaultRoot.delete(this.dataKeyHex)
-      }
-    }
-  }
-
   findFile (modelId: string): File {
     return this.data?.findFile(modelId)
   }
@@ -130,7 +74,7 @@ export class Vault extends Model({
   }
 
   @computed get data (): VaultData {
-    return vaultRoot.get(this.dataKeyHex)
+    return vaultStore.vaults.get(this.dataKeyHex)
   }
 
   @computed get isClosable (): boolean {
@@ -164,14 +108,9 @@ export class Vault extends Model({
     this.accessLog.push(new VaultClose({}))
   }
 
-  @modelAction _unlock (secretKeyBase64: string): void {
-    const newVault = new VaultData({ secretKeyBase64, dataKeyHex: this.dataKeyHex })
-    vaultRoot.set(this.dataKeyHex, newVault)
-  }
-
-  @modelAction unlock (secretKeyBase64: string): void {
-    this._unlock(secretKeyBase64)
-    this.accessLog.push(new VaultOpen({}))
+  async unlock (secretKeyBase64: string, persistOnDevice: boolean): Promise<void> {
+    // This triggers vaultStore!
+    await expoVaultSecrets.unlock(this.dataKeyHex, secretKeyBase64, persistOnDevice)
   }
 
   @computed get isOpen (): boolean {
@@ -187,7 +126,7 @@ export class Vault extends Model({
   }
 
   @computed get state (): TVaultState {
-    if (this._initing.get() !== null) {
+    if (vaultStore.loading) {
       return TVaultState.loading
     }
     if (this.data !== undefined) {

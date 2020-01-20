@@ -1,5 +1,5 @@
 import { computed, observable } from 'mobx'
-import { Model, model, tProp, types, prop, arraySet, ArraySet, modelAction } from 'mobx-keystone'
+import { Model, model, tProp, types, prop, arraySet, ArraySet, modelAction, registerRootStore, unregisterRootStore } from 'mobx-keystone'
 import { createContext } from 'react'
 import { AsyncStorage, AppStateStatus, AppState } from 'react-native'
 import { setup, IAPI, INotifications, IConsentoCrypto } from '@consento/api'
@@ -13,6 +13,8 @@ import { Relation } from './Relation'
 import { VaultLockee } from './VaultData'
 import { rimraf } from '../util/expoRimraf'
 import { first } from '../util/first'
+import { combinedDispose } from '../util/combinedDispose'
+import { vaultStore } from './VaultStore'
 
 export const ConsentoContext = createContext<Consento>(null)
 
@@ -186,23 +188,27 @@ export class Consento extends Model({
   }
 
   onAttachedToRootStore (): () => void {
-    return safeAutorun(() => {
-      if (this.config === null) {
-        return
-      }
-      const { notificationTransport, destructTransport } = createTransport(this.config.address)
-      const api = setup({
-        cryptoCore,
-        notificationTransport
+    registerRootStore(vaultStore)
+    return combinedDispose(
+      () => unregisterRootStore(vaultStore),
+      safeAutorun(() => {
+        if (this.config === null) {
+          return
+        }
+        const { notificationTransport, destructTransport } = createTransport(this.config.address)
+        const api = setup({
+          cryptoCore,
+          notificationTransport
+        })
+        api.notifications.reset([]).catch(error => {
+          console.log(`Error resetting the notifications ${error}`)
+        })
+        this._setApi(api)
+        return () => {
+          this._setApi(undefined)
+          destructTransport()
+        }
       })
-      api.notifications.reset([]).catch(error => {
-        console.log(`Error resetting the notifications ${error}`)
-      })
-      this._setApi(api)
-      return () => {
-        this._setApi(undefined)
-        destructTransport()
-      }
-    })
+    )
   }
 }

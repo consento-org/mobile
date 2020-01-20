@@ -1,5 +1,4 @@
-import { model, Model, tProp, types, JsonPatch, SnapshotOutOf, modelAction, prop, objectMap, getParent } from 'mobx-keystone'
-import { mobxPersist } from '../util/mobxPersist'
+import { model, Model, tProp, types, modelAction, prop, objectMap, getParent } from 'mobx-keystone'
 import { computed } from 'mobx'
 import { toBuffer, bufferToString, Buffer } from '@consento/crypto/util/buffer'
 import { find } from '../util/find'
@@ -92,7 +91,6 @@ export class VaultLockee extends Model({
 
 @model('consento/VaultData')
 export class VaultData extends Model({
-  secretKeyBase64: tProp(types.string),
   dataKeyHex: tProp(types.string),
   loaded: tProp(types.boolean, () => false),
   files: prop((): File[] => []),
@@ -144,10 +142,6 @@ export class VaultData extends Model({
     }
   }
 
-  @computed get secretKey (): Uint8Array {
-    return toBuffer(this.secretKeyBase64)
-  }
-
   newFilename (): string {
     let index = 0
     let filename: string
@@ -168,28 +162,6 @@ export class VaultData extends Model({
 
   findFileByName (filename: string): File {
     return this.filenameMap[filename]
-  }
-
-  onAttachedToRootStore (): () => any {
-    // TODO: Should we delete actually deleted blobs?
-    const stopPersist = mobxPersist({
-      item: this,
-      secretKey: this.secretKey,
-      filter: (patch: JsonPatch) => {
-        return patch.path !== '/secretKeyBase64'
-      },
-      clearClone: (cloned: any) => {
-        delete cloned.files.$modelId
-        return cloned
-      },
-      prepareSnapshot: (_: VaultData, snapshot: SnapshotOutOf<VaultData>) => {
-        return snapshot
-      }
-    })
-
-    return () => {
-      stopPersist()
-    }
   }
 
   @modelAction _markLoaded (): void {

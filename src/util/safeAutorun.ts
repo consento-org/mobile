@@ -1,17 +1,19 @@
-import { autorun } from 'mobx'
+import { autorun, IAutorunOptions, IReactionPublic } from 'mobx'
 
-export function safeAutorun (op: () => any): () => void {
-  let destructor: () => any
-  const destruct = autorun(() => {
-    if (typeof destructor === 'function') {
-      destructor()
+export type IDisposer = () => void
+
+export function safeAutorun (view: (r: IReactionPublic) => IDisposer, opts?: IAutorunOptions): () => void {
+  let disposer: () => any
+  const destruct = autorun((r) => {
+    if (typeof disposer === 'function') {
+      disposer()
     }
-    destructor = op()
-  })
+    disposer = view(r)
+  }, opts)
   return () => {
-    if (typeof destructor === 'function') {
-      destructor()
-      destructor = undefined
+    if (typeof disposer === 'function') {
+      disposer()
+      disposer = undefined
     }
     destruct()
   }

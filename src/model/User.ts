@@ -7,7 +7,6 @@ import { find } from '../util/find'
 import { mobxPersist } from '../util/mobxPersist'
 import { compareNames } from '../util/compareNames'
 import { VaultLockee } from './VaultData'
-import { Lock } from './Connection'
 
 function initUser (user: User): void {
   ;['My Contracts', 'My Certificates', 'My Passwords'].forEach(name => {
@@ -40,12 +39,10 @@ function isVaultPatch (patch: JsonPatch): boolean {
 export class Lockee {
   vaultLockee: VaultLockee
   relation?: Relation
-  lock?: Lock
 
-  constructor (vaultLockee: VaultLockee, relation?: Relation, lock?: Lock) {
+  constructor (vaultLockee: VaultLockee, relation?: Relation) {
     this.relation = relation
     this.vaultLockee = vaultLockee
-    this.lock = lock
   }
 
   get displayName (): string {

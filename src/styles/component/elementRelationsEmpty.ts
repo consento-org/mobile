@@ -19,7 +19,7 @@ export class ElementRelationsEmptyClass extends Component {
       ...TextStyles.H2PalanquinDarkMedium36BlackCenter,
       textAlignVertical: 'top'
     }, { x: 69, y: 408, w: 238, h: 36 }, this)
-    this.illustration = new ImagePlacement(Asset.illustrationFriends, { x: 26.89, y: 230, w: 321.2, h: 178 }, this)
+    this.illustration = new ImagePlacement(Asset.illustrationFriends, { x: 26.89, y: 210, w: 321.2, h: 178 }, this)
   }
 }
 

@@ -23,7 +23,7 @@ export class ElementConsentosEmptyClass extends Component {
       color: Color.black
     }, { x: 58, y: 410, w: 270, h: 56 }, this)
     this.title = new Text('All set up !', TextStyles.H2PalanquinDarkMedium36BlackCenter, { x: 102, y: 358, w: 171, h: 36 }, this)
-    this.illustration = new ImagePlacement(Asset.illustrationSun, { x: 79.5, y: 154, w: 217, h: 213 }, this)
+    this.illustration = new ImagePlacement(Asset.illustrationSun, { x: 79.5, y: 124, w: 217, h: 213 }, this)
   }
 }
 

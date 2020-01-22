@@ -1,7 +1,6 @@
 import { Relation } from './Relation'
-import { Vault } from './Vault'
 import { RequestBase, TRequestState } from './RequestBase'
-import { tProp, types, model, ExtendedModel, Model, modelAction, prop } from 'mobx-keystone'
+import { tProp, types, model, ExtendedModel, Model, modelAction, prop, Ref } from 'mobx-keystone'
 import { computed, observable, toJS } from 'mobx'
 import { requireAPI, IConfirmLockeeMessage, MessageType, hasAPI } from './Consento.types'
 import { IHandshakeAcceptMessage, IHandshakeAcceptJSON, IHandshakeAccept, IAPI, IConnection } from '@consento/api'
@@ -9,11 +8,11 @@ import { Alert } from 'react-native'
 import { Receiver, Sender } from './Connection'
 import { Buffer } from 'buffer'
 
-function confirmLockeeMessage (pendingLockId: string, acceptMessage: IHandshakeAcceptMessage): IConfirmLockeeMessage {
+function confirmLockeeMessage (lockId: string, acceptMessage: IHandshakeAcceptMessage): IConfirmLockeeMessage {
   return {
     version: 1,
     type: MessageType.confirmLockee,
-    pendingLockId: pendingLockId,
+    lockId,
     acceptMessage
   }
 }
@@ -24,7 +23,7 @@ export class ConsentoBecomeLockee extends Model({
   receiver: tProp(types.maybeNull(types.model<Receiver>(Receiver)), () => null),
   sender: tProp(types.maybeNull(types.model<Sender>(Sender)), () => null),
   acceptHandshakeJSON: prop<IHandshakeAcceptJSON>(),
-  pendingLockId: tProp(types.maybeNull(types.string)),
+  lockId: tProp(types.maybeNull(types.string)),
   shareHex: tProp(types.maybeNull(types.string), () => null),
   creationTime: tProp(types.number, () => Date.now()),
   vaultName: tProp(types.string),
@@ -76,7 +75,7 @@ export class ConsentoBecomeLockee extends Model({
         ;(async () => {
           const accept = this.acceptHandshake
           this._setReceiveConfirmation(true)
-          await api.notifications.send(accept.sender, confirmLockeeMessage(this.pendingLockId, accept.acceptMessage))
+          await api.notifications.send(accept.sender, confirmLockeeMessage(this.lockId, accept.acceptMessage))
         })().then(
           () => {
             this._lock.set(false)
@@ -141,11 +140,18 @@ export class ConsentoBecomeLockee extends Model({
 
 @model('consento/consentos/UnlockVault')
 export class ConsentoUnlockVault extends ExtendedModel(RequestBase, {
-  relation: tProp(types.ref<Relation>()),
-  vault: tProp(types.ref<Vault>())
+  becomeUnlockee: tProp(types.ref<ConsentoBecomeLockee>())
 }) {
   get receiver (): Receiver {
     return null
+  }
+
+  get vaultName (): string {
+    return this.becomeUnlockee.current?.vaultName
+  }
+
+  get relation (): Ref<Relation> {
+    return this.becomeUnlockee.current?.relation
   }
 
   static KEEP_ALIVE: number = 5000

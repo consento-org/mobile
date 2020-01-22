@@ -1,8 +1,8 @@
 import { model, Model, prop, ExtendedModel, tProp, types, ArraySet, arraySet, modelAction, findParent, BaseModel } from 'mobx-keystone'
 import { RequestBase } from './RequestBase'
-import { Receiver } from './Connection'
+import { Receiver, Sender, Connection } from './Connection'
 import { ISuccessNotification, IAPI } from '@consento/api'
-import { ISubscription, IConfirmLockeeMessage, IRequestLockeeMessage, MessageType, Message, requireAPI, hasAPI, ISubscriptionMap, IFinalizeLockeeMessage } from './Consento.types'
+import { ISubscription, IConfirmLockeeMessage, IRequestLockeeMessage, MessageType, Message, requireAPI, hasAPI, ISubscriptionMap, IFinalizeLockeeMessage, IRequestUnlockMessage } from './Consento.types'
 import { VaultLockee, VaultData, File, IVaultLockeeConfirmation } from './VaultData'
 import { bufferToString, Buffer } from '@consento/crypto/util/buffer'
 import { expoVaultSecrets } from '../util/expoVaultSecrets'
@@ -12,6 +12,9 @@ import { vaultStore } from './VaultStore'
 import sss from '@consento/shamirs-secret-sharing'
 import { mapSubscriptions } from './mapSubscriptions'
 import { find } from '../util/find'
+import { last } from '../util/last'
+import { now } from './now'
+import { map } from '../util/map'
 
 export enum TVaultState {
   open = 'open',
@@ -23,7 +26,7 @@ export enum TVaultState {
 @model('consento/MessageLogEntry')
 export class MessageLogEntry extends Model({
   message: prop<string>(),
-  time: prop<number>(() => Date.now())
+  time: prop<number>(() => now())
 }) {}
 
 export type VaultLogEntry = MessageLogEntry
@@ -41,7 +44,7 @@ export class VaultOpen extends Model({
 @model('consento/Vault/OpenRequest')
 export class VaultOpenRequest extends ExtendedModel(RequestBase, {
 }) {
-  static KEEP_ALIVE = 5000
+  static KEEP_ALIVE = 15 * 1000
 }
 
 export type VaultAccessEntry = typeof VaultOpenRequest | VaultClose | VaultOpen
@@ -63,8 +66,9 @@ function findVaultLockee (item: BaseModel<any, any>, lockeeId: string): VaultLoc
 }
 
 @model('consento/Vault/Lock')
-export class Lock extends ExtendedModel(Receiver, {
+export class Lock extends ExtendedModel(Connection, {
   shareHex: tProp(types.string),
+  lockId: tProp(types.string),
   lockeeId: tProp(types.string)
 }) {
   @computed get vaultLockee (): VaultLockee {
@@ -86,7 +90,7 @@ function requestLockeeMessage (pendingLock: PendingLock, vault: Vault, firstMess
   return {
     version: 1,
     type: MessageType.lockeeRequest,
-    pendingLockId: pendingLock.$modelId,
+    lockId: pendingLock.$modelId,
     firstMessageBase64: bufferToString(firstMessage, 'base64'),
     shareHex: bufferToString(share, 'hex'),
     vaultName
@@ -98,6 +102,15 @@ function finalizeLockeeMessage (finalMessage: Uint8Array): IFinalizeLockeeMessag
     version: 1,
     type: MessageType.finalizeLockee,
     finalMessageBase64: bufferToString(finalMessage, 'base64')
+  }
+}
+
+function requestUnlockMessage (time: number, keepAlive: number): IRequestUnlockMessage {
+  return {
+    version: 1,
+    type: MessageType.requestUnlock,
+    time,
+    keepAlive
   }
 }
 
@@ -122,7 +135,7 @@ export class Vault extends Model({
   @computed get lockSubscriptions (): ISubscriptionMap {
     return mapSubscriptions(
       this.locks,
-      lock => lock,
+      lock => lock.receiver,
       (lock, notification) => {
         const message = notification.body as Message
         if (message.type === MessageType.unlock) {
@@ -146,7 +159,7 @@ export class Vault extends Model({
             continue
           }
           for (const pendingLock of this.pendingLocks) {
-            if (pendingLock.lockeeId === message.pendingLockId) {
+            if (pendingLock.lockeeId === message.lockId) {
               this.processPendingNotification(pendingLock, notification, api)
               break
             }
@@ -256,8 +269,10 @@ export class Vault extends Model({
       const sender = new crypto.Sender(connectionJSON.sender)
       await notifications.send(sender, finalizeLockeeMessage(finalMessage))
       this.locks.add(new Lock({
-        ...connectionJSON.receiver,
+        sender: new Sender(connectionJSON.sender),
+        receiver: new Receiver(connectionJSON.receiver),
         lockeeId: vaultLockee.$modelId,
+        lockId: pendingLock.$modelId,
         shareHex
       }))
     } catch (err) {
@@ -287,14 +302,35 @@ export class Vault extends Model({
     this.name = name
   }
 
+  @computed get accessState (): VaultAccessEntry {
+    if (this.isOpen) {
+      return
+    }
+    return last(this.accessLog)
+  }
+
   @modelAction requestUnlock (): void {
     if (!this.isClosable) {
       throw new Error('not-closable')
     }
-    this.accessLog.push(new VaultOpenRequest({}))
+    if (this.isOpen) {
+      return
+    }
+    if (this.isPending) {
+      return
+    }
+    const request = new VaultOpenRequest({ keepAlive: VaultOpenRequest.KEEP_ALIVE })
+    this.accessLog.push(request)
+    const api = requireAPI(this)
+    Promise.all(
+      map(this.locks.values(), async (lock): Promise<void> => {
+        const sender = new api.crypto.Sender(lock.sender)
+        await api.notifications.send(sender, requestUnlockMessage(request.time, request.keepAlive))
+      })
+    ).catch(lockSendError => console.log({ lockSendError }))
   }
 
-  @modelAction close (): void {
+  async lock (): Promise<boolean> {
     if (!this.isClosable) {
       throw new Error('not-closable')
     }
@@ -307,7 +343,7 @@ export class Vault extends Model({
     if (!this.isOpen) {
       return // Nothing to see/nothing to do.
     }
-    this.accessLog.push(new VaultClose({}))
+    return expoVaultSecrets.delete(this.dataKeyHex)
   }
 
   async unlock (secretKeyBase64: string, persistOnDevice: boolean): Promise<void> {
@@ -327,6 +363,22 @@ export class Vault extends Model({
     return this.state === TVaultState.loading
   }
 
+  @computed get expiresIn (): number {
+    if (!this.isPending) {
+      return -1
+    }
+    const request = last(this.accessLog) as VaultOpenRequest
+    return request.expiresIn
+  }
+
+  @computed get keepAlive (): number {
+    if (!this.isPending) {
+      return -1
+    }
+    const request = last(this.accessLog) as VaultOpenRequest
+    return request.keepAlive
+  }
+
   @computed get state (): TVaultState {
     if (vaultStore.loading) {
       return TVaultState.loading
@@ -337,9 +389,11 @@ export class Vault extends Model({
       }
       return TVaultState.open
     }
-    const entry = this.accessLog[this.accessLog.length - 1]
-    if (entry instanceof VaultOpenRequest && entry.isActive) {
-      return TVaultState.pending
+    const entry = last(this.accessLog)
+    if (entry instanceof VaultOpenRequest) {
+      if (entry.isActive) {
+        return TVaultState.pending
+      }
     }
     return TVaultState.locked
   }

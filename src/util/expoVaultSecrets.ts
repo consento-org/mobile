@@ -44,6 +44,12 @@ export class ExpoVaultSecrets extends Model({
     await vaultSecrets.toggleDevicePersistence(keyHex, persistOnDevice)
   }
 
+  async delete (keyHex: string): Promise<boolean> {
+    this.secretsBase64.delete(keyHex)
+    const deleted = await vaultSecrets.delete(keyHex)
+    return deleted
+  }
+
   async unlock (keyHex: string, secretBase64: string, persistOnDevice: boolean): Promise<void> {
     this._update(keyHex, secretBase64)
     await vaultSecrets.set(keyHex, secretBase64, persistOnDevice)

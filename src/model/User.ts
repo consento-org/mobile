@@ -1,7 +1,7 @@
 import { model, Model, prop, arraySet, Ref, findParent, tProp, types, modelAction, customRef, JsonPatch, SnapshotOutOf } from 'mobx-keystone'
 import { Vault } from './Vault'
 import { Relation } from './Relation'
-import { IAnyConsento, ConsentoBecomeLockee } from './Consentos'
+import { IAnyConsento, ConsentoBecomeLockee, ConsentoUnlockVault } from './Consentos'
 import { computed } from 'mobx'
 import { find } from '../util/find'
 import { mobxPersist } from '../util/mobxPersist'
@@ -12,6 +12,8 @@ import { ISubscriptionMap, Message, MessageType } from './Consento.types'
 import { Buffer } from 'buffer'
 import { mapSubscriptions } from './mapSubscriptions'
 
+const ASSUMED_SAFETY_DELAY: number = 1000 // Lets count off a second for network overhead
+
 function initUser (user: User): void {
   ;['My Contracts', 'My Certificates', 'My Passwords'].forEach(name => {
     user.vaults.add(new Vault({ name }))
@@ -20,15 +22,21 @@ function initUser (user: User): void {
 
 export const findParentUser = (ref: Ref<any>): User => findParent(ref, n => n instanceof User)
 
-export const relationRefInUser = customRef<Relation>('consento/Relation#inUser', {
+export const relationRefInUser = customRef<Relation>(`${Relation.$modelType}#inUser`, {
   resolve (ref: Ref<Relation>): Relation {
     return findParentUser(ref)?.findRelation(ref.id)
   }
 })
 
-export const vaultRefInUser = customRef<Vault>('consento/Vault#inUser', {
+export const vaultRefInUser = customRef<Vault>(`${Vault.$modelType}#inUser`, {
   resolve (ref: Ref<Vault>): Vault {
     return findParentUser(ref)?.findVault(ref.id)
+  }
+})
+
+export const becomeUnlockeeRefInUser = customRef<ConsentoBecomeLockee>(`${ConsentoBecomeLockee}#inUser`, {
+  resolve (ref: Ref<ConsentoBecomeLockee>): ConsentoBecomeLockee {
+    return findParentUser(ref)?.findBecomeLockee(ref.id)
   }
 })
 
@@ -102,17 +110,13 @@ export class User extends Model({
             this.consentos.add(new ConsentoBecomeLockee({
               relation: relationRefInUser(relation),
               acceptHandshakeJSON: accept.toJSON(),
-              pendingLockId: message.pendingLockId,
+              lockId: message.lockId,
               shareHex: message.shareHex,
               vaultName: message.vaultName
             }))
           })().catch(error => {
             console.log({ error })
           })
-          return
-        }
-        if (message.type === MessageType.unlock) {
-          console.log('unlock')
         }
       }
     )
@@ -129,6 +133,16 @@ export class User extends Model({
             consento.finalize(api, message.finalMessageBase64)
           }
         }
+        if (message.type === MessageType.requestUnlock) {
+          if (consento instanceof ConsentoBecomeLockee) {
+            this.consentos.add(new ConsentoUnlockVault({
+              keepAlive: message.keepAlive - ASSUMED_SAFETY_DELAY,
+              time: message.time,
+              becomeUnlockee: becomeUnlockeeRefInUser(consento)
+            }))
+          }
+        }
+        console.log(message.type)
       }
     )
   }
@@ -182,6 +196,10 @@ export class User extends Model({
 
   findVault (vaultId: string): Vault {
     return find(this.vaults, (vault): vault is Vault => vault.$modelId === vaultId)
+  }
+
+  findBecomeLockee (becomeUnlockeeId: string): ConsentoBecomeLockee {
+    return find(this.consentos, (consento): consento is ConsentoBecomeLockee => consento.$modelId === becomeUnlockeeId)
   }
 }
 

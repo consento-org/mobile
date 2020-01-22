@@ -1,4 +1,4 @@
-import React, { useContext } from 'react'
+import React, { useContext, useEffect } from 'react'
 import { View, ViewStyle, Alert } from 'react-native'
 import { TopNavigation } from './components/TopNavigation'
 import { createTabBar } from './components/createTabBar'
@@ -61,14 +61,26 @@ export const VaultRouter = VaultNavigator.router
 export const Vault = withNavigation(observer(({ navigation }: { navigation: TNavigation }): JSX.Element => {
   const { user } = useContext(ConsentoContext)
   const { vault } = useContext(VaultContext)
+  useEffect(() => {
+    if (!vault.isOpen) {
+      vault.requestUnlock()
+    }
+  }, [])
+  const handleNameEdit = vault.isOpen ? newName => vault.setName(newName) : undefined
+  const handleDelete = (): void => confirmDelete(user, vault, navigation)
+  const handleLock = vault.isClosable ? () => {
+    navigation.navigate('vaults')
+    vault.lock()
+      .catch(lockError => console.error(lockError))
+  } : undefined
   return <PopupMenu>
     <View style={{ position: 'absolute', width: '100%', height: '100%' }}>
-      <TopNavigation title={vault.name} titlePlaceholder={vault.defaultName} back='vaults' onEdit={vault.isOpen ? newName => vault.setName(newName) : undefined} onDelete={() => confirmDelete(user, vault, navigation)} />
+      <TopNavigation title={vault.name} titlePlaceholder={vault.defaultName} back='vaults' onEdit={handleNameEdit} onDelete={handleDelete} />
       {
         vault.isOpen ? [
-          <LockButton key='lock' />,
+          <LockButton key='lock' onPress={handleLock} />,
           <VaultNavigator key='vault' navigation={navigation} />
-        ] : <Waiting />
+        ] : <Waiting vault={vault} />
       }
     </View>
   </PopupMenu>

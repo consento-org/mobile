@@ -1,9 +1,11 @@
 import React, { useState } from 'react'
 import Svg, { Path } from 'react-native-svg'
-import useInterval from '@use-it/interval'
 import { View, ViewStyle, Text, TextStyle } from 'react-native'
 import { createBoxOutline } from './createBoxOutline'
 import { elementVaultUnlock } from '../../styles/component/elementVaultUnlock'
+import { observer } from 'mobx-react'
+import { Vault } from '../../model/Vault'
+import { exists } from '../../util/exists'
 
 export interface IWaitingProps {
   start?: number
@@ -26,13 +28,24 @@ const textStyle: TextStyle = {
 }
 const absolute: ViewStyle = { position: 'absolute' }
 
-export function Waiting (): JSX.Element {
-  const [offset, setOffset] = useState(0.2)
-  useInterval(() => {
-    setOffset((offset + 0.01) % 1)
-  }, 25)
+const container: ViewStyle = {
+  flexGrow: 1,
+  backgroundColor: elementVaultUnlock.backgroundColor,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center'
+}
 
-  return <View style={{ flexGrow: 1, backgroundColor: elementVaultUnlock.backgroundColor, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+export const Waiting = observer(({ vault, onClose }: { vault: Vault, onClose?: () => any }): JSX.Element => {
+  const offset = Math.max(1 - vault.expiresIn / vault.keepAlive, 0)
+  const [closeCalled, setCloseCalled] = useState<boolean>(false)
+
+  if (offset === 0 && closeCalled === false) {
+    setCloseCalled(true)
+    if (exists(onClose)) onClose()
+  }
+
+  return <View style={container}>
     {elementVaultUnlock.illustrationWaiting.img({ marginBottom: elementVaultUnlock.waiting.place.top - elementVaultUnlock.illustrationWaiting.place.bottom })}
     <View style={{ width: outWidth, height: outHeight, position: 'relative' }}>
       <Svg width={outWidth} height={outHeight} viewBox={viewBox} style={absolute}>
@@ -55,4 +68,4 @@ export function Waiting (): JSX.Element {
       <Text style={textStyle}>{elementVaultUnlock.waiting.text}</Text>
     </View>
   </View>
-}
+})

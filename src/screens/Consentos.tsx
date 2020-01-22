@@ -118,7 +118,7 @@ export const ConsentosScreen = observer(() => {
         : <ScrollView centerContent>
           <View style={listStyle}>
             {
-              map(consentos.values(), consento => <Consento consento={consento} key={consento.$modelId} />)
+              map(consentos.values(), consento => <Consento consento={consento} key={consento.$modelId} />).reverse()
             }
           </View>
         </ScrollView>

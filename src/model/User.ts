@@ -135,14 +135,14 @@ export class User extends Model({
         }
         if (message.type === MessageType.requestUnlock) {
           if (consento instanceof ConsentoBecomeLockee) {
+            const becomeUnlockee = becomeUnlockeeRefInUser(consento.$modelId)
             this.consentos.add(new ConsentoUnlockVault({
               keepAlive: message.keepAlive - ASSUMED_SAFETY_DELAY,
               time: message.time,
-              becomeUnlockee: becomeUnlockeeRefInUser(consento)
+              becomeUnlockee
             }))
           }
         }
-        console.log(message.type)
       }
     )
   }

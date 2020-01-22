@@ -13,7 +13,7 @@ export function mapSubscriptions<T> (
     if (receiver !== null && receiver !== undefined) {
       subscriptions[receiver.id] = {
         receiver,
-        action: action.bind(null, item)
+        action: (notification: ISuccessNotification, api: IAPI) => action(item, notification, api)
       }
     }
   }

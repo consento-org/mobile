@@ -38,9 +38,6 @@ const lockeeCardStyle: ViewStyle = {
   margin: cardMargin
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-function
-const noop = (): void => {}
-
 const BecomeLockee = observer(({ consento }: { consento: ConsentoBecomeLockee }) => {
   if (consento.deleted) {
     return
@@ -89,22 +86,26 @@ const BecomeLockee = observer(({ consento }: { consento: ConsentoBecomeLockee })
   </View>
 })
 
-const Consento = observer(({ consento }: { consento: IAnyConsento }) => {
+const UnlockVault = observer(({ consento }: { consento: ConsentoUnlockVault }) => {
+  return <View style={accessCardStyle}>
+    <elementConsentosBase.lastAccess.Render value={humanTime(consento.time)} />
+    <elementConsentosBase.relationName.Render value={consento.relation.current?.displayName} style={{ ...elementConsentosBase.relationName.place.size(), backgroundColor: '#00000000', position: 'relative' }} />
+    <elementConsentosBase.actionRequested.Render />
+    <elementConsentosBase.vaultIcon.Render />
+    <elementConsentosBase.vaultName.Render value={consento.vaultName} />
+    <ConsentoState state={consento.state} onAccept={consento.handleAccept} onDelete={consento.handleDelete} style={elementConsentosAccessAccepted.state.place.style()} />
+  </View>
+})
+
+const Consento = ({ consento }: { consento: IAnyConsento }): JSX.Element => {
   if (consento instanceof ConsentoUnlockVault) {
-    return <View style={accessCardStyle}>
-      <elementConsentosBase.lastAccess.Render value={humanTime(consento.time)} />
-      <elementConsentosBase.relationName.Render value='Some Person' style={{ ...elementConsentosBase.relationName.place.size(), backgroundColor: '#00000000', position: 'relative' }} />
-      <elementConsentosBase.actionRequested.Render />
-      <elementConsentosBase.vaultIcon.Render />
-      <elementConsentosBase.vaultName.Render value='Vault Name' />
-      <ConsentoState state={consento.state} onAccept={noop} onDelete={noop} style={elementConsentosAccessAccepted.state.place.style()} />
-    </View>
+    return <UnlockVault consento={consento} />
   }
   if (consento instanceof ConsentoBecomeLockee) {
     return <BecomeLockee consento={consento} />
   }
   return null
-})
+}
 
 const listStyle: ViewStyle = {
   display: 'flex',

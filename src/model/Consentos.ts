@@ -2,7 +2,7 @@ import { Relation } from './Relation'
 import { RequestBase, TRequestState } from './RequestBase'
 import { tProp, types, model, ExtendedModel, Model, modelAction, prop, Ref } from 'mobx-keystone'
 import { computed, observable, toJS } from 'mobx'
-import { requireAPI, IConfirmLockeeMessage, MessageType, hasAPI } from './Consento.types'
+import { requireAPI, IConfirmLockeeMessage, MessageType, hasAPI, IUnlockMessage } from './Consento.types'
 import { IHandshakeAcceptMessage, IHandshakeAcceptJSON, IHandshakeAccept, IAPI, IConnection } from '@consento/api'
 import { Alert } from 'react-native'
 import { Receiver, Sender } from './Connection'
@@ -14,6 +14,14 @@ function confirmLockeeMessage (lockId: string, acceptMessage: IHandshakeAcceptMe
     type: MessageType.confirmLockee,
     lockId,
     acceptMessage
+  }
+}
+
+function unlockMessage (shareHex: string): IUnlockMessage {
+  return {
+    version: 1,
+    type: MessageType.unlock,
+    shareHex
   }
 }
 
@@ -62,7 +70,6 @@ export class ConsentoBecomeLockee extends Model({
   }
 
   @computed get handleAccept (): () => any {
-    const api = requireAPI(this)
     if (this.isLocked) {
       return
     }
@@ -70,6 +77,7 @@ export class ConsentoBecomeLockee extends Model({
       return
     }
     if (this.state === TRequestState.active) {
+      const api = requireAPI(this)
       return () => {
         this._lock.set(true)
         ;(async () => {
@@ -83,7 +91,7 @@ export class ConsentoBecomeLockee extends Model({
           acceptError => {
             this._setReceiveConfirmation(false)
             this._lock.set(false)
-            console.error(acceptError)
+            console.log({ acceptError })
             Alert.alert(
               'Error',
               'Couldnt accept message',
@@ -120,6 +128,7 @@ export class ConsentoBecomeLockee extends Model({
   @modelAction _finalize (connection: IConnection): void {
     this.acceptHandshakeJSON = null
     this.receiver = new Receiver(connection.receiver.toJSON())
+    this.sender = new Sender(connection.sender.toJSON())
     this._lock.set(false)
   }
 
@@ -154,7 +163,25 @@ export class ConsentoUnlockVault extends ExtendedModel(RequestBase, {
     return this.becomeUnlockee.current?.relation
   }
 
-  static KEEP_ALIVE: number = 5000
+  @computed get handleAccept (): () => any {
+    if (this.isActive) {
+      const api = requireAPI(this)
+      return () => {
+        const { shareHex, sender } = this.becomeUnlockee.current
+        ;(async (): Promise<string[]> => {
+          return api.notifications.send(
+            new api.crypto.Sender(sender),
+            unlockMessage(shareHex)
+          )
+        })()
+          .catch(err => console.error(err))
+      }
+    }
+  }
+
+  get handleDelete (): () => any {
+    return null
+  }
 }
 
 export type IAnyConsento = ConsentoUnlockVault | ConsentoBecomeLockee

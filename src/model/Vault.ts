@@ -15,6 +15,7 @@ import { find } from '../util/find'
 import { last } from '../util/last'
 import { now } from './now'
 import { map } from '../util/map'
+import randomBytes from '@consento/sync-randombytes'
 
 export enum TVaultState {
   open = 'open',
@@ -139,7 +140,7 @@ export class Vault extends Model({
       (lock, notification) => {
         const message = notification.body as Message
         if (message.type === MessageType.unlock) {
-          const secret = sss.combine([lock.shareHex, message.shareHex])
+          const secret = sss.combine([Buffer.from(lock.shareHex, 'hex'), Buffer.from(message.shareHex, 'hex')])
           this.unlock(bufferToString(secret, 'base64'), false)
             .catch(unlockError => unlockError)
         }
@@ -213,8 +214,12 @@ export class Vault extends Model({
       throw new Error('Cant add lockee on closed vault!')
     }
     const [myShare, theirShare] = sss.split(
-      this.secretKeyBase64,
-      { shares: 2, threshold: 2 }
+      Buffer.from(this.secretKeyBase64, 'base64'),
+      {
+        shares: 2,
+        threshold: 2,
+        random: (size: number): Buffer => randomBytes(Buffer.alloc(size))
+      }
     )
     const lockee = new VaultLockee({
       relationId: relation.$modelId,
@@ -250,7 +255,6 @@ export class Vault extends Model({
       console.log(`Warning: Repeat confirmation for vaultLockee ${vaultLockee.$modelId}`)
       return
     }
-    console.log('confirm lockee')
     const { crypto, notifications } = api
     let confirmation: IVaultLockeeConfirmation
     try {
@@ -275,11 +279,19 @@ export class Vault extends Model({
         lockId: pendingLock.$modelId,
         shareHex
       }))
+      this._updateLocks()
     } catch (err) {
       this.pendingLocks.add(pendingLock)
+      this._updateLocks()
       console.log({ err })
       console.log(`Warning: Couldn't confirm unlockee ${vaultLockee.$modelId} properly`)
     }
+  }
+
+  _updateLocks (): void {
+    (async (): Promise<void> => {
+      return expoVaultSecrets.toggleDevicePersistence(this.dataKeyHex, this.locks.size > 0)
+    })().catch(error => console.log({ error }))
   }
 
   findFile (modelId: string): File {

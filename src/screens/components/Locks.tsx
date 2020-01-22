@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react'
-import { Text } from 'react-native'
+import { Text, Alert } from 'react-native'
 import { observer } from 'mobx-react'
 import { EmptyView } from './EmptyView'
 import { elementLocksEmpty } from '../../styles/component/elementLocksEmpty'
@@ -76,6 +76,10 @@ const LockeeList = (): JSX.Element => {
       setSelectionActive(false)
       setAddingLockees(false)
     })().catch(error => {
+      Alert.alert(
+        'Failed',
+        `Woops, for some reason the lockee could not be added.\n [${error.code}]`
+      )
       console.log(error)
       setSelectionActive(false)
       setAddingLockees(false)

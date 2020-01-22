@@ -4,7 +4,7 @@ import { observer } from 'mobx-react'
 import { EmptyView } from './components/EmptyView'
 import { TopNavigation } from './components/TopNavigation'
 import { elementConsentosEmpty } from '../styles/component/elementConsentosEmpty'
-import { Consentos, ConsentoBecomeLockee, ConsentoUnlockVault } from '../model/Consentos'
+import { IAnyConsento, ConsentoBecomeLockee, ConsentoUnlockVault } from '../model/Consentos'
 import { elementConsentosBase } from '../styles/component/elementConsentosBase'
 import { elementConsentosAccessAccepted } from '../styles/component/elementConsentosAccessAccepted'
 import { screen02Consentos } from '../styles/component/screen02Consentos'
@@ -41,7 +41,55 @@ const lockeeCardStyle: ViewStyle = {
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 const noop = (): void => {}
 
-const Consento = observer(({ consento }: { consento: Consentos }) => {
+const BecomeLockee = observer(({ consento }: { consento: ConsentoBecomeLockee }) => {
+  if (consento.deleted) {
+    return
+  }
+  const { card, outline } = elementConsentosLockeeIdle
+  const thickness = card.border.thickness
+  return <View style={lockeeCardStyle}>
+    <Svg width={elementConsentosLockeeIdle.width} height={elementConsentosLockeeIdle.height} viewBox={viewBox}>
+      <G fill={card.border.fill.color}>
+        <Rect
+          x={card.place.x}
+          y={card.place.y}
+          width={card.place.width}
+          height={card.place.height}
+          rx={card.border.radius}
+          ry={card.border.radius}
+        />
+        <Circle
+          x={outline.place.centerX}
+          y={outline.place.centerY}
+          r={outline.place.width / 2}
+        />
+      </G>
+      <G fill={card.fill.color}>
+        <Rect
+          x={card.place.x + thickness}
+          y={card.place.y + thickness}
+          width={card.place.width - thickness * 2}
+          height={card.place.height - thickness * 2}
+          rx={card.border.radius - thickness}
+          ry={card.border.radius - thickness}
+        />
+        <Circle
+          x={outline.place.centerX}
+          y={outline.place.centerY}
+          r={outline.place.width / 2 - thickness}
+        />
+      </G>
+    </Svg>
+    <elementConsentosLockeeIdle.vaultIcon.Render />
+    <elementConsentosLockeeIdle.lastAccess.Render />
+    <elementConsentosLockeeIdle.relationName.Render value={consento.relation.current?.displayName} />
+    <elementConsentosLockeeIdle.question.Render />
+    <elementConsentosLockeeIdle.vaultName.Render value={consento.vaultName} />
+    <ConsentoState state={consento.state} onAccept={consento.handleAccept} onDelete={consento.handleDelete} style={elementConsentosLockeeIdle.state.place.style()} />
+  </View>
+})
+
+const Consento = observer(({ consento }: { consento: IAnyConsento }) => {
   if (consento instanceof ConsentoUnlockVault) {
     return <View style={accessCardStyle}>
       <elementConsentosBase.lastAccess.Render value={humanTime(consento.time)} />
@@ -53,48 +101,7 @@ const Consento = observer(({ consento }: { consento: Consentos }) => {
     </View>
   }
   if (consento instanceof ConsentoBecomeLockee) {
-    const { card, outline } = elementConsentosLockeeIdle
-    const thickness = card.border.thickness
-    return <View style={lockeeCardStyle}>
-      <Svg width={elementConsentosLockeeIdle.width} height={elementConsentosLockeeIdle.height} viewBox={viewBox}>
-        <G fill={card.border.fill.color}>
-          <Rect
-            x={card.place.x}
-            y={card.place.y}
-            width={card.place.width}
-            height={card.place.height}
-            rx={card.border.radius}
-            ry={card.border.radius}
-          />
-          <Circle
-            x={outline.place.centerX}
-            y={outline.place.centerY}
-            r={outline.place.width / 2}
-          />
-        </G>
-        <G fill={card.fill.color}>
-          <Rect
-            x={card.place.x + thickness}
-            y={card.place.y + thickness}
-            width={card.place.width - thickness * 2}
-            height={card.place.height - thickness * 2}
-            rx={card.border.radius - thickness}
-            ry={card.border.radius - thickness}
-          />
-          <Circle
-            x={outline.place.centerX}
-            y={outline.place.centerY}
-            r={outline.place.width / 2 - thickness}
-          />
-        </G>
-      </Svg>
-      <elementConsentosLockeeIdle.vaultIcon.Render />
-      <elementConsentosLockeeIdle.lastAccess.Render />
-      <elementConsentosLockeeIdle.relationName.Render />
-      <elementConsentosLockeeIdle.question.Render />
-      <elementConsentosLockeeIdle.vaultName.Render />
-      <ConsentoState state={consento.state} onAccept={noop} onDelete={noop} style={elementConsentosLockeeIdle.state.place.style()} />
-    </View>
+    return <BecomeLockee consento={consento} />
   }
   return null
 })

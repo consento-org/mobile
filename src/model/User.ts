@@ -1,14 +1,16 @@
 import { model, Model, prop, arraySet, Ref, findParent, tProp, types, modelAction, customRef, JsonPatch, SnapshotOutOf } from 'mobx-keystone'
 import { Vault } from './Vault'
 import { Relation } from './Relation'
-import { Consentos } from './Consentos'
+import { IAnyConsento, ConsentoBecomeLockee } from './Consentos'
 import { computed } from 'mobx'
 import { find } from '../util/find'
 import { mobxPersist } from '../util/mobxPersist'
 import { compareNames } from '../util/compareNames'
 import { VaultLockee } from './VaultData'
-import { ISuccessNotification } from '@consento/api'
-import { ISubscription } from './Consento.types'
+import { ISuccessNotification, IAPI } from '@consento/api'
+import { ISubscriptionMap, Message, MessageType } from './Consento.types'
+import { Buffer } from 'buffer'
+import { mapSubscriptions } from './mapSubscriptions'
 
 function initUser (user: User): void {
   ;['My Contracts', 'My Certificates', 'My Passwords'].forEach(name => {
@@ -62,7 +64,7 @@ export class User extends Model({
   loaded: tProp(types.boolean, false),
   vaults: prop(() => arraySet<Vault>()),
   relations: prop(() => arraySet<Relation>()),
-  consentos: prop(() => arraySet<Consentos>())
+  consentos: prop(() => arraySet<IAnyConsento>())
 }) {
   onAttachedToRootStore (): () => any {
     return mobxPersist({
@@ -85,19 +87,54 @@ export class User extends Model({
     })
   }
 
-  @computed get relationSubscriptions (): { [receiveKey: string]: ISubscription } {
-    const map: { [receiveKey: string]: ISubscription } = {}
-    for (const relation of this.relations) {
-      map[relation.connection.receiver.receiveKey] = {
-        receiver: relation.connection.receiver,
-        action: this.processConsento.bind(this, relation)
+  @computed get relationSubscriptions (): ISubscriptionMap {
+    return mapSubscriptions(
+      this.relations,
+      relation => relation.connection.receiver,
+      (relation: Relation, notification: ISuccessNotification, api: IAPI): void => {
+        const message: Message = notification.body as any
+        if (message.type === MessageType.lockeeRequest) {
+          if (message.version !== 1) {
+            throw new Error('unknown request version')
+          }
+          ;(async () => {
+            const accept = await api.crypto.acceptHandshake(Buffer.from(message.firstMessageBase64, 'base64'))
+            this.consentos.add(new ConsentoBecomeLockee({
+              relation: relationRefInUser(relation),
+              acceptHandshakeJSON: accept.toJSON(),
+              pendingLockId: message.pendingLockId,
+              shareHex: message.shareHex,
+              vaultName: message.vaultName
+            }))
+          })().catch(error => {
+            console.log({ error })
+          })
+          return
+        }
+        if (message.type === MessageType.unlock) {
+          console.log('unlock')
+        }
       }
-    }
-    return map
+    )
   }
 
-  @computed get vaultSubscriptions (): { [receiveKey: string]: ISubscription } {
-    let map: { [receiveKey: string]: ISubscription } = {}
+  @computed get consentoSubscriptions (): ISubscriptionMap {
+    return mapSubscriptions(
+      this.consentos,
+      consento => consento.receiver, // consento's without a receiver will be ignored!
+      (consento: IAnyConsento, notification: ISuccessNotification, api: IAPI): void => {
+        const message: Message = notification.body as any
+        if (message.type === MessageType.finalizeLockee) {
+          if (consento instanceof ConsentoBecomeLockee) {
+            consento.finalize(api, message.finalMessageBase64)
+          }
+        }
+      }
+    )
+  }
+
+  @computed get vaultSubscriptions (): ISubscriptionMap {
+    let map: ISubscriptionMap = {}
     for (const vault of this.vaults) {
       map = {
         ...map,
@@ -107,14 +144,11 @@ export class User extends Model({
     return map
   }
 
-  processConsento (relation: Relation, notification: ISuccessNotification): void {
-    console.log('TODO processing of relation messages')
-  }
-
-  @computed get subscriptions (): { [receiveKey: string]: ISubscription } {
+  @computed get subscriptions (): ISubscriptionMap {
     return {
       ...this.relationSubscriptions,
-      ...this.vaultSubscriptions
+      ...this.vaultSubscriptions,
+      ...this.consentoSubscriptions
     }
   }
 
@@ -125,7 +159,7 @@ export class User extends Model({
   }
 
   getLockeesSorted (vault: Vault): Lockee[] {
-    return vault.data?.lockees.map(
+    return vault.data?.lockees.items.map(
       vaultLockee => new Lockee(vaultLockee, this.findRelation(vaultLockee.relationId))
     ).sort(compareNames)
   }
@@ -135,7 +169,7 @@ export class User extends Model({
   }
 
   availableRelations (vault: Vault): Relation[] {
-    const usedRelations = vault.data?.lockees.reduce((map: { [key: string]: true }, vaultLockee) => {
+    const usedRelations = vault.data?.lockees.items.reduce((map: { [key: string]: true }, vaultLockee) => {
       map[vaultLockee.relationId] = true
       return map
     }, {})

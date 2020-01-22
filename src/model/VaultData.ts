@@ -1,10 +1,9 @@
-import { model, Model, tProp, types, modelAction, prop, objectMap, getParent } from 'mobx-keystone'
+import { model, Model, tProp, types, modelAction, prop, objectMap, getParent, arraySet } from 'mobx-keystone'
 import { computed } from 'mobx'
 import { toBuffer, bufferToString, Buffer } from '@consento/crypto/util/buffer'
 import { find } from '../util/find'
 import { readBlob, writeBlob } from '../util/expoSecureBlobStore'
-import { IHandshakeInitJSON, IHandshakeAcceptMessage, ISenderJSON, IReceiverJSON } from '@consento/api'
-import { requireAPI } from './Consento.types'
+import { IHandshakeInitJSON, IHandshakeAcceptMessage, ISenderJSON, IConnectionJSON, IAPI } from '@consento/api'
 import { Sender } from './Connection'
 
 export interface IFile {
@@ -79,6 +78,12 @@ export class TextFile extends Model({
   }
 }
 
+export interface IVaultLockeeConfirmation {
+  connectionJSON: IConnectionJSON
+  shareHex: string
+  finalMessage: Uint8Array
+}
+
 @model('consento/VaultData/Lockee')
 export class VaultLockee extends Model({
   relationId: prop<string>(),
@@ -96,11 +101,7 @@ export class VaultLockee extends Model({
     return this.initJSON !== null
   }
 
-  async confirm (acceptMessage: IHandshakeAcceptMessage): Promise<{
-    receiverJSON: IReceiverJSON
-    shareHex: string
-    finalMessage: Uint8Array
-  }> {
+  async confirm (acceptMessage: IHandshakeAcceptMessage, api: IAPI): Promise<IVaultLockeeConfirmation> {
     if (!this.initPending) {
       return
     }
@@ -108,12 +109,12 @@ export class VaultLockee extends Model({
       throw new Error('Operation locked! Can not confirm lockee')
     }
     this._lock = true
-    const { crypto } = requireAPI(this)
+    const { crypto } = api
     const init = new crypto.HandshakeInit(this.initJSON)
     const { finalMessage, connection } = await init.confirm(acceptMessage)
     const shareHex = this._confirm(connection.sender.toJSON())
     return {
-      receiverJSON: connection.receiver.toJSON(),
+      connectionJSON: connection.toJSON(),
       finalMessage,
       shareHex
     }
@@ -132,7 +133,7 @@ export class VaultData extends Model({
   dataKeyHex: tProp(types.string),
   loaded: tProp(types.boolean, () => false),
   files: prop((): File[] => []),
-  lockees: prop((): VaultLockee[] => [])
+  lockees: prop(() => arraySet<VaultLockee>())
 }) {
   findFile (modelId: string): File {
     return find(this.files, (file: File): file is File => file.$modelId === modelId)
@@ -147,10 +148,6 @@ export class VaultData extends Model({
       }
     }
     this.files.push(file)
-  }
-
-  @modelAction addLockees (lockees: VaultLockee[]): void {
-    this.lockees = this.lockees.concat(lockees)
   }
 
   @modelAction deleteFile (file: File): void {

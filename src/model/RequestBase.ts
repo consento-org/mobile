@@ -2,6 +2,7 @@ import { computed } from 'mobx'
 import { tProp, model, modelAction, Model, types, modelIdKey, BaseModel } from 'mobx-keystone'
 
 export enum TRequestState {
+  deleted = 'deleted',
   accepted = 'accepted',
   denied = 'denied',
   cancelled = 'cancelled',

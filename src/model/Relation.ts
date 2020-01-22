@@ -1,6 +1,6 @@
 import { computed } from 'mobx'
 import { model, tProp, Model, types, modelAction } from 'mobx-keystone'
-import { IReceiver, ISender, IConnection } from '@consento/api'
+import { IConnection } from '@consento/api'
 import { Buffer } from '@consento/crypto/util/buffer'
 import { Connection, fromIConnection } from './Connection'
 
@@ -32,13 +32,5 @@ export class Relation extends Model({
 
   @modelAction setName (name: string): void {
     this.name = name
-  }
-
-  get receiver (): IReceiver | null {
-    return this.connection.receiver.receiver
-  }
-
-  get sender (): ISender | null {
-    return this.connection.sender.sender
   }
 }

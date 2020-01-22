@@ -1,9 +1,9 @@
 import { model, Model, prop, ExtendedModel, tProp, types, ArraySet, arraySet, modelAction, findParent, BaseModel } from 'mobx-keystone'
 import { RequestBase } from './RequestBase'
 import { Receiver } from './Connection'
-import { ISuccessNotification } from '@consento/api'
-import { ISubscription, IConfirmLockeeMessage, IRequestLockeeMessage, MessageType, Message, requireAPI } from './Consento.types'
-import { VaultLockee, VaultData, File } from './VaultData'
+import { ISuccessNotification, IAPI } from '@consento/api'
+import { ISubscription, IConfirmLockeeMessage, IRequestLockeeMessage, MessageType, Message, requireAPI, hasAPI, ISubscriptionMap, IFinalizeLockeeMessage } from './Consento.types'
+import { VaultLockee, VaultData, File, IVaultLockeeConfirmation } from './VaultData'
 import { bufferToString, Buffer } from '@consento/crypto/util/buffer'
 import { expoVaultSecrets } from '../util/expoVaultSecrets'
 import { computed, when } from 'mobx'
@@ -82,13 +82,22 @@ export class PendingLock extends Model({
   }
 }
 
-function requestLockeeMessage (pendingLock: PendingLock, vault: Vault, firstMessage: Uint8Array, share: Buffer): IRequestLockeeMessage {
+function requestLockeeMessage (pendingLock: PendingLock, vault: Vault, firstMessage: Uint8Array, share: Buffer, vaultName: string): IRequestLockeeMessage {
   return {
     version: 1,
     type: MessageType.lockeeRequest,
     pendingLockId: pendingLock.$modelId,
     firstMessageBase64: bufferToString(firstMessage, 'base64'),
-    shareHex: bufferToString(share, 'hex')
+    shareHex: bufferToString(share, 'hex'),
+    vaultName
+  }
+}
+
+function finalizeLockeeMessage (finalMessage: Uint8Array): IFinalizeLockeeMessage {
+  return {
+    version: 1,
+    type: MessageType.finalizeLockee,
+    finalMessageBase64: bufferToString(finalMessage, 'base64')
   }
 }
 
@@ -110,7 +119,7 @@ export class Vault extends Model({
     return this.defaultName
   }
 
-  @computed get lockSubscriptions (): { [key: string]: ISubscription } {
+  @computed get lockSubscriptions (): ISubscriptionMap {
     return mapSubscriptions(
       this.locks,
       lock => lock,
@@ -127,8 +136,9 @@ export class Vault extends Model({
 
   onInit (): void {
     when(
-      () => this.isOpen,
+      () => this.isOpen && hasAPI(this),
       () => {
+        const api = requireAPI(this)
         for (const notification of this.pendingNotifications) {
           this.pendingNotifications.delete(notification)
           const message = notification.body as Message
@@ -137,7 +147,7 @@ export class Vault extends Model({
           }
           for (const pendingLock of this.pendingLocks) {
             if (pendingLock.lockeeId === message.pendingLockId) {
-              this.processPendingNotification(pendingLock, notification)
+              this.processPendingNotification(pendingLock, notification, api)
               break
             }
           }
@@ -146,11 +156,11 @@ export class Vault extends Model({
     )
   }
 
-  processPendingNotification (pendingLock: PendingLock, notification: ISuccessNotification): void {
+  processPendingNotification (pendingLock: PendingLock, notification: ISuccessNotification, api: IAPI): void {
     if (this.isOpen) {
       const message = notification.body as Message
       if (message.type === MessageType.confirmLockee) {
-        this.confirmLockee(pendingLock, message)
+        this.confirmLockee(pendingLock, message, api)
           .catch(confirmLockeeError => console.error({ confirmLockeeError }))
       }
     } else {
@@ -158,11 +168,11 @@ export class Vault extends Model({
     }
   }
 
-  @computed get pendingLockSubscriptions (): { [key: string]: ISubscription } {
+  @computed get pendingLockSubscriptions (): ISubscriptionMap {
     return mapSubscriptions(
       this.pendingLocks,
       pendingLock => pendingLock.receiver,
-      (pendingLock, notification) => this.processPendingNotification(pendingLock, notification)
+      (pendingLock, notification, api) => this.processPendingNotification(pendingLock, notification, api)
     )
   }
 
@@ -185,7 +195,7 @@ export class Vault extends Model({
   async addLockee (relation: Relation): Promise<void> {
     const { crypto, notifications } = requireAPI(this)
     const handshake = await crypto.initHandshake()
-    const { sender } = relation
+    const { connection: { sender: senderJSON } } = relation
     if (!this.isOpen) {
       throw new Error('Cant add lockee on closed vault!')
     }
@@ -203,38 +213,57 @@ export class Vault extends Model({
       receiver: new Receiver(handshake.receiver.toJSON())
     })
     this._addLockee(lockee, pendingLock)
-    await notifications.send(sender, requestLockeeMessage(pendingLock, this, handshake.firstMessage, theirShare))
+    try {
+      await notifications.send(new crypto.Sender(senderJSON), requestLockeeMessage(pendingLock, this, handshake.firstMessage, theirShare, this.displayName))
+    } catch (error) {
+      this._removeLockee(lockee, pendingLock)
+      throw error
+    }
+  }
+
+  @modelAction _removeLockee (lockee: VaultLockee, pendingLock: PendingLock): void {
+    this.data.lockees.delete(lockee)
+    this.pendingLocks.delete(pendingLock)
   }
 
   @modelAction _addLockee (lockee: VaultLockee, pendingLock: PendingLock): void {
-    this.data.lockees.push(lockee)
+    this.data.lockees.add(lockee)
     this.pendingLocks.add(pendingLock)
   }
 
-  async confirmLockee (pendingLock: PendingLock, confirm: IConfirmLockeeMessage): Promise<void> {
+  async confirmLockee (pendingLock: PendingLock, confirm: IConfirmLockeeMessage, api: IAPI): Promise<void> {
     const { vaultLockee } = pendingLock
     if (!vaultLockee.initPending) {
       console.log(`Warning: Repeat confirmation for vaultLockee ${vaultLockee.$modelId}`)
       return
     }
+    console.log('confirm lockee')
+    const { crypto, notifications } = api
+    let confirmation: IVaultLockeeConfirmation
     try {
-      const { notifications } = requireAPI(this)
-      const confirmation = await vaultLockee.confirm(confirm.acceptMessage)
+      confirmation = await vaultLockee.confirm(confirm.acceptMessage, api)
       if (confirmation === undefined) {
         console.log(`Warning: Couldn't confirm ${vaultLockee.$modelId}`)
         return
       }
-      const { receiverJSON, shareHex, finalMessage } = confirmation
-      this.pendingLocks.delete(pendingLock)
-      const lock = new Lock({
-        ...receiverJSON,
+    } catch (confirmationError) {
+      console.log({ confirmationError })
+      return
+    }
+    this.pendingLocks.delete(pendingLock)
+    try {
+      const { connectionJSON, shareHex, finalMessage } = confirmation
+      const sender = new crypto.Sender(connectionJSON.sender)
+      await notifications.send(sender, finalizeLockeeMessage(finalMessage))
+      this.locks.add(new Lock({
+        ...connectionJSON.receiver,
         lockeeId: vaultLockee.$modelId,
         shareHex
-      })
-      this.locks.add(lock)
-      await notifications.send(vaultLockee.sender.sender, finalMessage)
+      }))
     } catch (err) {
-      console.log(`Warning: Couldn't unlock ${vaultLockee.$modelId} properly`)
+      this.pendingLocks.add(pendingLock)
+      console.log({ err })
+      console.log(`Warning: Couldn't confirm unlockee ${vaultLockee.$modelId} properly`)
     }
   }
 

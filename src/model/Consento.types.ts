@@ -13,6 +13,11 @@ export interface ISubscriptionMap {
 
 export const CONSENTO = 'consento'
 
+export function hasAPI (item: BaseModel<any, any>): boolean {
+  const api = findParent(item, isConsento)?.api
+  return api !== undefined
+}
+
 export function requireAPI (item: BaseModel<any, any>): IAPI {
   const api = findParent(item, isConsento)?.api
   if (api === undefined) {
@@ -41,7 +46,7 @@ export interface IMessage {
   version: number
 }
 
-export type Message = IRequestLockeeMessage | IConfirmLockeeMessage | IUnlockMessage
+export type Message = IRequestLockeeMessage | IConfirmLockeeMessage | IUnlockMessage | IFinalizeLockeeMessage
 
 export interface IUnlockMessage extends IMessage {
   type: MessageType.unlock
@@ -54,6 +59,7 @@ export interface IRequestLockeeMessage extends IMessage {
   pendingLockId: string
   firstMessageBase64: string
   shareHex: string
+  vaultName: string
 }
 
 export interface IConfirmLockeeMessage extends IMessage {

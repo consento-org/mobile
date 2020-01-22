@@ -148,7 +148,13 @@ export class Consento extends Model({
   }
 
   @computed get ready (): boolean {
-    return this.api !== undefined && (first(this.users)?.loaded ?? false)
+    if (this.api === undefined) {
+      return false
+    }
+    if (this.user === undefined) {
+      return false
+    }
+    return this.user.loaded
   }
 
   @modelAction _setApi (api: IAPI): void {
@@ -164,10 +170,7 @@ export class Consento extends Model({
     const api = this._api
     this._setApi(undefined)
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    rimraf('')
-      .finally(() =>
-        this._setApi(api)
-      )
+    rimraf('').finally(() => this._setApi(api))
   }
 
   onAttachedToRootStore (): () => void {

@@ -2,9 +2,10 @@ import * as Permissions from 'expo-permissions'
 import { Notifications } from 'expo'
 import randomBytes from '@consento/sync-randombytes'
 import Constants from 'expo-constants'
+import { bufferToString } from '@consento/crypto/util/buffer'
 
 function rndChar (num: number): string {
-  return randomBytes(new Uint8Array(num * 2)).toString('hex')
+  return bufferToString(randomBytes(new Uint8Array(num * 2)), 'hex')
 }
 
 function randomDummyExpoToken (): string {

@@ -42,7 +42,6 @@ export const InputField = ({ value, defaultValue, onEdit, proto, autoFocus, inva
             }
           }}
           selectTextOnFocus
-          selection={{ start: 0 }}
           value={value}
           targetRef={ref}
           horz='stretch'

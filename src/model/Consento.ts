@@ -1,19 +1,20 @@
-import { computed, observable } from 'mobx'
+import { computed, observable, autorun } from 'mobx'
 import { Model, model, tProp, types, prop, arraySet, ArraySet, modelAction, registerRootStore, unregisterRootStore } from 'mobx-keystone'
 import { createContext } from 'react'
 import { AsyncStorage, AppStateStatus, AppState } from 'react-native'
-import { setup, IAPI, INotifications, IConsentoCrypto } from '@consento/api'
+import { setup, IAPI, INotifications, IConsentoCrypto, INotification } from '@consento/api'
 import { ExpoTransport } from '@consento/notification-server'
 import isURL from 'is-url-superb'
 import { User, createDefaultUser } from './User'
 import { getExpoToken } from '../util/getExpoToken'
 import { cryptoCore } from '../cryptoCore'
-import { safeAutorun } from '../util/safeAutorun'
 import { rimraf } from '../util/expoRimraf'
 import { first } from '../util/first'
 import { combinedDispose } from '../util/combinedDispose'
 import { vaultStore } from './VaultStore'
-import { IConsentoModel, CONSENTO } from './Consento.types'
+import { IConsentoModel, CONSENTO, ISubscription, ISubscriptionMap } from './Consento.types'
+import { safeReaction } from '../util/safeReaction'
+import { bufferToString } from '@consento/crypto/util/buffer'
 
 export const ConsentoContext = createContext<Consento>(null)
 
@@ -87,6 +88,31 @@ function createTransport (address: string): {
       AppState.removeEventListener('change', stateChange)
       stateChange('inactive')
     }
+  }
+}
+
+function diffSubscriptions (stored: ISubscriptionMap, current: ISubscriptionMap): { newSubscriptions: ISubscription[], goneSubscriptions: ISubscription[] } {
+  const newSubscriptions = []
+  const goneReceiveKeys = new Set(Object.keys(stored))
+  for (const receiveKey in current) {
+    const subscription = current[receiveKey]
+    if (stored[receiveKey] === undefined) {
+      newSubscriptions.push(subscription)
+    } else {
+      goneReceiveKeys.delete(receiveKey)
+    }
+    // TODO: This logic works but it hard to remember and easy to mistake
+    // Replace the internal handler with the current subscription, not need to inform the subscription system
+    stored[receiveKey] = subscription
+  }
+  const goneSubscriptions = Array.from(goneReceiveKeys).map(receiveKey => {
+    const subscription = stored[receiveKey]
+    delete stored[receiveKey]
+    return subscription
+  })
+  return {
+    newSubscriptions,
+    goneSubscriptions
   }
 }
 
@@ -177,24 +203,86 @@ export class Consento extends Model({
     registerRootStore(vaultStore)
     return combinedDispose(
       () => unregisterRootStore(vaultStore),
-      safeAutorun(() => {
-        if (this.config === null) {
-          return
+      safeReaction(
+        () => ({ ready: this.ready, user: this.user }),
+        ({ ready, user }) => {
+          if (!ready) return
+          const subscriptions = {
+            ...user.subscriptions
+          }
+          const processor = (message: INotification, encryptedMessage?: any): void => {
+            if (message.type === 'success') {
+              const subscription = subscriptions[message.channelIdBase64]
+              if (subscription === undefined) {
+                console.log(`Received notification for ${message.channelIdBase64} but there was no subscriber ${encryptedMessage}?!`)
+                return
+              }
+              console.log(`Received notification: ${message.channelIdBase64}`)
+              subscription.action(message, this.api)
+            } else {
+              console.log({ errorNotification: message })
+            }
+          }
+          const api = this.api
+          api.notifications.processors.add(processor)
+          const receivers = Object.values(subscriptions).map(subscription => new api.crypto.Receiver(subscription.receiver))
+          console.log(`Resetting:\n  ${receivers.map(receiver => bufferToString(receiver.id, 'base64')).join('\n  ')}`)
+          api.notifications
+            .reset(receivers)
+            .catch(notificationResetError => {
+              console.log('Error resetting the notifications')
+              console.log({ notificationResetError })
+            })
+          return combinedDispose(
+            () => api.notifications.processors.delete(processor),
+            autorun(() => {
+              const { newSubscriptions, goneSubscriptions } = diffSubscriptions(subscriptions, user.subscriptions)
+              if (newSubscriptions.length > 0) {
+                const receivers = newSubscriptions.map(subscription => new api.crypto.Receiver(subscription.receiver))
+                console.log(`Subscribing:\n  ${receivers.map(receiver => bufferToString(receiver.id, 'base64')).join('\n  ')}`)
+                this.api.notifications
+                  .subscribe(receivers)
+                  .catch(subscribeError => {
+                    for (const subscription of newSubscriptions) {
+                      delete subscriptions[subscription.receiver.receiveKey]
+                    }
+                    console.log({ subscribeError })
+                  })
+              }
+              if (goneSubscriptions.length > 0) {
+                const receivers = goneSubscriptions.map(subscription => new api.crypto.Receiver(subscription.receiver))
+                console.log(`Unsubscribing:\n  ${receivers.map(receiver => bufferToString(receiver.id, 'base64')).join('\n  ')}`)
+                this.api.notifications
+                  .unsubscribe(receivers)
+                  .catch(unsubscribeError => {
+                    for (const subscription of goneSubscriptions) {
+                      subscriptions[subscription.receiver.receiveKey] = subscription
+                    }
+                    console.log({ unsubscribeError })
+                  })
+              }
+            })
+          )
         }
-        const { notificationTransport, destructTransport } = createTransport(this.config.address)
-        const api = setup({
-          cryptoCore,
-          notificationTransport
-        })
-        api.notifications.reset([]).catch(error => {
-          console.log(`Error resetting the notifications ${error}`)
-        })
-        this._setApi(api)
-        return () => {
-          this._setApi(undefined)
-          destructTransport()
+      ),
+      safeReaction(
+        () => this.config?.address,
+        address => {
+          if (address === undefined || address === null) {
+            return
+          }
+          const { notificationTransport, destructTransport } = createTransport(address)
+          const api = setup({
+            cryptoCore,
+            notificationTransport
+          })
+          this._setApi(api)
+          return () => {
+            this._setApi(undefined)
+            destructTransport()
+          }
         }
-      })
+      )
     )
   }
 }

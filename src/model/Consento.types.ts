@@ -7,6 +7,10 @@ export interface ISubscription {
   action: (notification: ISuccessNotification, api: IAPI) => void
 }
 
+export interface ISubscriptionMap {
+  [ receiveKeyBase64: string ]: ISubscription
+}
+
 export const CONSENTO = 'consento'
 
 export function requireAPI (item: BaseModel<any, any>): IAPI {

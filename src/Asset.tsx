@@ -280,6 +280,9 @@ export const Asset = {
   illustrationVault () {
     return images.fetch('illustrationVault', () => require('../assets/illustration/vault.png'))
   },
+  illustrationVaults () {
+    return images.fetch('illustrationVaults', () => require('../assets/illustration/vaults.png'))
+  },
   illustrationWaiting () {
     return images.fetch('illustrationWaiting', () => require('../assets/illustration/waiting.png'))
   },

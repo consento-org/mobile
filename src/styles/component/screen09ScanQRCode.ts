@@ -16,6 +16,12 @@ export class Screen09ScanQRCodeClass extends Component {
   code: Polygon
   message: Text
   logo: ImagePlacement
+  outgoingBadge: Polygon
+  incomingBadge: Polygon
+  incomingConnecting: Text
+  outgoingConnecting: Text
+  outgoingConfirming: Text
+  incomingLoading: Text
   constructor () {
     super('screen09ScanQRCode', 375, 812, Color.white)
     this.background = new Polygon({ x: 0, y: 0, w: 375, h: 426 }, Color.black, null, [], this)
@@ -35,6 +41,36 @@ export class Screen09ScanQRCodeClass extends Component {
       fontSize: 13
     }, { x: 6, y: 781, w: 364, h: 15 }, this)
     this.logo = new ImagePlacement(Asset.iconLogo, { x: 164, y: 589, w: 48, h: 48 }, this)
+    this.outgoingBadge = new Polygon({ x: 91.5, y: 589, w: 192, h: 54 }, '#95d6ffff', { radius: 10 }, [], this)
+    this.incomingBadge = new Polygon({ x: 92, y: 213, w: 192, h: 54 }, '#95d6ffff', { radius: 10 }, [], this)
+    this.incomingConnecting = new Text('Connecting…', {
+      color: '#546e7aff',
+      fontSize: 14.14,
+      textAlign: 'center',
+      textTransform: 'none',
+      textAlignVertical: 'center'
+    }, { x: 92, y: 227, w: 192, h: 26 }, this)
+    this.outgoingConnecting = new Text('Confirming…', {
+      color: '#546e7aff',
+      fontSize: 14.14,
+      textAlign: 'center',
+      textTransform: 'none',
+      textAlignVertical: 'center'
+    }, { x: 92, y: 227, w: 192, h: 26 }, this)
+    this.outgoingConfirming = new Text('Confirming…', {
+      color: '#546e7aff',
+      fontSize: 14.14,
+      textAlign: 'center',
+      textTransform: 'none',
+      textAlignVertical: 'center'
+    }, { x: 92, y: 603, w: 192, h: 26 }, this)
+    this.incomingLoading = new Text('Loading…', {
+      color: '#546e7aff',
+      fontSize: 14.14,
+      textAlign: 'center',
+      textTransform: 'none',
+      textAlignVertical: 'center'
+    }, { x: 92, y: 603, w: 192, h: 26 }, this)
   }
 }
 

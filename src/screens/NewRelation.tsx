@@ -1,10 +1,10 @@
 import React, { useState, useContext } from 'react'
-import { View, Text, ViewStyle, TouchableOpacity } from 'react-native'
+import { View, ViewStyle, TouchableOpacity } from 'react-native'
 import { BarCodeScanningResult } from 'expo-camera/build/Camera.types'
 import { screen09ScanQRCode } from '../styles/component/screen09ScanQRCode'
 import { useVUnits } from '../styles/Component'
 import { withNavigation, TNavigation } from './navigation'
-import { useHandshake, isInitLink, IncomingState } from '../model/useHandshake'
+import { useHandshake, isInitLink, OutgoingState, IncomingState } from '../model/useHandshake'
 import { CameraContainer } from './components/CameraContainer'
 import { exists } from '../util/exists'
 import QRCode from 'react-native-qrcode-svg'
@@ -98,14 +98,36 @@ export const NewRelation = withNavigation(({ navigation }: { navigation: TNaviga
     }
   }
 
+  const size = qrSpace - (screen09ScanQRCode.code.place.left * 2)
+
   return <View style={{ width: '100%', height: '100%', display: 'flex', flexDirection: isHorz ? 'row' : 'column', backgroundColor: screen09ScanQRCode.backgroundColor }}>
-    <Text style={{ position: 'absolute', borderRadius: 20, top: inset.top, padding: 10, backgroundColor: '#fff', color: '#000', zIndex: 10 }}>{String(exists(outgoing) ? outgoing.state : '')}</Text>
     <CameraContainer style={camSpace} onCode={onCode}>
       <Svg viewBox={`0 0 ${camSpace.width.toString()} ${camSpace.height.toString()}`} style={{ ...camSpace, position: 'absolute' }}>
         <Path fill={screen09ScanQRCode.shadow.fill.color} d={cutOutG} fillRule='evenodd' />
       </Svg>
       <View style={cutOutContainer}>
         <View style={cutOut}>
+          {
+            (exists(outgoing) && outgoing?.state !== OutgoingState.idle)
+              ? <View style={{ ...barContainer, height: '100%', justifyContent: 'center', alignItems: 'center' }}>
+                <View style={{
+                  ...screen09ScanQRCode.outgoingBadge.place.size(),
+                  borderRadius: screen09ScanQRCode.outgoingBadge.borderRadius,
+                  backgroundColor: screen09ScanQRCode.outgoingBadge.fill.color,
+                  display: 'flex',
+                  justifyContent: 'center'
+                }}>
+                  {
+                    (
+                      outgoing.state === OutgoingState.confirming
+                        ? screen09ScanQRCode.outgoingConfirming
+                        : screen09ScanQRCode.outgoingConnecting
+                    ).render({})
+                  }
+                </View>
+              </View>
+              : null
+          }
           <View style={{ ...barContainer, alignItems: 'flex-start' }}>
             {screen09ScanQRCode.topLeft.img()}
             {screen09ScanQRCode.topRight.img()}
@@ -126,13 +148,25 @@ export const NewRelation = withNavigation(({ navigation }: { navigation: TNaviga
       <View style={{ margin: screen09ScanQRCode.code.place.left }}>
         {
           !exists(incoming) || incoming.state === IncomingState.init
-            ? <Text>init</Text>
-            : <QRCode value={incoming.ops as string} logo={screen09ScanQRCode.logo.asset().source} backgroundColor='#00000000' color={screen09ScanQRCode.code.border.fill.color} size={qrSpace - (screen09ScanQRCode.code.place.left * 2)} />
-        }
-        {
-          exists(incoming) && incoming.state === IncomingState.confirming
-            ? <Text>confirming</Text>
-            : null
+            ? screen09ScanQRCode.incomingLoading.render({})
+            : <>
+              {
+                incoming.state === IncomingState.confirming
+                  ? <View style={{ zIndex: 1, position: 'absolute', width: size, height: size, justifyContent: 'center', alignItems: 'center' }}>
+                    <View style={{
+                      ...screen09ScanQRCode.incomingBadge.place.size(),
+                      borderRadius: screen09ScanQRCode.incomingBadge.borderRadius,
+                      backgroundColor: screen09ScanQRCode.incomingBadge.fill.color,
+                      display: 'flex',
+                      justifyContent: 'center'
+                    }}>
+                      {screen09ScanQRCode.incomingConnecting.render({})}
+                    </View>
+                  </View>
+                  : null
+              }
+              <QRCode value={incoming.ops as string} logo={screen09ScanQRCode.logo.asset().source} backgroundColor='#00000000' color={screen09ScanQRCode.code.border.fill.color} size={size} />
+            </>
         }
       </View>
     </View>

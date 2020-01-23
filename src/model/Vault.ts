@@ -117,7 +117,7 @@ function requestUnlockMessage (time: number, keepAlive: number): IRequestUnlockM
 
 @model('consento/Vault')
 export class Vault extends Model({
-  name: tProp(types.maybeNull(types.string), () => null),
+  name: tProp(types.string, () => ''),
   locks: prop<ArraySet<Lock>>(() => arraySet()),
   pendingLocks: prop<ArraySet<PendingLock>>(() => arraySet()),
   pendingNotifications: prop<ArraySet<ISuccessNotification>>(() => arraySet()),

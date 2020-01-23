@@ -45,11 +45,14 @@ const LockeeList = (): JSX.Element => {
     return <Text>Adding new entries...</Text>
   }
 
+  const availableRelations = user.availableRelations(vault)
+
   if (!isSelectionActive) {
     const revoke = (entry: IRelationEntry): void => {
       console.log('REVOKE ' + entry.$modelId)
     }
-    return <EmptyView prototype={elementLocksEmpty} onAdd={() => setSelectionActive(true)}>
+    const handleAdd = availableRelations.length > 0 ? () => setSelectionActive(true) : undefined
+    return <EmptyView prototype={elementLocksEmpty} onAdd={handleAdd}>
       {
         user.getLockeesSorted(vault)?.map(
           lockee => <RelationListEntry key={lockee.$modelId} entry={lockee} prototype={elementRelationSelectListDisplay.revoke.component} onPress={revoke} />
@@ -88,7 +91,7 @@ const LockeeList = (): JSX.Element => {
 
   return <BottomButtonView prototype={elementRelationSelectListAdd} onPress={handleSelectConfirmation}>
     {
-      user.availableRelations(vault).map(
+      availableRelations.map(
         relation => <SelectEntry key={relation.$modelId} entry={relation} onSelect={handleSelect} />
       )
     }

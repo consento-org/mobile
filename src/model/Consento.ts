@@ -7,6 +7,7 @@ import { ExpoTransport } from '@consento/notification-server'
 import isURL from 'is-url-superb'
 import { User, createDefaultUser } from './User'
 import { getExpoToken } from '../util/getExpoToken'
+import { Notifications, Notification } from 'expo'
 import { cryptoCore } from '../cryptoCore'
 import { rimraf } from '../util/expoRimraf'
 import { first } from '../util/first'
@@ -31,6 +32,14 @@ async function saveConfig (newConfig: IConfig): Promise<void> {
 
 interface IConfig {
   address?: string
+}
+
+interface IHackAPI extends IAPI {
+  notificationTransport: ExpoTransport
+}
+
+interface IEventSubscription {
+  remove (): void
 }
 
 @model('consento/Config')
@@ -122,7 +131,7 @@ export class Consento extends Model({
   config: prop<Config>(() => null)
 }) implements IConsentoModel {
   _apiReady = observable.box(Date.now())
-  _api: IAPI
+  _api: IHackAPI
 
   onInit (): void {
     this.deleteEverything = this.deleteEverything.bind(this)
@@ -183,7 +192,7 @@ export class Consento extends Model({
     return this.user.loaded
   }
 
-  @modelAction _setApi (api: IAPI): void {
+  @modelAction _setApi (api: IHackAPI): void {
     this.users.clear()
     this._api = api
     this._apiReady.set(Date.now())
@@ -223,18 +232,29 @@ export class Consento extends Model({
               console.log({ errorNotification: message })
             }
           }
-          const api = this.api
+          const api = this._api
           api.notifications.processors.add(processor)
           const receivers = Object.values(subscriptions).map(subscription => new api.crypto.Receiver(subscription.receiver))
           console.log(`Resetting:\n  ${receivers.map(receiver => bufferToString(receiver.id, 'base64')).join('\n  ')}`)
+          let expoSubscription: IEventSubscription
           api.notifications
             .reset(receivers)
-            .catch(notificationResetError => {
-              console.log('Error resetting the notifications')
-              console.log({ notificationResetError })
-            })
+            .then(
+              () => {
+                expoSubscription = Notifications.addListener((notification: Notification): void => {
+                  api.notificationTransport.handleNotification(notification)
+                })
+              },
+              notificationResetError => {
+                console.log('Error resetting the notifications')
+                console.log({ notificationResetError })
+              }
+            )
           return combinedDispose(
-            () => api.notifications.processors.delete(processor),
+            () => {
+              expoSubscription?.remove()
+              api.notifications.processors.delete(processor)
+            },
             autorun(() => {
               const { newSubscriptions, goneSubscriptions } = diffSubscriptions(subscriptions, user.subscriptions)
               if (newSubscriptions.length > 0) {
@@ -276,7 +296,10 @@ export class Consento extends Model({
             cryptoCore,
             notificationTransport
           })
-          this._setApi(api)
+          this._setApi({
+            ...api,
+            notificationTransport
+          })
           return () => {
             this._setApi(undefined)
             destructTransport()

@@ -81,8 +81,10 @@ class FormField<T> implements IFormField<T> {
   _value: T
   _validate: (defaultValue: T) => boolean | string
   _triggerUpdate: () => void
-  _currentInitial: number = 0
-  _initialValue: boolean = false
+  _initiator: TOrPromise<T>
+  _initCount: number = 0
+  _firstInitFinished: boolean = false
+  _initiatorPromise: PromiseLike<T>
 
   constructor (validate: (defaultValue: T) => boolean | string, triggerUpdate: () => void, save: (newValue: T) => void | Promise<void>) {
     this._triggerUpdate = triggerUpdate
@@ -95,35 +97,53 @@ class FormField<T> implements IFormField<T> {
     this.reset = this.reset.bind(this)
   }
 
-  setInitial (initial: TInitiator<T>): void {
-    const valOrPromise = isInitiatorFn(initial) ? initial() : initial
-    const initialId = ++this._currentInitial
-    if (isPromiseLike(valOrPromise)) {
+  setInitial (initiator: TOrPromise<T>, async: boolean = false): void {
+    if (this._initiator === initiator) {
+      return
+    }
+    this._initiator = initiator
+    const initCount = ++this._initCount
+    if (isPromiseLike(initiator)) {
+      if (initiator === this._initiatorPromise) {
+        return
+      }
       this.loaded = false
-      valOrPromise
-        .then(initial => {
-          if (initialId === this._currentInitial) {
+      this._initiatorPromise = initiator
+      initiator
+        .then(newInitial => {
+          if (initCount !== this._initCount) {
             return // Another initial value was set meanwhile
           }
-          this.setInitial(initial)
+          this._finishInitial(newInitial, true)
         })
         .catch(error => console.error(error))
-      this._triggerUpdate()
-    } else {
-      if (this.initial !== valOrPromise || !this._initialValue) {
-        this.loaded = true
-        this.initial = valOrPromise
-        if (!this._initialValue) {
-          this._initialValue = true
-          this._value = valOrPromise
-        }
-        if (this.updateState()) {
-          this._triggerUpdate()
-        }
-      } else if (!this.loaded) {
-        this.loaded = true
+      if (this._firstInitFinished) {
         this._triggerUpdate()
       }
+    } else {
+      this._initiatorPromise = undefined
+      this._finishInitial(initiator)
+    }
+  }
+
+  _finishInitial (initial: T, async: boolean = false): void {
+    if (this.initial !== initial || !this._firstInitFinished) {
+      this.loaded = true
+      this.initial = initial
+      if (!this._firstInitFinished) {
+        this._firstInitFinished = true
+        this._value = initial
+        if (!async) {
+          this.updateState()
+          return
+        }
+      }
+      if (this.updateState()) {
+        this._triggerUpdate()
+      }
+    } else if (!this.loaded) {
+      this.loaded = true
+      this._triggerUpdate()
     }
   }
 
@@ -264,18 +284,27 @@ export function useForm (
       },
       useField <T> (key: string, initial: TInitiator<T>, validate?: (value: T) => boolean | string, save?: (value: T) => void | Promise<void>): IFormField<T> {
         const setUpdate = useState<number>(Date.now())[1]
-        const field = useState<IFormField<T>>(() => {
-          if (fields[key] !== undefined) {
-            throw new Error(`Form field [${key}] already exists.`)
-          }
+        const [field] = useState<FormField<T>>(() => {
           const field = new FormField(validate, () => {
             triggerUpdate()
             setUpdate(Date.now())
           }, save)
-          fields[key] = field
           return field
-        })[0]
-        field.setInitial(initial)
+        })
+        useEffect(() => {
+          if (fields[key] !== undefined) {
+            throw new Error(`Form field [${key}] already exists.`)
+          }
+          fields[key] = field
+          return () => delete fields[key]
+        }, [])
+        if (isInitiatorFn(initial)) {
+          useEffect(() => {
+            field.setInitial((initial as Function)())
+          }, [])
+        } else {
+          field.setInitial(initial)
+        }
         return field
       },
       Form ({ children }: { children?: React.ReactChild | React.ReactChild[] }) {

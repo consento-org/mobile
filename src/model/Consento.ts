@@ -7,7 +7,8 @@ import { ExpoTransport } from '@consento/notification-server'
 import isURL from 'is-url-superb'
 import { User, createDefaultUser } from './User'
 import { getExpoToken } from '../util/getExpoToken'
-import { Notifications, Notification } from 'expo'
+import { Notifications } from 'expo'
+import { Notification } from 'expo/build/Notifications/Notifications.types'
 import { cryptoCore } from '../cryptoCore'
 import { rimraf } from '../util/expoRimraf'
 import { first } from '../util/first'
@@ -252,7 +253,7 @@ export class Consento extends Model({
             )
           return combinedDispose(
             () => {
-              expoSubscription?.remove()
+              if (expoSubscription !== undefined) expoSubscription.remove()
               api.notifications.processors.delete(processor)
             },
             autorun(() => {

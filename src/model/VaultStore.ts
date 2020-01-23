@@ -59,7 +59,6 @@ export class VaultStore extends Model({
           if (!this.vaults.has(dataKeyHex)) {
             const data = new VaultData({ dataKeyHex })
             const secret = expoVaultSecrets.secretsBase64.get(dataKeyHex)
-            console.log({ dataKeyHex, secret })
             this._disposersByKeyHex[dataKeyHex] = persist(data, secret)
             this.vaults.set(dataKeyHex, data)
           } else {

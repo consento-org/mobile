@@ -62,7 +62,6 @@ export const Vault = withNavigation(observer(({ navigation }: { navigation: TNav
   const { user } = useContext(ConsentoContext)
   const { vault } = useContext(VaultContext)
   useEffect(() => {
-    console.log({ state: vault.state })
     if (!vault.isOpen && !vault.isLoading) {
       vault.requestUnlock()
     }

@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { View, ViewStyle } from 'react-native'
+import React, { useState, useEffect } from 'react'
+import { View, ViewStyle, BackHandler } from 'react-native'
 import { elementTopNavEmpty } from '../../styles/component/elementTopNavEmpty'
 import { elementTopNavItem } from '../../styles/component/elementTopNavItem'
 import { elementTopNavEdit } from '../../styles/component/elementTopNavEdit'
@@ -33,18 +33,31 @@ function isEmpty (value: string): boolean {
 export const TopNavigation = withNavigation((props: ITopNavigationProps) => {
   const [editing, setEditing] = useState(false)
   const inset = useSafeArea()
+  const handleBack = (): boolean => {
+    if (!exists(props.back)) {
+      return
+    }
+    if (typeof props.back === 'string') {
+      props.navigation.navigate(props.back)
+    } else {
+      props.back()
+    }
+    return true
+  }
+
+  useEffect(() => {
+    BackHandler.addEventListener('hardwareBackPress', handleBack)
+    return () => {
+      BackHandler.removeEventListener('hardwareBackPress', handleBack)
+    }
+  }, [])
+
   return <View style={{ ...topNav, height: elementTopNavEmpty.height + inset.top }}>
     <DarkBar />
     <View style={{ position: 'relative' }}>
       {exists(props.back)
         ? <elementTopNavItem.back.Render
-          onPress={() => {
-            if (typeof props.back === 'string') {
-              props.navigation.navigate(props.back)
-            } else {
-              props.back()
-            }
-          }}
+          onPress={handleBack}
         />
         : <elementTopNavEmpty.logo.Render onPress={() => props.navigation.navigate('config')} style={{ zIndex: 1 }} />}
       {editing

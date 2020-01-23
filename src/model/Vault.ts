@@ -407,6 +407,9 @@ export class Vault extends Model({
         return TVaultState.pending
       }
     }
-    return TVaultState.locked
+    if (this.locks.size > 0) {
+      return TVaultState.locked
+    }
+    return TVaultState.loading
   }
 }

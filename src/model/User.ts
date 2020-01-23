@@ -173,7 +173,14 @@ export class User extends Model({
   }
 
   getLockeesSorted (vault: Vault): Lockee[] {
-    return vault.data?.lockees.items.map(
+    const lockees = vault.data?.lockees.items
+    if (lockees === undefined) {
+      return
+    }
+    if (lockees.length === 0) {
+      return
+    }
+    return lockees.map(
       vaultLockee => new Lockee(vaultLockee, this.findRelation(vaultLockee.relationId))
     ).sort(compareNames)
   }

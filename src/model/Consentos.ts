@@ -41,7 +41,11 @@ export class ConsentoBecomeLockee extends Model({
   _lock = observable.box<boolean>(false)
 
   @computed get relationName (): string {
-    return this.relation.maybeCurrent?.name ?? ''
+    return this.relation.maybeCurrent?.name
+  }
+
+  @computed get relationAvatarId (): string {
+    return this.relation.maybeCurrent?.avatarId
   }
 
   @computed get relationHumanId (): string {
@@ -170,6 +174,10 @@ export class ConsentoUnlockVault extends ExtendedModel(RequestBase, {
 
   @computed get relationHumanId (): string {
     return this.becomeUnlockee.current.relationHumanId
+  }
+
+  @computed get relationAvatarId (): string {
+    return this.becomeUnlockee.current.relationAvatarId
   }
 
   get vaultName (): string {

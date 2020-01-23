@@ -2,6 +2,7 @@
 import { Component, Link } from '../Component'
 import { elementBottomButton } from './elementBottomButton'
 import { elementFormInputField } from './elementFormInputField'
+import { elementAvatarGenerate } from './elementAvatarGenerate'
 import { Color } from '../Color'
 
 /* eslint-disable lines-between-class-members */
@@ -14,6 +15,7 @@ export class ElementRelationNameClass extends Component {
     label: 'name',
     caption: 'only you will see this name.'
   })
+  elementAvatarGenerate = new Link(elementAvatarGenerate, { x: 57, y: 136, w: 239, h: 210 }, {})
   constructor () {
     super('elementRelationName', 375, 970, Color.white)
   }

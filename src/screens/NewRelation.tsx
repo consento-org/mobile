@@ -86,6 +86,7 @@ export const NewRelation = withNavigation(({ navigation }: { navigation: TNaviga
     ...cutOutRect
   }
 
+  // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
   const cutOutG = `M0 0 L0 ${camSpace.height} L${camSpace.width} ${camSpace.height} L${camSpace.width} 0 z M${cutOut.left} ${cutOut.top} L${cutOut.left} ${cutOutRect.top + cutOutRect.height} L${cutOutRect.left + cutOutRect.width} ${cutOutRect.top + cutOutRect.height} L${cutOutRect.left + cutOutRect.width} ${cutOut.top} z`
 
   function onCode (code: BarCodeScanningResult): void {
@@ -100,7 +101,7 @@ export const NewRelation = withNavigation(({ navigation }: { navigation: TNaviga
   return <View style={{ width: '100%', height: '100%', display: 'flex', flexDirection: isHorz ? 'row' : 'column', backgroundColor: screen09ScanQRCode.backgroundColor }}>
     <Text style={{ position: 'absolute', borderRadius: 20, top: inset.top, padding: 10, backgroundColor: '#fff', color: '#000', zIndex: 10 }}>{String(exists(outgoing) ? outgoing.state : '')}</Text>
     <CameraContainer style={camSpace} onCode={onCode}>
-      <Svg viewBox={`0 0 ${camSpace.width} ${camSpace.height}`} style={{ ...camSpace, position: 'absolute' }}>
+      <Svg viewBox={`0 0 ${camSpace.width.toString()} ${camSpace.height.toString()}`} style={{ ...camSpace, position: 'absolute' }}>
         <Path fill={screen09ScanQRCode.shadow.fill.color} d={cutOutG} fillRule='evenodd' />
       </Svg>
       <View style={cutOutContainer}>

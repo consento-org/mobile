@@ -296,6 +296,7 @@ export function useForm (
             throw new Error(`Form field [${key}] already exists.`)
           }
           fields[key] = field
+          // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
           return () => delete fields[key]
         }, [])
         if (isInitiatorFn(initial)) {

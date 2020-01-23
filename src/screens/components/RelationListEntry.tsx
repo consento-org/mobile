@@ -1,8 +1,9 @@
 import React from 'react'
 import { TouchableOpacity } from 'react-native-gesture-handler'
-import { Component, Text as TextComponent, ImagePlacement } from '../../styles/Component'
+import { Component, Text as TextComponent, ImagePlacement, Polygon } from '../../styles/Component'
 import { observer } from 'mobx-react'
-import { exists } from '../../util/exists'
+import { Avatar } from './Avatar'
+import { IRelationEntry } from '../../model/Consento.types'
 
 export interface IRelationListEntryPrototype extends Component {
   relationName: TextComponent
@@ -10,11 +11,7 @@ export interface IRelationListEntryPrototype extends Component {
   iconLabel?: TextComponent
   relationID: TextComponent
   avatarBg: ImagePlacement
-}
-
-export interface IRelationEntry {
-  readonly humanId: string
-  readonly name: string
+  avatarCut: Polygon
 }
 
 export interface IRelationListEntryProps {
@@ -26,9 +23,12 @@ export interface IRelationListEntryProps {
 export const RelationListEntry = observer(({ entry, prototype, onPress }: IRelationListEntryProps): JSX.Element => {
   return <TouchableOpacity style={{ height: prototype.height }} onPress={() => onPress(entry)}>
     <prototype.relationID.Render value={entry.humanId} />
-    <prototype.relationName.Render horz='stretch' value={exists(entry.name) ? entry.name : ''} />
+    <prototype.relationName.Render horz='stretch' value={entry.name !== '' ? entry.name : null} />
     <prototype.icon.Render horz='end' />
     {prototype.iconLabel !== undefined ? <prototype.iconLabel.Render horz='end' /> : null}
-    <prototype.avatarBg.Render />
+    <Avatar
+      avatarId={entry.avatarId}
+      place={prototype.avatarCut.place}
+    />
   </TouchableOpacity>
 })

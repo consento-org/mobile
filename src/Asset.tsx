@@ -151,17 +151,74 @@ export class Slice9 {
 const images = new Cache<ImageAsset, ImageSourcePropType>(ImageAsset)
 
 export const Asset = {
+  avatarEyes1 () {
+    return images.fetch('avatarEyes1', () => require('../assets/avatar/eyes/1.png'))
+  },
+  avatarEyes2 () {
+    return images.fetch('avatarEyes2', () => require('../assets/avatar/eyes/2.png'))
+  },
+  avatarEyes3 () {
+    return images.fetch('avatarEyes3', () => require('../assets/avatar/eyes/3.png'))
+  },
+  avatarFace1 () {
+    return images.fetch('avatarFace1', () => require('../assets/avatar/face/1.png'))
+  },
+  avatarFace2 () {
+    return images.fetch('avatarFace2', () => require('../assets/avatar/face/2.png'))
+  },
+  avatarFace3 () {
+    return images.fetch('avatarFace3', () => require('../assets/avatar/face/3.png'))
+  },
+  avatarHairAbove1 () {
+    return images.fetch('avatarHairAbove1', () => require('../assets/avatar/hair/above/1.png'))
+  },
+  avatarHairAbove2 () {
+    return images.fetch('avatarHairAbove2', () => require('../assets/avatar/hair/above/2.png'))
+  },
+  avatarHairAbove3 () {
+    return images.fetch('avatarHairAbove3', () => require('../assets/avatar/hair/above/3.png'))
+  },
+  avatarHairBelow1 () {
+    return images.fetch('avatarHairBelow1', () => require('../assets/avatar/hair/below/1.png'))
+  },
+  avatarHairBelow2 () {
+    return images.fetch('avatarHairBelow2', () => require('../assets/avatar/hair/below/2.png'))
+  },
+  avatarHairBelow3 () {
+    return images.fetch('avatarHairBelow3', () => require('../assets/avatar/hair/below/3.png'))
+  },
+  avatarMouth1 () {
+    return images.fetch('avatarMouth1', () => require('../assets/avatar/mouth/1.png'))
+  },
+  avatarMouth2 () {
+    return images.fetch('avatarMouth2', () => require('../assets/avatar/mouth/2.png'))
+  },
+  avatarMouth3 () {
+    return images.fetch('avatarMouth3', () => require('../assets/avatar/mouth/3.png'))
+  },
+  avatarNose1 () {
+    return images.fetch('avatarNose1', () => require('../assets/avatar/nose/1.png'))
+  },
+  avatarNose2 () {
+    return images.fetch('avatarNose2', () => require('../assets/avatar/nose/2.png'))
+  },
+  avatarNose3 () {
+    return images.fetch('avatarNose3', () => require('../assets/avatar/nose/3.png'))
+  },
+  avatarUnknown () {
+    return images.fetch('avatarUnknown', () => require('../assets/avatar/unknown.png'))
+  },
   buttonAddHexagonal () {
     return images.fetch('buttonAddHexagonal', () => require('../assets/button/add/hexagonal.png'))
   },
   buttonAddRound () {
     return images.fetch('buttonAddRound', () => require('../assets/button/add/round.png'))
   },
-  elementAvatarIconBg () {
-    return images.fetch('elementAvatarIconBg', () => require('../assets/element/avatar/icon-bg.png'))
-  },
   elementCardVaultBackground () {
     return images.fetch('elementCardVaultBackground', () => require('../assets/element/card/vault/background.png'))
+  },
+  iconAvatarPlaceholder () {
+    return images.fetch('iconAvatarPlaceholder', () => require('../assets/icon/avatar/placeholder.png'))
   },
   iconBackGrey () {
     return images.fetch('iconBackGrey', () => require('../assets/icon/back/grey.png'))

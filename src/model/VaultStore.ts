@@ -68,6 +68,7 @@ export class VaultStore extends Model({
         for (const dataKeyHex of toDelete) {
           this.vaults.delete(dataKeyHex)
           const disposer = this._disposersByKeyHex[dataKeyHex]
+          // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
           delete this._disposersByKeyHex[dataKeyHex]
           disposer()
         }

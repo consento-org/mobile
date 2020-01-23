@@ -8,10 +8,9 @@ import { mobxPersist } from '../util/mobxPersist'
 import { compareNames, ISortable } from '../util/compareNames'
 import { VaultLockee } from './VaultData'
 import { ISuccessNotification, IAPI } from '@consento/api'
-import { ISubscriptionMap, Message, MessageType } from './Consento.types'
+import { ISubscriptionMap, Message, MessageType, IRelationEntry } from './Consento.types'
 import { Buffer } from 'buffer'
 import { mapSubscriptions } from './mapSubscriptions'
-import { IRelationEntry } from '../screens/components/RelationListEntry'
 
 const ASSUMED_SAFETY_DELAY: number = 1000 // Lets count off a second for network overhead
 
@@ -56,6 +55,10 @@ export class Lockee implements IRelationEntry, ISortable {
   constructor (vaultLockee: VaultLockee, relation?: Relation) {
     this.relation = relation
     this.vaultLockee = vaultLockee
+  }
+
+  get avatarId (): string {
+    return this.relation?.avatarId
   }
 
   get sortBy (): string {

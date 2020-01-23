@@ -25,12 +25,13 @@ export class ElementConsentosBaseClass extends Component {
     }, [], this)
     this.vaultIcon = new ImagePlacement(Asset.iconVaultGrey, { x: 29, y: 128, w: 24, h: 24 }, this)
     this.vaultName = new Text('Vault  Name', TextStyles.H5RobotoRegular24BlackLeft, { x: 80, y: 120, w: 260, h: 36 }, this)
-    this.relationName = new Text('Name', TextStyles.H5RobotoRegular24BlackLeft, { x: 80, y: 30, w: 223, h: 36 }, this)
+    this.relationName = new Text('<Unnamed>', TextStyles.H5RobotoRegular24BlackLeft, { x: 80, y: 30, w: 223, h: 36 }, this)
     this.actionRequested = new Text('requests access to:', TextStyles.BodyRobotoRegular18BlackLeft, { x: 80, y: 90, w: 223, h: 24 }, this)
     this.relationID = new Text('A67F-BB3C-1A89-23C4', {
       ...TextStyles.BodyRobotoRegular18BlackLeft,
-      color: Color.darkGrey
-    }, { x: 80, y: 60, w: 245, h: 24 }, this)
+      color: Color.darkGrey,
+      fontSize: 16
+    }, { x: 80, y: 61, w: 245, h: 24 }, this)
     this.lastAccess = new Text('23 Sec. ago', {
       ...TextStyles.TimestampRobotoSmallCapRegular10BlackLeft,
       textAlign: 'right'

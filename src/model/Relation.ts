@@ -3,6 +3,9 @@ import { model, tProp, Model, types, modelAction } from 'mobx-keystone'
 import { IConnection } from '@consento/api'
 import { Connection, fromIConnection } from './Connection'
 import { humanModelId } from '../util/humanModelId'
+import { randomAvatarId } from '../screens/components/Avatar'
+import { ISortable } from '../util/compareNames'
+import { IRelationEntry } from './Consento.types'
 
 // eslint-disable-next-line @typescript-eslint/require-await
 export function fromConnection (connection: IConnection): Relation {
@@ -15,8 +18,9 @@ export function fromConnection (connection: IConnection): Relation {
 @model('consento/Relation')
 export class Relation extends Model({
   name: tProp(types.string, () => ''),
+  avatarId: tProp(types.maybeNull(types.string), () => null),
   connection: tProp(types.model<Connection>(Connection))
-}) {
+}) implements ISortable, IRelationEntry {
   @computed get displayName (): string {
     if (this.name === '') {
       return this.humanId
@@ -34,5 +38,9 @@ export class Relation extends Model({
 
   @modelAction setName (name: string): void {
     this.name = name
+  }
+
+  @modelAction setAvatarId (avatarId: string): void {
+    this.avatarId = avatarId
   }
 }

@@ -8,8 +8,8 @@ import { Color } from '../Color'
 export class ElementConsentosAccessIdleClass extends Component {
   requestBase = new Link(elementConsentosBase, { x: 0, y: 0, w: 340, h: 280 }, {})
   state = new Link(elementConsentosBaseIdle, { x: 0, y: 152, w: 340, h: 114 }, {
-    allowButtonLabel: 'allow',
-    deleteButtonLabel: 'deny'
+    deleteButtonLabel: 'deny',
+    allowButtonLabel: 'allow'
   })
   constructor () {
     super('elementConsentosAccessIdle', 340, 280, Color.black)

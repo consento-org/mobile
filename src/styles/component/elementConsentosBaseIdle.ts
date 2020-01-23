@@ -1,17 +1,17 @@
 // This file has been generated with expo-export@3.6.1, a Sketch plugin.
-import { Component, Link, Text } from '../Component'
-import { buttonContainerDisabled } from './buttonContainerDisabled'
+import { Component, Text, Link } from '../Component'
 import { TextStyles } from '../TextStyles'
 import { buttonContainerLight } from './buttonContainerLight'
+import { buttonContainerDisabled } from './buttonContainerDisabled'
 
 /* eslint-disable lines-between-class-members */
 export class ElementConsentosBaseIdleClass extends Component {
-  deleteButton = new Link(buttonContainerDisabled, { x: 80, y: 78, w: 180, h: 36 }, {
-    label: 'deny'
-  })
   timeLeft: Text
   allowButton = new Link(buttonContainerLight, { x: 80, y: 31, w: 180, h: 36 }, {
     label: 'allow'
+  })
+  deleteButton = new Link(buttonContainerDisabled, { x: 80, y: 78, w: 180, h: 36 }, {
+    label: 'deny'
   })
   constructor () {
     super('elementConsentosBaseIdle', 340, 114)

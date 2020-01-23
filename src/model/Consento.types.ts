@@ -2,6 +2,12 @@ import { IHandshakeAcceptMessage, IAPI, ISuccessNotification } from '@consento/a
 import { Receiver } from './Connection'
 import { BaseModel, findParent } from 'mobx-keystone'
 
+export interface IRelationEntry {
+  readonly humanId: string
+  readonly name: string
+  readonly avatarId: string
+}
+
 export interface ISubscription {
   receiver: Receiver
   action: (notification: ISuccessNotification, api: IAPI) => void

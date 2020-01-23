@@ -14,6 +14,7 @@ import { elementConsentosLockeeIdle } from '../styles/component/elementConsentos
 import { map } from '../util/map'
 import { ConsentoContext } from '../model/Consento'
 import { useHumanSince } from '../util/useHumanSince'
+import { Avatar } from './components/Avatar'
 
 const cardMargin = screen02Consentos.b.place.top - screen02Consentos.a.place.bottom
 
@@ -75,8 +76,9 @@ const BecomeLockee = observer(({ consento }: { consento: ConsentoBecomeLockee })
     </Svg>
     <elementConsentosLockeeIdle.vaultIcon.Render />
     <elementConsentosLockeeIdle.lastAccess.Render value={useHumanSince(consento.creationTime)} />
-    <elementConsentosLockeeIdle.relationName.Render value={consento.relationName} />
+    <elementConsentosLockeeIdle.relationName.Render value={consento.relationName !== '' ? consento.relationName : null} />
     <elementConsentosLockeeIdle.relationID.Render value={consento.relationHumanId} />
+    <Avatar place={elementConsentosLockeeIdle.avatar.place} avatarId={consento.relationAvatarId} />
     <elementConsentosLockeeIdle.question.Render />
     <elementConsentosLockeeIdle.vaultName.Render value={consento.vaultName} />
     <ConsentoState state={consento.state} onAccept={consento.handleAccept} onDelete={consento.handleDelete} style={elementConsentosLockeeIdle.state.place.style()} />
@@ -86,9 +88,10 @@ const BecomeLockee = observer(({ consento }: { consento: ConsentoBecomeLockee })
 const UnlockVault = observer(({ consento }: { consento: ConsentoUnlockVault }) => {
   return <View style={accessCardStyle}>
     <elementConsentosBase.lastAccess.Render value={useHumanSince(consento.time)} />
-    <elementConsentosBase.relationName.Render value={consento.relationName} style={{ ...elementConsentosBase.relationName.place.size(), backgroundColor: '#00000000', position: 'relative' }} />
+    <elementConsentosBase.relationName.Render value={consento.relationName !== '' ? consento.relationName : null} />
     <elementConsentosBase.relationID.Render value={consento.relationHumanId} />
     <elementConsentosBase.actionRequested.Render />
+    <Avatar place={elementConsentosBase.avatar.place} avatarId={consento.relationAvatarId} />
     <elementConsentosBase.vaultIcon.Render />
     <elementConsentosBase.vaultName.Render value={consento.vaultName} />
     <ConsentoState state={consento.state} onAccept={consento.handleAccept} onDelete={consento.handleDelete} style={elementConsentosAccessAccepted.state.place.style()} />

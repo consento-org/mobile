@@ -9,10 +9,11 @@ import { elementRelationSelectListDisplay } from '../../styles/component/element
 import { VaultContext } from '../../model/VaultContext'
 import { withNavigation, TNavigation } from '../navigation'
 import { BottomButtonView } from './BottomButtonView'
-import { RelationListEntry, IRelationListEntryProps, IRelationEntry } from './RelationListEntry'
+import { RelationListEntry, IRelationListEntryProps } from './RelationListEntry'
 import { Relation } from '../../model/Relation'
 import { ConsentoContext } from '../../model/Consento'
 import { Lockee } from '../../model/User'
+import { IRelationEntry } from '../../model/Consento.types'
 
 export interface ILocksProps {
   navigation: TNavigation

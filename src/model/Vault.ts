@@ -16,6 +16,7 @@ import { last } from '../util/last'
 import { now } from './now'
 import { map } from '../util/map'
 import randomBytes from '@consento/sync-randombytes'
+import { humanModelId } from '../util/humanModelId'
 
 export enum TVaultState {
   open = 'open',
@@ -127,10 +128,11 @@ export class Vault extends Model({
   log: VaultLogEntry[]
 
   @computed get displayName (): string {
+    console.log({ name: this.name })
     if (this.name !== null && this.name !== '') {
       return this.name
     }
-    return this.defaultName
+    return this.humanId
   }
 
   @computed get lockSubscriptions (): ISubscriptionMap {
@@ -197,9 +199,8 @@ export class Vault extends Model({
     }
   }
 
-  @computed get defaultName (): string {
-    const idBuffer = Buffer.from(this.$modelId, 'utf8')
-    return `${idBuffer.readUInt16BE(0).toString(16)}-${idBuffer.readUInt16BE(1).toString(16)}-${idBuffer.readUInt16BE(2).toString(16)}-${idBuffer.readUInt16BE(3).toString(16)}`.toUpperCase()
+  @computed get humanId (): string {
+    return humanModelId(this.$modelId)
   }
 
   @computed get secretKeyBase64 (): string {

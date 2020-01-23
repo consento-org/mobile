@@ -7,6 +7,7 @@ import { IHandshakeAcceptMessage, IHandshakeAcceptJSON, IHandshakeAccept, IAPI, 
 import { Alert } from 'react-native'
 import { Receiver, Sender } from './Connection'
 import { Buffer } from 'buffer'
+import { humanModelId } from '../util/humanModelId'
 
 function confirmLockeeMessage (lockId: string, acceptMessage: IHandshakeAcceptMessage): IConfirmLockeeMessage {
   return {
@@ -38,6 +39,14 @@ export class ConsentoBecomeLockee extends Model({
   deleted: tProp(types.boolean, () => false)
 }) {
   _lock = observable.box<boolean>(false)
+
+  @computed get relationName (): string {
+    return this.relation.maybeCurrent?.name ?? ''
+  }
+
+  @computed get relationHumanId (): string {
+    return humanModelId(this.relation.id)
+  }
 
   @computed get acceptHandshake (): IHandshakeAccept {
     if (this.acceptHandshakeJSON === null) {
@@ -155,12 +164,20 @@ export class ConsentoUnlockVault extends ExtendedModel(RequestBase, {
     return null
   }
 
+  @computed get relationName (): string {
+    return this.becomeUnlockee.current.relationName
+  }
+
+  @computed get relationHumanId (): string {
+    return this.becomeUnlockee.current.relationHumanId
+  }
+
   get vaultName (): string {
-    return this.becomeUnlockee.current?.vaultName
+    return this.becomeUnlockee.current.vaultName
   }
 
   get relation (): Ref<Relation> {
-    return this.becomeUnlockee.current?.relation
+    return this.becomeUnlockee.current.relation
   }
 
   @computed get handleAccept (): () => any {

@@ -5,12 +5,13 @@ import { IAnyConsento, ConsentoBecomeLockee, ConsentoUnlockVault } from './Conse
 import { computed } from 'mobx'
 import { find } from '../util/find'
 import { mobxPersist } from '../util/mobxPersist'
-import { compareNames } from '../util/compareNames'
+import { compareNames, ISortable } from '../util/compareNames'
 import { VaultLockee } from './VaultData'
 import { ISuccessNotification, IAPI } from '@consento/api'
 import { ISubscriptionMap, Message, MessageType } from './Consento.types'
 import { Buffer } from 'buffer'
 import { mapSubscriptions } from './mapSubscriptions'
+import { IRelationEntry } from '../screens/components/RelationListEntry'
 
 const ASSUMED_SAFETY_DELAY: number = 1000 // Lets count off a second for network overhead
 
@@ -48,7 +49,7 @@ function isVaultPatch (patch: JsonPatch): boolean {
   return /^\/vaults\/items\/\d+\/data(\/|$)/.test(patch.path)
 }
 
-export class Lockee {
+export class Lockee implements IRelationEntry, ISortable {
   vaultLockee: VaultLockee
   relation?: Relation
 
@@ -57,12 +58,16 @@ export class Lockee {
     this.vaultLockee = vaultLockee
   }
 
-  get displayName (): string {
-    return this.relation?.displayName
+  get sortBy (): string {
+    return this.relation?.name ?? this.humanId
   }
 
-  get $modelId (): string {
-    return this.vaultLockee.$modelId
+  get name (): string {
+    return this.relation?.name ?? ''
+  }
+
+  get humanId (): string {
+    return this.vaultLockee.humanId
   }
 }
 

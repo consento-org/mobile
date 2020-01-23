@@ -48,7 +48,7 @@ export const Relation = withNavigation(observer(({ navigation }: { navigation: T
         proto={elementRelationName.relationName}
         value={name.value}
         autoFocus
-        defaultValue={relation.defaultName}
+        defaultValue={relation.humanId}
         onEdit={name.handleValue}
       />
     </BottomButtonView>

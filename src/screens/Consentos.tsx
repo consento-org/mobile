@@ -79,7 +79,8 @@ const BecomeLockee = observer(({ consento }: { consento: ConsentoBecomeLockee })
     </Svg>
     <elementConsentosLockeeIdle.vaultIcon.Render />
     <elementConsentosLockeeIdle.lastAccess.Render />
-    <elementConsentosLockeeIdle.relationName.Render value={consento.relation.current?.displayName} />
+    <elementConsentosLockeeIdle.relationName.Render value={consento.relationName} />
+    <elementConsentosLockeeIdle.relationID.Render value={consento.relationHumanId} />
     <elementConsentosLockeeIdle.question.Render />
     <elementConsentosLockeeIdle.vaultName.Render value={consento.vaultName} />
     <ConsentoState state={consento.state} onAccept={consento.handleAccept} onDelete={consento.handleDelete} style={elementConsentosLockeeIdle.state.place.style()} />
@@ -89,7 +90,8 @@ const BecomeLockee = observer(({ consento }: { consento: ConsentoBecomeLockee })
 const UnlockVault = observer(({ consento }: { consento: ConsentoUnlockVault }) => {
   return <View style={accessCardStyle}>
     <elementConsentosBase.lastAccess.Render value={humanTime(consento.time)} />
-    <elementConsentosBase.relationName.Render value={consento.relation.current?.displayName} style={{ ...elementConsentosBase.relationName.place.size(), backgroundColor: '#00000000', position: 'relative' }} />
+    <elementConsentosBase.relationName.Render value={consento.relationName} style={{ ...elementConsentosBase.relationName.place.size(), backgroundColor: '#00000000', position: 'relative' }} />
+    <elementConsentosBase.relationID.Render value={consento.relationHumanId} />
     <elementConsentosBase.actionRequested.Render />
     <elementConsentosBase.vaultIcon.Render />
     <elementConsentosBase.vaultName.Render value={consento.vaultName} />

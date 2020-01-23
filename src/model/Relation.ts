@@ -1,8 +1,8 @@
 import { computed } from 'mobx'
 import { model, tProp, Model, types, modelAction } from 'mobx-keystone'
 import { IConnection } from '@consento/api'
-import { Buffer } from '@consento/crypto/util/buffer'
 import { Connection, fromIConnection } from './Connection'
+import { humanModelId } from '../util/humanModelId'
 
 // eslint-disable-next-line @typescript-eslint/require-await
 export function fromConnection (connection: IConnection): Relation {
@@ -14,20 +14,22 @@ export function fromConnection (connection: IConnection): Relation {
 
 @model('consento/Relation')
 export class Relation extends Model({
-  name: tProp(types.maybeNull(types.string)),
+  name: tProp(types.string, () => ''),
   connection: tProp(types.model<Connection>(Connection))
 }) {
   @computed get displayName (): string {
-    if (this.name !== null && this.name !== '') {
-      return this.name
+    if (this.name === '') {
+      return this.humanId
     }
-    return this.defaultName
+    return this.name
   }
 
-  @computed get defaultName (): string {
-    const send = Buffer.from(this.connection.sender.sendKey, 'base64')
-    const receive = Buffer.from(this.connection.receiver.receiveKey, 'base64')
-    return `${send.readUInt16BE(0).toString(16)}-${send.readUInt16BE(1).toString(16)}-${receive.readUInt16BE(0).toString(16)}-${receive.readUInt16BE(1).toString(16)}`.toUpperCase()
+  @computed get sortBy (): string {
+    return this.name ?? this.humanId
+  }
+
+  @computed get humanId (): string {
+    return humanModelId(this.$modelId)
   }
 
   @modelAction setName (name: string): void {

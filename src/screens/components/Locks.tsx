@@ -12,6 +12,7 @@ import { BottomButtonView } from './BottomButtonView'
 import { RelationListEntry, IRelationListEntryProps, IRelationEntry } from './RelationListEntry'
 import { Relation } from '../../model/Relation'
 import { ConsentoContext } from '../../model/Consento'
+import { Lockee } from '../../model/User'
 
 export interface ILocksProps {
   navigation: TNavigation
@@ -48,24 +49,24 @@ const LockeeList = (): JSX.Element => {
   const availableRelations = user.availableRelations(vault)
 
   if (!isSelectionActive) {
-    const revoke = (entry: IRelationEntry): void => {
-      console.log('REVOKE ' + entry.$modelId)
+    const revoke = (entry: Lockee): void => {
+      console.log('REVOKE ' + entry.vaultLockee.$modelId)
     }
     const handleAdd = availableRelations.length > 0 ? () => setSelectionActive(true) : undefined
     return <EmptyView prototype={elementLocksEmpty} onAdd={handleAdd}>
       {
         user.getLockeesSorted(vault)?.map(
-          lockee => <RelationListEntry key={lockee.$modelId} entry={lockee} prototype={elementRelationSelectListDisplay.revoke.component} onPress={revoke} />
+          lockee => <RelationListEntry key={lockee.vaultLockee.$modelId} entry={lockee} prototype={elementRelationSelectListDisplay.revoke.component} onPress={revoke} />
         )
       }
     </EmptyView>
   }
 
-  const handleSelect = (entry: IRelationEntry, selected: boolean): void => {
+  const handleSelect = (relation: Relation, selected: boolean): void => {
     if (selected) {
-      selection[entry.$modelId] = entry
+      selection[relation.$modelId] = relation
     } else {
-      delete selection[entry.$modelId]
+      delete selection[relation.$modelId]
     }
   }
   const handleSelectConfirmation = (): void => {

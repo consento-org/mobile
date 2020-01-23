@@ -1,5 +1,5 @@
 import React, { useContext } from 'react'
-import { View, ViewStyle, ScrollView } from 'react-native'
+import { View, ViewStyle } from 'react-native'
 import { VaultCard } from './components/VaultCard'
 import { TopNavigation } from './components/TopNavigation'
 import { Asset } from '../Asset'
@@ -43,16 +43,12 @@ export const VaultsScreen = withNavigation(observer(({ navigation }: { navigatio
 
   return <View style={{ display: 'flex', height: '100%' }}>
     <TopNavigation title='Vaults' />
-    <EmptyView prototype={elementVaultsEmpty}>
-      {
-        vaults.size > 0
-          ? <View style={{ ...listStyle, width, left: (vw(100) - width) / 2 }}>
-            {
-              map(vaults.values(), vault => <VaultCard key={vault.$modelId} vault={vault} />)
-            }
-          </View>
-          : undefined
-      }
+    <EmptyView prototype={elementVaultsEmpty} isEmpty={vaults.size === 0}>
+      <View style={{ ...listStyle, width, left: (vw(100) - width) / 2 }}>
+        {
+          map(vaults.values(), vault => <VaultCard key={vault.$modelId} vault={vault} />)
+        }
+      </View>
     </EmptyView>
     <AddButton
       style={{ position: 'absolute', right: 10, bottom: 10 }}

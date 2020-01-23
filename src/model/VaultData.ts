@@ -5,6 +5,7 @@ import { find } from '../util/find'
 import { readBlob, writeBlob } from '../util/expoSecureBlobStore'
 import { IHandshakeInitJSON, IHandshakeAcceptMessage, ISenderJSON, IConnectionJSON, IAPI } from '@consento/api'
 import { Sender } from './Connection'
+import { humanModelId } from '../util/humanModelId'
 
 export interface IFile {
   readonly secretKeyBase64: string
@@ -95,6 +96,10 @@ export class VaultLockee extends Model({
 
   get initPending (): boolean {
     return this.initJSON !== null
+  }
+
+  @computed get humanId (): string {
+    return humanModelId(this.relationId)
   }
 
   async confirm (acceptMessage: IHandshakeAcceptMessage, api: IAPI): Promise<IVaultLockeeConfirmation> {

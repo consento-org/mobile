@@ -45,7 +45,7 @@ export const VaultCard = withNavigation(observer(({ vault, navigation }: { vault
   return <TouchableOpacity style={cardStyle} onPress={onPress} activeOpacity={0.55} disabled={vault.isLoading}>
     <proto.background.Render style={{ position: 'absolute' }} />
     <proto.title.Render value={vault.name} />
-    <proto.lastAccess.Render value={vault.defaultName} />
+    <proto.lastAccess.Render value={vault.humanId} />
     <proto.icon.Render style={{ position: 'absolute' }} />
     <proto.status.Render style={{ position: 'absolute' }} />
   </TouchableOpacity>

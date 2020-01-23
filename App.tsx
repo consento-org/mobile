@@ -32,14 +32,14 @@ export default function App (): JSX.Element {
       .catch(setError)
   }, [])
   if (error !== undefined) {
-    return <Text>{`Error while initing:\n${this.state.error}`}</Text>
+    return <Text>{`Error while initing:\n${String(this.state.error)}`}</Text>
   }
   if (loaded !== undefined) {
     try {
       return <SafeAreaProvider><loaded.ConsentoApp /></SafeAreaProvider>
     // eslint-disable-next-line no-unreachable
     } catch (err) {
-      return <Text>{`Error: ${err}`}</Text>
+      return <Text>{`Error: ${String(err)}`}</Text>
     }
   }
   return <SafeAreaProvider><Loading /></SafeAreaProvider>

@@ -13,6 +13,7 @@ import Svg, { Circle, Rect, G } from 'react-native-svg'
 import { elementConsentosLockeeIdle } from '../styles/component/elementConsentosLockeeIdle'
 import { map } from '../util/map'
 import { ConsentoContext } from '../model/Consento'
+import { useHumanSince } from '../util/useHumanSince'
 
 const cardMargin = screen02Consentos.b.place.top - screen02Consentos.a.place.bottom
 
@@ -25,12 +26,7 @@ const accessCardStyle: ViewStyle = {
   ...elementConsentosBase.background.borderStyle()
 }
 
-function humanTime (time: number): string {
-  // TODO!
-  return String(time)
-}
-
-const viewBox = `0 0 ${elementConsentosLockeeIdle.width} ${elementConsentosLockeeIdle.height}`
+const viewBox = `0 0 ${elementConsentosLockeeIdle.width.toString()} ${elementConsentosLockeeIdle.height.toString()}`
 const lockeeCardStyle: ViewStyle = {
   position: 'relative',
   width: elementConsentosLockeeIdle.width,
@@ -78,7 +74,7 @@ const BecomeLockee = observer(({ consento }: { consento: ConsentoBecomeLockee })
       </G>
     </Svg>
     <elementConsentosLockeeIdle.vaultIcon.Render />
-    <elementConsentosLockeeIdle.lastAccess.Render />
+    <elementConsentosLockeeIdle.lastAccess.Render value={useHumanSince(consento.creationTime)} />
     <elementConsentosLockeeIdle.relationName.Render value={consento.relationName} />
     <elementConsentosLockeeIdle.relationID.Render value={consento.relationHumanId} />
     <elementConsentosLockeeIdle.question.Render />
@@ -89,7 +85,7 @@ const BecomeLockee = observer(({ consento }: { consento: ConsentoBecomeLockee })
 
 const UnlockVault = observer(({ consento }: { consento: ConsentoUnlockVault }) => {
   return <View style={accessCardStyle}>
-    <elementConsentosBase.lastAccess.Render value={humanTime(consento.time)} />
+    <elementConsentosBase.lastAccess.Render value={useHumanSince(consento.time)} />
     <elementConsentosBase.relationName.Render value={consento.relationName} style={{ ...elementConsentosBase.relationName.place.size(), backgroundColor: '#00000000', position: 'relative' }} />
     <elementConsentosBase.relationID.Render value={consento.relationHumanId} />
     <elementConsentosBase.actionRequested.Render />

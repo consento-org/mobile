@@ -183,7 +183,7 @@ export class VaultData extends Model({
     let filename: string
     do {
       index += 1
-      filename = `Untitled-${index}`
+      filename = `Untitled-${index.toString()}`
     } while (!this.isUnusedFilename(filename))
     return filename
   }

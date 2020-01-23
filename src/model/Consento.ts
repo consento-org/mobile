@@ -117,6 +117,7 @@ function diffSubscriptions (stored: ISubscriptionMap, current: ISubscriptionMap)
   }
   const goneSubscriptions = Array.from(goneReceiveKeys).map(receiveKey => {
     const subscription = stored[receiveKey]
+    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
     delete stored[receiveKey]
     return subscription
   })
@@ -224,7 +225,7 @@ export class Consento extends Model({
             if (message.type === 'success') {
               const subscription = subscriptions[message.channelIdBase64]
               if (subscription === undefined) {
-                console.log(`Received notification for ${message.channelIdBase64} but there was no subscriber ${encryptedMessage}?!`)
+                console.log(`Received notification for ${message.channelIdBase64} but there was no subscriber ${String(encryptedMessage)}?!`)
                 return
               }
               console.log(`Received notification: ${message.channelIdBase64}`)
@@ -265,6 +266,7 @@ export class Consento extends Model({
                   .subscribe(receivers)
                   .catch(subscribeError => {
                     for (const subscription of newSubscriptions) {
+                      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
                       delete subscriptions[subscription.receiver.receiveKey]
                     }
                     console.log({ subscribeError })

@@ -35,7 +35,7 @@ export const vaultRefInUser = customRef<Vault>(`${Vault.$modelType}#inUser`, {
   }
 })
 
-export const becomeUnlockeeRefInUser = customRef<ConsentoBecomeLockee>(`${ConsentoBecomeLockee}#inUser`, {
+export const becomeUnlockeeRefInUser = customRef<ConsentoBecomeLockee>(`${ConsentoBecomeLockee.$modelType}#inUser`, {
   resolve (ref: Ref<ConsentoBecomeLockee>): ConsentoBecomeLockee {
     return findParentUser(ref)?.findBecomeLockee(ref.id)
   }

@@ -66,6 +66,7 @@ const LockeeList = (): JSX.Element => {
     if (selected) {
       selection[relation.$modelId] = relation
     } else {
+      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
       delete selection[relation.$modelId]
     }
   }
@@ -82,7 +83,7 @@ const LockeeList = (): JSX.Element => {
     })().catch(error => {
       Alert.alert(
         'Failed',
-        `Woops, for some reason the lockee could not be added.\n [${error.code}]`
+        `Woops, for some reason the lockee could not be added.\n [${String(error.code)}]`
       )
       console.log(error)
       setSelectionActive(false)

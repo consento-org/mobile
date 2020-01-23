@@ -7,7 +7,7 @@ import { Color } from '../Color'
 export class Screen01WelcomeClass extends Component {
   illustration: ImagePlacement
   constructor () {
-    super('screen01Welcome', 375, 812, Color.coral)
+    super('screen01Welcome', 375, 812, Color.lightGrey)
     this.illustration = new ImagePlacement(Asset.illustrationWelcome, { x: 78.85, y: 276, w: 216, h: 224 }, this)
   }
 }

@@ -50,8 +50,8 @@ export const Editor = observer(({ navigation, file, vault, children }: IEditorPr
   return <Form>
     <DarkBar />
     <View style={{ position: 'absolute', top: insets.top, height: vh(100) - insets.top, width: '100%' }}>
-      <TouchableOpacity style={closeSize}>
-        <elementTextEditor.close.Render onPress={() => leave(() => navigation.navigate('vault', { vault: vault.$modelId }))} />
+      <TouchableOpacity style={closeSize} onPress={() => leave(() => navigation.navigate('vault', { vault: vault.$modelId }))}>
+        <elementTextEditor.close.Render />
       </TouchableOpacity>
       {
         isDirty

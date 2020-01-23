@@ -34,7 +34,7 @@ export class Screen09ScanQRCodeClass extends Component {
       ...TextStyles.H6BlackHighEmphasisCenter,
       fontSize: 13
     }, { x: 6, y: 781, w: 364, h: 15 }, this)
-    this.logo = new ImagePlacement(Asset.iconLogo, { x: 162.26, y: 588, w: 50.46, h: 50 }, this)
+    this.logo = new ImagePlacement(Asset.iconLogo, { x: 164, y: 589, w: 48, h: 48 }, this)
   }
 }
 

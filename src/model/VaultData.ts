@@ -54,21 +54,17 @@ export class TextFile extends Model({
   }
 
   @modelAction _saveText (secretKeyBase64: string): void {
-    console.log({ persisting: secretKeyBase64 })
     this.secretKeyBase64 = secretKeyBase64
   }
 
   async loadText (): Promise<string> {
-    console.log({ loading: this.secretKeyBase64 })
     if (this.secretKeyBase64 === null) {
       return ''
     }
     try {
       const fromFs = await readBlob(Buffer.from(this.secretKeyBase64, 'base64'))
-      console.log({ fromFs })
       return fromFs as string
     } catch (_) {
-      console.log(_)
       return ''
     }
   }

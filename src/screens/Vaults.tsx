@@ -10,6 +10,8 @@ import { withNavigation, TNavigation } from './navigation'
 import { useVUnits } from '../styles/Component'
 import { elementCardVaultClose } from '../styles/component/elementCardVaultClose'
 import { ConsentoContext } from '../model/Consento'
+import { EmptyView } from './components/EmptyView'
+import { elementVaultsEmpty } from '../styles/component/elementVaultsEmpty'
 
 const listStyle: ViewStyle = {
   display: 'flex',
@@ -41,13 +43,17 @@ export const VaultsScreen = withNavigation(observer(({ navigation }: { navigatio
 
   return <View style={{ display: 'flex', height: '100%' }}>
     <TopNavigation title='Vaults' />
-    <ScrollView centerContent>
-      <View style={{ ...listStyle, width, left: (vw(100) - width) / 2 }}>
-        {
-          map(vaults.values(), vault => <VaultCard key={vault.$modelId} vault={vault} />)
-        }
-      </View>
-    </ScrollView>
+    <EmptyView prototype={elementVaultsEmpty}>
+      {
+        vaults.size > 0
+          ? <View style={{ ...listStyle, width, left: (vw(100) - width) / 2 }}>
+            {
+              map(vaults.values(), vault => <VaultCard key={vault.$modelId} vault={vault} />)
+            }
+          </View>
+          : undefined
+      }
+    </EmptyView>
     <AddButton
       style={{ position: 'absolute', right: 10, bottom: 10 }}
       onPress={() => {

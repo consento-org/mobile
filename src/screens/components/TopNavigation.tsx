@@ -6,7 +6,7 @@ import { elementTopNavEdit } from '../../styles/component/elementTopNavEdit'
 import { withNavigation, TNavigation } from '../navigation'
 import { exists } from '../../util/exists'
 import { useSafeArea } from 'react-native-safe-area-context'
-import { Color } from '../../styles/Color'
+import { DarkBar } from './DarkBar'
 
 const topNav = Object.freeze<ViewStyle>({
   backfaceVisibility: 'visible',
@@ -34,7 +34,7 @@ export const TopNavigation = withNavigation((props: ITopNavigationProps) => {
   const [editing, setEditing] = useState(false)
   const inset = useSafeArea()
   return <View style={{ ...topNav, height: elementTopNavEmpty.height + inset.top }}>
-    <View style={{ width: '100%', height: inset.top, backgroundColor: Color.veryDarkGrey }} />
+    <DarkBar />
     <View style={{ position: 'relative' }}>
       {exists(props.back)
         ? <elementTopNavItem.back.Render

@@ -10,6 +10,7 @@ import { observer } from 'mobx-react'
 import { TNavigation } from '../navigation'
 import { Vault } from '../../model/Vault'
 import { Color } from '../../styles/Color'
+import { DarkBar } from './DarkBar'
 
 const saveSize: ViewStyle = {
   position: 'absolute',
@@ -47,6 +48,7 @@ export const Editor = observer(({ navigation, file, vault, children }: IEditorPr
   const insets = useSafeArea()
 
   return <Form>
+    <DarkBar />
     <View style={{ position: 'absolute', top: insets.top, height: vh(100) - insets.top, width: '100%' }}>
       <TouchableOpacity style={closeSize}>
         <elementTextEditor.close.Render onPress={() => leave(() => navigation.navigate('vault', { vault: vault.$modelId }))} />

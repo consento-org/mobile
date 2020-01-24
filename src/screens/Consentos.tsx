@@ -36,7 +36,7 @@ const lockeeCardStyle: ViewStyle = {
 }
 
 const BecomeLockee = observer(({ consento }: { consento: ConsentoBecomeLockee }) => {
-  if (consento.deleted) {
+  if (consento.isHidden) {
     return
   }
   const { card, outline } = elementConsentosLockeeIdle
@@ -81,7 +81,7 @@ const BecomeLockee = observer(({ consento }: { consento: ConsentoBecomeLockee })
     <Avatar place={elementConsentosLockeeIdle.avatar.place} avatarId={consento.relationAvatarId} />
     <elementConsentosLockeeIdle.question.Render />
     <elementConsentosLockeeIdle.vaultName.Render value={consento.vaultName} />
-    <ConsentoState state={consento.state} onAccept={consento.handleAccept} onDelete={consento.handleDelete} style={elementConsentosLockeeIdle.state.place.style()} />
+    <ConsentoState state={consento.state} onAccept={consento.handleAccept} onDelete={consento.handleHide} style={elementConsentosLockeeIdle.state.place.style()} />
   </View>
 })
 

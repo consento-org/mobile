@@ -35,8 +35,9 @@ export class ConsentoBecomeLockee extends Model({
   lockId: tProp(types.maybeNull(types.string)),
   shareHex: tProp(types.maybeNull(types.string), () => null),
   creationTime: tProp(types.number, () => Date.now()),
+  cancelTime: tProp(types.maybeNull(types.number), () => null),
   vaultName: tProp(types.string),
-  deleted: tProp(types.boolean, () => false)
+  hiddenTime: tProp(types.maybeNull(types.number), () => null)
 }) {
   _lock = observable.box<boolean>(false)
 
@@ -63,6 +64,9 @@ export class ConsentoBecomeLockee extends Model({
   }
 
   @computed get isReceivingConfirmation (): boolean {
+    if (this.isCancelled) {
+      return false
+    }
     if (this.acceptHandshakeJSON === null) {
       return false
     }
@@ -73,6 +77,9 @@ export class ConsentoBecomeLockee extends Model({
   }
 
   get state (): TRequestState {
+    if (this.cancelTime !== null) {
+      return TRequestState.cancelled
+    }
     if (this.acceptHandshakeJSON !== null) {
       return TRequestState.active
     }
@@ -82,7 +89,22 @@ export class ConsentoBecomeLockee extends Model({
     return TRequestState.cancelled
   }
 
+  @modelAction cancel (): void {
+    this.cancelTime = Date.now()
+    this.receiver = null
+    this.sender = null
+    this.acceptHandshakeJSON = null
+    this._lock.set(false)
+  }
+
+  get isCancelled (): boolean {
+    return this.state === TRequestState.cancelled
+  }
+
   @computed get handleAccept (): () => any {
+    if (this.isCancelled) {
+      return
+    }
     if (this.isLocked) {
       return
     }
@@ -94,6 +116,9 @@ export class ConsentoBecomeLockee extends Model({
       return () => {
         this._lock.set(true)
         ;(async () => {
+          if (this.isCancelled) {
+            return
+          }
           const accept = this.acceptHandshake
           this._setReceiveConfirmation(true)
           await api.notifications.send(accept.sender, confirmLockeeMessage(this.lockId, accept.acceptMessage))
@@ -118,6 +143,10 @@ export class ConsentoBecomeLockee extends Model({
     }
   }
 
+  get isHidden (): boolean {
+    return this.hiddenTime !== null
+  }
+
   get isLocked (): boolean {
     return this._lock.get()
   }
@@ -127,6 +156,9 @@ export class ConsentoBecomeLockee extends Model({
   }
 
   finalize (api: IAPI, finalMessageBase64: string): void {
+    if (!this.isReceivingConfirmation) {
+      return
+    }
     if (this.acceptHandshakeJSON === null) {
       console.log(`Warning: Already finalised Lockee ${this.$modelId}`)
       return
@@ -145,17 +177,17 @@ export class ConsentoBecomeLockee extends Model({
     this._lock.set(false)
   }
 
-  @computed get handleDelete (): () => any {
+  @computed get handleHide (): () => any {
     if (this.state === TRequestState.accepted) {
       return () => {
-        this.delete()
+        this.hide()
       }
     }
   }
 
-  @modelAction delete (): void {
-    if (this.deleted === false) {
-      this.deleted = true
+  @modelAction hide (): void {
+    if (!this.isHidden) {
+      this.hiddenTime = Date.now()
     }
   }
 }

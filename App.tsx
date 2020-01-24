@@ -6,13 +6,10 @@ import { Loading } from './src/screens/Loading'
 import { loadFonts } from './src/styles/Font'
 import { exists } from './src/util/exists'
 import { setGlobalConfig } from 'mobx-keystone'
-import randomBytes from '@consento/sync-randombytes'
-import { Buffer, bufferToString } from '@consento/crypto/util/buffer'
+import { generateId } from './src/util/generateId'
 
 setGlobalConfig({
-  modelIdGenerator (): string {
-    return bufferToString(randomBytes(Buffer.alloc(16)), 'hex')
-  }
+  modelIdGenerator: generateId
 })
 
 export default function App (): JSX.Element {

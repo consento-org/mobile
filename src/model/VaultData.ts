@@ -83,8 +83,9 @@ export interface IVaultLockeeConfirmation {
 
 @model('consento/VaultData/Lockee')
 export class VaultLockee extends Model({
-  relationId: prop<string>(),
-  shareHex: prop<string>(() => null),
+  relationId: tProp(types.string),
+  shareHex: tProp(types.maybeNull(types.string), () => null),
+  lockId: tProp(types.string),
   initJSON: prop<IHandshakeInitJSON>(() => null),
   sender: prop<Sender>(() => null)
 }) {
@@ -157,6 +158,14 @@ export class VaultData extends Model({
       throw new Error(`Can not remove file ${file.name}: File not added.`)
     }
     this.files.splice(index, 1)
+  }
+
+  @modelAction revokeLockee (lockee: VaultLockee): boolean {
+    if (!this.lockees.has(lockee)) {
+      return false
+    }
+    this.lockees.delete(lockee)
+    return true
   }
 
   isUnusedFilename (filename: string): boolean {

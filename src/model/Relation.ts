@@ -3,7 +3,6 @@ import { model, tProp, Model, types, modelAction } from 'mobx-keystone'
 import { IConnection } from '@consento/api'
 import { Connection, fromIConnection } from './Connection'
 import { humanModelId } from '../util/humanModelId'
-import { randomAvatarId } from '../screens/components/Avatar'
 import { ISortable } from '../util/compareNames'
 import { IRelationEntry } from './Consento.types'
 

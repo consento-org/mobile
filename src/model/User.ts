@@ -2,7 +2,7 @@ import { model, Model, prop, arraySet, Ref, findParent, tProp, types, modelActio
 import { Vault } from './Vault'
 import { Relation } from './Relation'
 import { IAnyConsento, ConsentoBecomeLockee, ConsentoUnlockVault } from './Consentos'
-import { computed } from 'mobx'
+import { computed, autorun } from 'mobx'
 import { find } from '../util/find'
 import { mobxPersist } from '../util/mobxPersist'
 import { compareNames, ISortable } from '../util/compareNames'
@@ -11,6 +11,9 @@ import { ISuccessNotification, IAPI } from '@consento/api'
 import { ISubscriptionMap, Message, MessageType, IRelationEntry } from './Consento.types'
 import { Buffer } from 'buffer'
 import { mapSubscriptions } from './mapSubscriptions'
+import { exists } from '../util/exists'
+import { combinedDispose } from '../util/combinedDispose'
+import { map } from '../util/map'
 
 const ASSUMED_SAFETY_DELAY: number = 1000 // Lets count off a second for network overhead
 
@@ -83,24 +86,37 @@ export class User extends Model({
   consentos: prop(() => arraySet<IAnyConsento>())
 }) {
   onAttachedToRootStore (): () => any {
-    return mobxPersist({
-      item: this,
-      location: `user_${this.name}`,
-      filter: (patch: JsonPatch) => !isVaultPatch(patch) && !isSecretPatch(patch),
-      init: initUser,
-      clearClone: (cloned: any) => {
-        delete cloned.relations.$modelId
-        delete cloned.consentos.$modelId
-        delete cloned.vaults.$modelId
-        return cloned
-      },
-      prepareSnapshot: (item: User, snapshot: SnapshotOutOf<User>) => {
-        snapshot.relations.$modelId = item.relations.$modelId
-        snapshot.consentos.$modelId = item.consentos.$modelId
-        snapshot.vaults.$modelId = this.vaults.$modelId
-        return snapshot
-      }
-    })
+    return combinedDispose(
+      autorun(() => {
+        for (const consento of this.consentos) {
+          if (consento instanceof ConsentoBecomeLockee) {
+            if (consento.isCancelled && consento.isHidden) {
+              // TODO: this cleanup process for consentos that are deleted works but it its
+              //       very had to understand
+              this.consentos.delete(consento)
+            }
+          }
+        }
+      }),
+      mobxPersist({
+        item: this,
+        location: `user_${this.name}`,
+        filter: (patch: JsonPatch) => !isVaultPatch(patch) && !isSecretPatch(patch),
+        init: initUser,
+        clearClone: (cloned: any) => {
+          delete cloned.relations.$modelId
+          delete cloned.consentos.$modelId
+          delete cloned.vaults.$modelId
+          return cloned
+        },
+        prepareSnapshot: (item: User, snapshot: SnapshotOutOf<User>) => {
+          snapshot.relations.$modelId = item.relations.$modelId
+          snapshot.consentos.$modelId = item.consentos.$modelId
+          snapshot.vaults.$modelId = this.vaults.$modelId
+          return snapshot
+        }
+      })
+    )
   }
 
   @computed get relationSubscriptions (): ISubscriptionMap {
@@ -108,6 +124,7 @@ export class User extends Model({
       this.relations,
       relation => relation.connection.receiver,
       (relation: Relation, notification: ISuccessNotification, api: IAPI): void => {
+        // TODO: this belongs to the Relation, probably
         const message: Message = notification.body as any
         if (message.type === MessageType.lockeeRequest) {
           if (message.version !== 1) {
@@ -126,7 +143,25 @@ export class User extends Model({
             console.log({ error })
           })
         }
+        if (message.type === MessageType.revokeLockee) {
+          const consento = this.getConsentoByLockId(message.lockId)
+          if (exists(consento)) {
+            consento.cancel()
+            if (consento.isHidden) {
+              this.consentos.delete(consento)
+            }
+          }
+        }
       }
+    )
+  }
+
+  getConsentoByLockId (lockId: string): ConsentoBecomeLockee {
+    return find(
+      this.consentos,
+      (consento: IAnyConsento): consento is ConsentoBecomeLockee =>
+        consento instanceof ConsentoBecomeLockee &&
+        consento.lockId === lockId
     )
   }
 
@@ -149,6 +184,14 @@ export class User extends Model({
               time: message.time,
               becomeUnlockee
             }))
+          }
+        }
+        if (message.type === MessageType.revokeLockee) {
+          if (consento instanceof ConsentoBecomeLockee) {
+            consento.cancel()
+            if (consento.isHidden) {
+              this.consentos.delete(consento)
+            }
           }
         }
       }
@@ -181,16 +224,14 @@ export class User extends Model({
   }
 
   getLockeesSorted (vault: Vault): Lockee[] {
-    const lockees = vault.data?.lockees.items
+    const lockees = vault.data?.lockees
     if (lockees === undefined) {
       return
     }
-    if (lockees.length === 0) {
+    if (lockees.size === 0) {
       return
     }
-    return lockees.map(
-      vaultLockee => new Lockee(vaultLockee, this.findRelation(vaultLockee.relationId))
-    ).sort(compareNames)
+    return map(lockees.values(), vaultLockee => new Lockee(vaultLockee, this.findRelation(vaultLockee.relationId))).sort(compareNames)
   }
 
   @computed get relationsSorted (): Relation[] {

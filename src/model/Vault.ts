@@ -2,7 +2,7 @@ import { model, Model, prop, ExtendedModel, tProp, types, ArraySet, arraySet, mo
 import { RequestBase } from './RequestBase'
 import { Receiver, Sender, Connection } from './Connection'
 import { ISuccessNotification, IAPI } from '@consento/api'
-import { ISubscription, IConfirmLockeeMessage, IRequestLockeeMessage, MessageType, Message, requireAPI, hasAPI, ISubscriptionMap, IFinalizeLockeeMessage, IRequestUnlockMessage } from './Consento.types'
+import { ISubscription, IConfirmLockeeMessage, IRequestLockeeMessage, MessageType, Message, requireAPI, hasAPI, ISubscriptionMap, IFinalizeLockeeMessage, IRequestUnlockMessage, IRevokeLockeeMessage } from './Consento.types'
 import { VaultLockee, VaultData, File, IVaultLockeeConfirmation } from './VaultData'
 import { bufferToString, Buffer } from '@consento/crypto/util/buffer'
 import { expoVaultSecrets } from '../util/expoVaultSecrets'
@@ -17,6 +17,7 @@ import { now } from './now'
 import { map } from '../util/map'
 import randomBytes from '@consento/sync-randombytes'
 import { humanModelId } from '../util/humanModelId'
+import { generateId } from '../util/generateId'
 
 export enum TVaultState {
   open = 'open',
@@ -82,18 +83,19 @@ export class Lock extends ExtendedModel(Connection, {
 @model('consento/Vault/PendingLock')
 export class PendingLock extends Model({
   receiver: tProp(types.model<Receiver>(Receiver)),
-  lockeeId: tProp(types.string)
+  lockeeId: tProp(types.string),
+  lockId: tProp(types.string)
 }) {
   @computed get vaultLockee (): VaultLockee {
     return findVaultLockee(this, this.lockeeId)
   }
 }
 
-function requestLockeeMessage (pendingLock: PendingLock, vault: Vault, firstMessage: Uint8Array, share: Buffer, vaultName: string): IRequestLockeeMessage {
+function requestLockeeMessage (lockId: string, vault: Vault, firstMessage: Uint8Array, share: Buffer, vaultName: string): IRequestLockeeMessage {
   return {
     version: 1,
     type: MessageType.lockeeRequest,
-    lockId: pendingLock.$modelId,
+    lockId,
     firstMessageBase64: bufferToString(firstMessage, 'base64'),
     shareHex: bufferToString(share, 'hex'),
     vaultName
@@ -114,6 +116,14 @@ function requestUnlockMessage (time: number, keepAlive: number): IRequestUnlockM
     type: MessageType.requestUnlock,
     time,
     keepAlive
+  }
+}
+
+function revokeLockeeMessage (lockId: string): IRevokeLockeeMessage {
+  return {
+    version: 1,
+    type: MessageType.revokeLockee,
+    lockId
   }
 }
 
@@ -222,30 +232,33 @@ export class Vault extends Model({
         random: (size: number): Buffer => randomBytes(Buffer.alloc(size))
       }
     )
+    const lockId: string = generateId()
     const lockee = new VaultLockee({
       relationId: relation.$modelId,
+      lockId,
       shareHex: bufferToString(myShare, 'hex'),
       initJSON: handshake.toJSON()
     })
     const pendingLock = new PendingLock({
       lockeeId: lockee.$modelId,
+      lockId,
       receiver: new Receiver(handshake.receiver.toJSON())
     })
-    this._addLockee(lockee, pendingLock)
+    this._addPendingLockee(lockee, pendingLock)
     try {
-      await notifications.send(new crypto.Sender(senderJSON), requestLockeeMessage(pendingLock, this, handshake.firstMessage, theirShare, this.displayName))
+      await notifications.send(new crypto.Sender(senderJSON), requestLockeeMessage(lockId, this, handshake.firstMessage, theirShare, this.displayName))
     } catch (error) {
-      this._removeLockee(lockee, pendingLock)
+      this._removePendingLockee(lockee, pendingLock)
       throw error
     }
   }
 
-  @modelAction _removeLockee (lockee: VaultLockee, pendingLock: PendingLock): void {
+  @modelAction _removePendingLockee (lockee: VaultLockee, pendingLock: PendingLock): void {
     this.data.lockees.delete(lockee)
     this.pendingLocks.delete(pendingLock)
   }
 
-  @modelAction _addLockee (lockee: VaultLockee, pendingLock: PendingLock): void {
+  @modelAction _addPendingLockee (lockee: VaultLockee, pendingLock: PendingLock): void {
     this.data.lockees.add(lockee)
     this.pendingLocks.add(pendingLock)
   }
@@ -259,6 +272,9 @@ export class Vault extends Model({
     const { crypto, notifications } = api
     let confirmation: IVaultLockeeConfirmation
     try {
+      // TODO: Here the logic flow is messed up.
+      //       there is some possible inconsistency where the vaultLockee is confirmed
+      //       yet the final message is not sent.
       confirmation = await vaultLockee.confirm(confirm.acceptMessage, api)
       if (confirmation === undefined) {
         console.log(`Warning: Couldn't confirm ${vaultLockee.$modelId}`)
@@ -277,16 +293,32 @@ export class Vault extends Model({
         sender: new Sender(connectionJSON.sender),
         receiver: new Receiver(connectionJSON.receiver),
         lockeeId: vaultLockee.$modelId,
-        lockId: pendingLock.$modelId,
+        lockId: pendingLock.lockId,
         shareHex
       }))
       this._updateLocks()
     } catch (err) {
-      this.pendingLocks.add(pendingLock)
-      this._updateLocks()
+      this.data.revokeLockee(vaultLockee)
       console.log({ err })
-      console.log(`Warning: Couldn't confirm unlockee ${vaultLockee.$modelId} properly`)
+      console.log(`Warning: Couldn't confirm unlockee ${vaultLockee.$modelId} properly.`)
     }
+  }
+
+  async revokeLockee (lockee: VaultLockee, relation?: Relation): Promise<void> {
+    if (!this.data.revokeLockee(lockee)) {
+      return
+    }
+    this.pendingLocks.delete(find(this.pendingLocks, (pendingLock): pendingLock is PendingLock => pendingLock.lockId === lockee.lockId))
+    this.locks.delete(find(this.locks, (lock): lock is Lock => lock.lockId === lockee.lockId))
+    const { notifications, crypto } = requireAPI(this)
+    const sender = lockee.sender ?? relation?.connection.sender ?? null
+    if (sender === null) {
+      return
+    }
+    await notifications.send(
+      new crypto.Sender(sender),
+      revokeLockeeMessage(lockee.lockId)
+    )
   }
 
   _updateLocks (): void {

@@ -4,14 +4,15 @@ import { Component, Text as TextComponent, ImagePlacement, Polygon } from '../..
 import { observer } from 'mobx-react'
 import { Avatar } from './Avatar'
 import { IRelationEntry } from '../../model/Consento.types'
+import { exists } from '../../util/exists'
 
 export interface IRelationListEntryPrototype extends Component {
   relationName: TextComponent
   icon: ImagePlacement
   iconLabel?: TextComponent
   relationID: TextComponent
-  avatarBg: ImagePlacement
   avatarCut: Polygon
+  state?: TextComponent
 }
 
 export interface IRelationListEntryProps {
@@ -22,6 +23,7 @@ export interface IRelationListEntryProps {
 
 export const RelationListEntry = observer(({ entry, prototype, onPress }: IRelationListEntryProps): JSX.Element => {
   return <TouchableOpacity style={{ height: prototype.height }} onPress={() => onPress(entry)}>
+    {exists(prototype.state) ? <prototype.state.Render horz='end' /> : null}
     <prototype.relationID.Render value={entry.humanId} />
     <prototype.relationName.Render horz='stretch' value={entry.name !== '' ? entry.name : null} />
     <prototype.icon.Render horz='end' />

@@ -13,7 +13,7 @@ export class ElementRelationSelectListRevokeClass extends Component {
   relationName: Text
   constructor () {
     super('elementRelationSelectListRevoke', 375, 100)
-    this.icon = new ImagePlacement(Asset.iconDeleteRed, { x: 323, y: 28.5, w: 24, h: 24 }, this)
+    this.icon = new ImagePlacement(Asset.iconDeleteRed, { x: 311.5, y: 23, w: 48, h: 48 }, this)
     this.avatarCut = new Polygon({ x: 31, y: 20, w: 60, h: 60 }, Color.blue, null, [], this)
     this.iconLabel = new Text('Revoke', TextStyles.BodyRobotoRegular18RedCenter, { x: 302, y: 60, w: 67, h: 20 }, this)
     this.relationID = new Text('A67F-BB3C-1A89-23C4', {

@@ -14,6 +14,7 @@ import { Relation } from '../../model/Relation'
 import { ConsentoContext } from '../../model/Consento'
 import { Lockee } from '../../model/User'
 import { IRelationEntry } from '../../model/Consento.types'
+import { elementRelationSelectListCancel } from '../../styles/component/elementRelationSelectListCancel'
 
 export interface ILocksProps {
   navigation: TNavigation
@@ -36,34 +37,35 @@ const SelectEntry = ({ entry, onSelect }: ISelectEntryProps): JSX.Element => {
   />
 }
 
-const LockeeList = (): JSX.Element => {
-  const [isSelectionActive, setSelectionActive] = useState<boolean>(false)
-  const [isAddingLockees, setAddingLockees] = useState<boolean>(false)
+const SelectedLockees = observer(({ onAdd: handleAdd }: { onAdd: () => void }): JSX.Element => {
   const { user } = useContext(ConsentoContext)
   const { vault } = useContext(VaultContext)
-  const selection: { [modelId: string]: IRelationEntry } = {}
-
-  if (isAddingLockees) {
-    return <Text>Adding new entries...</Text>
+  const handleRelationPress = (lockee: Lockee): void => {
+    vault.revokeLockee(lockee.vaultLockee, lockee.relation)
+      .catch(error => {
+        console.log({ error })
+      })
   }
-
-  const availableRelations = user.availableRelations(vault)
-
-  if (!isSelectionActive) {
-    const revoke = (entry: Lockee): void => {
-      console.log('REVOKE ' + entry.vaultLockee.$modelId)
+  return <EmptyView prototype={elementLocksEmpty} onAdd={handleAdd}>
+    {
+      user.getLockeesSorted(vault)?.map(
+        lockee => <RelationListEntry
+          key={lockee.vaultLockee.$modelId}
+          entry={lockee}
+          prototype={lockee.vaultLockee.isConfirmed ? elementRelationSelectListDisplay.revoke.component : elementRelationSelectListCancel}
+          onPress={handleRelationPress}
+        />
+      )
     }
-    const handleAdd = availableRelations.length > 0 ? () => setSelectionActive(true) : undefined
-    return <EmptyView prototype={elementLocksEmpty} onAdd={handleAdd}>
-      {
-        user.getLockeesSorted(vault)?.map(
-          lockee => <RelationListEntry key={lockee.vaultLockee.$modelId} entry={lockee} prototype={elementRelationSelectListDisplay.revoke.component} onPress={revoke} />
-        )
-      }
-    </EmptyView>
-  }
+  </EmptyView>
+})
 
-  const handleSelect = (relation: Relation, selected: boolean): void => {
+const SelectLockees = ({ onSelect: handleSelectConfirmation }: { onSelect: (relations: Relation[]) => any }): JSX.Element => {
+  const selection: { [modelId: string]: IRelationEntry } = {}
+  const { user } = useContext(ConsentoContext)
+  const { vault } = useContext(VaultContext)
+  const availableRelations = user.availableRelations(vault)
+  const handleEntrySelect = (relation: Relation, selected: boolean): void => {
     if (selected) {
       selection[relation.$modelId] = relation
     } else {
@@ -71,10 +73,35 @@ const LockeeList = (): JSX.Element => {
       delete selection[relation.$modelId]
     }
   }
-  const handleSelectConfirmation = (): void => {
+  const handleConfirm = (): void => handleSelectConfirmation(Object.values(selection) as Relation[])
+
+  return <BottomButtonView prototype={elementRelationSelectListAdd} onPress={handleConfirm}>
+    {
+      availableRelations.map(
+        relation => <SelectEntry key={relation.$modelId} entry={relation} onSelect={handleEntrySelect} />
+      )
+    }
+  </BottomButtonView>
+}
+
+const LockeeList = observer((): JSX.Element => {
+  const [isSelectionActive, setSelectionActive] = useState<boolean>(false)
+  const [isAddingLockees, setAddingLockees] = useState<boolean>(false)
+  const { user } = useContext(ConsentoContext)
+  const { vault } = useContext(VaultContext)
+  const availableRelations = user.availableRelations(vault)
+
+  if (isAddingLockees) {
+    return <Text>Adding new entries...</Text>
+  }
+
+  if (!isSelectionActive) {
+    const handleAdd = availableRelations.length > 0 ? () => setSelectionActive(true) : undefined
+    return <SelectedLockees onAdd={handleAdd} />
+  }
+  const handleSelectConfirmation = (relations: Relation[]): void => {
     setAddingLockees(true)
     ;(async () => {
-      const relations = Object.values(selection) as Relation[]
       await Promise.all(
         // eslint-disable-next-line @typescript-eslint/require-await
         relations.map(async relation => vault.addLockee(relation))
@@ -91,15 +118,8 @@ const LockeeList = (): JSX.Element => {
       setAddingLockees(false)
     })
   }
-
-  return <BottomButtonView prototype={elementRelationSelectListAdd} onPress={handleSelectConfirmation}>
-    {
-      availableRelations.map(
-        relation => <SelectEntry key={relation.$modelId} entry={relation} onSelect={handleSelect} />
-      )
-    }
-  </BottomButtonView>
-}
+  return <SelectLockees onSelect={handleSelectConfirmation} />
+})
 
 export const Locks = withNavigation(observer(({ navigation }: ILocksProps): JSX.Element => {
   const { user } = useContext(ConsentoContext)

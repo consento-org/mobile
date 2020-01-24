@@ -24,6 +24,7 @@ export function hasAPI (item: BaseModel<any, any>): boolean {
   return api !== undefined
 }
 
+// TODO: requireAPI is possibly a horrible hack that should be removed...
 export function requireAPI (item: BaseModel<any, any>): IAPI {
   const api = findParent(item, isConsento)?.api
   if (api === undefined) {
@@ -46,14 +47,15 @@ export enum MessageType {
   cancelLockee = 'cancelLockee',
   finalizeLockee = 'finalizeLockee',
   requestUnlock = 'requestUnlock',
-  unlock = 'unlock'
+  unlock = 'unlock',
+  revokeLockee = 'revokeLockee'
 }
 
 export interface IMessage {
   version: number
 }
 
-export type Message = IRequestLockeeMessage | IConfirmLockeeMessage | IUnlockMessage | IFinalizeLockeeMessage | IRequestUnlockMessage
+export type Message = IRequestLockeeMessage | IConfirmLockeeMessage | IUnlockMessage | IFinalizeLockeeMessage | IRequestUnlockMessage | IRevokeLockeeMessage
 
 export interface IRequestUnlockMessage extends IMessage {
   type: MessageType.requestUnlock
@@ -83,6 +85,11 @@ export interface IConfirmLockeeMessage extends IMessage {
 export interface ICancelLockeeMessage extends IMessage {
   type: MessageType.cancelLockee
   id: string
+}
+
+export interface IRevokeLockeeMessage extends IMessage {
+  type: MessageType.revokeLockee
+  lockId: string
 }
 
 export interface IFinalizeLockeeMessage extends IMessage {

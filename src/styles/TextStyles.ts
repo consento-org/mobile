@@ -185,7 +185,7 @@ export const BUTTONRobotoSmallCapRegular18BlackCenter: TextStyle = Object.freeze
 
 export const H2PalanquinDarkMedium36BlackCenter: TextStyle = Object.freeze({
   color: Color.black,
-  fontFamily: Font.PalanquinDarkMedium,
+  fontFamily: Font.Helvetica,
   fontSize: 36,
   textAlign: 'center',
   textTransform: 'none',
@@ -257,7 +257,7 @@ export const time: TextStyle = Object.freeze({
 
 export const waiting: TextStyle = Object.freeze({
   color: Color.white,
-  fontFamily: Font.RobotoMediumItalic,
+  fontFamily: Font.Helvetica,
   fontSize: 26,
   textAlign: 'center',
   textTransform: 'none',
@@ -266,7 +266,7 @@ export const waiting: TextStyle = Object.freeze({
 
 export const LineDivider: TextStyle = Object.freeze({
   color: Color.activeGrey,
-  fontFamily: Font.PalanquinDarkMedium,
+  fontFamily: Font.Helvetica,
   fontSize: 24,
   textAlign: 'center',
   textTransform: 'none',
@@ -275,7 +275,7 @@ export const LineDivider: TextStyle = Object.freeze({
 
 export const Subtitle1SelectedOnSurfaceHighEmphasisLeft: TextStyle = Object.freeze({
   color: '#000000de',
-  fontFamily: Font.RobotoMediumItalic,
+  fontFamily: Font.Helvetica,
   fontSize: 16.16,
   textAlign: 'left',
   textTransform: 'none',
@@ -284,7 +284,7 @@ export const Subtitle1SelectedOnSurfaceHighEmphasisLeft: TextStyle = Object.free
 
 export const CaptionPrimaryOnSurfaceLeft: TextStyle = Object.freeze({
   color: '#546e7aff',
-  fontFamily: Font.RobotoMediumItalic,
+  fontFamily: Font.Helvetica,
   fontSize: 12.12,
   textAlign: 'left',
   textTransform: 'none',

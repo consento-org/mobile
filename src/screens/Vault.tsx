@@ -66,6 +66,11 @@ export const Vault = withNavigation(observer(({ navigation }: { navigation: TNav
       vault.requestUnlock()
     }
   }, [vault.isLoading])
+  useEffect(() => {
+    if (!vault.isOpen && !vault.isPending && !vault.isLoading) {
+      navigation.navigate('vaults')
+    }
+  }, [vault.isPending, vault.isLoading])
   const handleNameEdit = vault.isOpen ? newName => vault.setName(newName) : undefined
   const handleDelete = (): void => confirmDelete(user, vault, navigation)
   const handleLock = vault.isClosable ? () => {

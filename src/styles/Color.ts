@@ -17,5 +17,8 @@ export enum Color {
   activeGrey = '#454545ff',
   avatar1 = '#69bac9ff',
   avatar2 = '#ff3434ff',
-  avatar3 = '#6ac67bff'
+  avatar3 = '#6ac67bff',
+  avatar4 = '#3b53ffff',
+  avatar5 = '#7e6ac6ff',
+  avatar6 = '#ff7436ff'
 }

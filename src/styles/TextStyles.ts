@@ -58,7 +58,7 @@ export const TimestampRobotoSmallCapRegular10RedCenter: TextStyle = Object.freez
 })
 
 export const TITLERobotoSmallCapRegular12BlueCenter: TextStyle = Object.freeze({
-  color: Color.lightBlue,
+  color: Color.avatar1,
   fontFamily: Font.RobotoMedium,
   fontSize: 12,
   textAlign: 'center',

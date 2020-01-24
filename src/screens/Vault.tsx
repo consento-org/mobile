@@ -1,10 +1,11 @@
 import React, { useContext, useEffect } from 'react'
-import { View, ViewStyle, Alert } from 'react-native'
+import { View, ViewStyle, Alert, Image } from 'react-native'
 import { TopNavigation } from './components/TopNavigation'
 import { createTabBar } from './components/createTabBar'
 import { TNavigation } from './navigation'
 import { elementSealVaultActive } from '../styles/component/elementSealVaultActive'
 import { elementSealVaultIdle } from '../styles/component/elementSealVaultIdle'
+import { elementVaultsLoading } from '../styles/component/elementVaultsLoading'
 import { ConsentoButton } from './components/ConsentoButton'
 import { Logs } from './Logs'
 import { Waiting } from './components/Waiting'
@@ -17,6 +18,9 @@ import { User } from '../model/User'
 import { Vault as VaultModel } from '../model/Vault'
 import { Locks } from './components/Locks'
 import { ConsentoContext } from '../model/Consento'
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const animation = require('../../assets/animation/consento_symbol_animation.gif')
 
 const lockStyle: ViewStyle = {
   height: elementSealVaultActive.height,
@@ -82,10 +86,17 @@ export const Vault = withNavigation(observer(({ navigation }: { navigation: TNav
     <View style={{ position: 'absolute', width: '100%', height: '100%' }}>
       <TopNavigation title={vault.name} titlePlaceholder={vault.humanId} back='vaults' onEdit={handleNameEdit} onDelete={handleDelete} />
       {
-        vault.isOpen ? [
-          <LockButton key='lock' onPress={handleLock} />,
-          <VaultNavigator key='vault' navigation={navigation} />
-        ] : <Waiting vault={vault} />
+        vault.isOpen
+          ? [
+            <LockButton key='lock' onPress={handleLock} />,
+            <VaultNavigator key='vault' navigation={navigation} />
+          ]
+          : vault.isLoading
+            ? <View style={{ flexGrow: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              <Image source={animation} style={elementVaultsLoading.placeholder.place.size({})} />
+              {elementVaultsLoading.loadingData.render({})}
+            </View>
+            : <Waiting vault={vault} />
       }
     </View>
   </PopupMenu>

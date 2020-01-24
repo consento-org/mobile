@@ -72,7 +72,8 @@ export class RequestBase extends Model({
   }
 
   acceptAndConfirm (): boolean {
-    return this.accept() && this.confirm()
+    this.accept()
+    return this.confirm()
   }
 
   @modelAction confirm (): boolean {
@@ -90,6 +91,9 @@ export class RequestBase extends Model({
   @computed get state (): TRequestState {
     if (this.cancelled !== null) {
       return TRequestState.cancelled
+    }
+    if (this.confirmed !== null) {
+      return TRequestState.confirmed
     }
     if (this.denied !== null) {
       return TRequestState.denied

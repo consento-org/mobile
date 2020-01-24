@@ -160,6 +160,15 @@ export const Asset = {
   avatarEyes3 () {
     return images.fetch('avatarEyes3', () => require('../assets/avatar/eyes/3.png'))
   },
+  avatarEyes4 () {
+    return images.fetch('avatarEyes4', () => require('../assets/avatar/eyes/4.png'))
+  },
+  avatarEyes5 () {
+    return images.fetch('avatarEyes5', () => require('../assets/avatar/eyes/5.png'))
+  },
+  avatarEyes6 () {
+    return images.fetch('avatarEyes6', () => require('../assets/avatar/eyes/6.png'))
+  },
   avatarFace1 () {
     return images.fetch('avatarFace1', () => require('../assets/avatar/face/1.png'))
   },
@@ -168,6 +177,15 @@ export const Asset = {
   },
   avatarFace3 () {
     return images.fetch('avatarFace3', () => require('../assets/avatar/face/3.png'))
+  },
+  avatarFace4 () {
+    return images.fetch('avatarFace4', () => require('../assets/avatar/face/4.png'))
+  },
+  avatarFace5 () {
+    return images.fetch('avatarFace5', () => require('../assets/avatar/face/5.png'))
+  },
+  avatarFace6 () {
+    return images.fetch('avatarFace6', () => require('../assets/avatar/face/6.png'))
   },
   avatarHairAbove1 () {
     return images.fetch('avatarHairAbove1', () => require('../assets/avatar/hair/above/1.png'))
@@ -178,6 +196,15 @@ export const Asset = {
   avatarHairAbove3 () {
     return images.fetch('avatarHairAbove3', () => require('../assets/avatar/hair/above/3.png'))
   },
+  avatarHairAbove4 () {
+    return images.fetch('avatarHairAbove4', () => require('../assets/avatar/hair/above/4.png'))
+  },
+  avatarHairAbove5 () {
+    return images.fetch('avatarHairAbove5', () => require('../assets/avatar/hair/above/5.png'))
+  },
+  avatarHairAbove6 () {
+    return images.fetch('avatarHairAbove6', () => require('../assets/avatar/hair/above/6.png'))
+  },
   avatarHairBelow1 () {
     return images.fetch('avatarHairBelow1', () => require('../assets/avatar/hair/below/1.png'))
   },
@@ -186,6 +213,15 @@ export const Asset = {
   },
   avatarHairBelow3 () {
     return images.fetch('avatarHairBelow3', () => require('../assets/avatar/hair/below/3.png'))
+  },
+  avatarHairBelow4 () {
+    return images.fetch('avatarHairBelow4', () => require('../assets/avatar/hair/below/4.png'))
+  },
+  avatarHairBelow5 () {
+    return images.fetch('avatarHairBelow5', () => require('../assets/avatar/hair/below/5.png'))
+  },
+  avatarHairBelow6 () {
+    return images.fetch('avatarHairBelow6', () => require('../assets/avatar/hair/below/6.png'))
   },
   avatarMouth1 () {
     return images.fetch('avatarMouth1', () => require('../assets/avatar/mouth/1.png'))
@@ -196,6 +232,15 @@ export const Asset = {
   avatarMouth3 () {
     return images.fetch('avatarMouth3', () => require('../assets/avatar/mouth/3.png'))
   },
+  avatarMouth4 () {
+    return images.fetch('avatarMouth4', () => require('../assets/avatar/mouth/4.png'))
+  },
+  avatarMouth5 () {
+    return images.fetch('avatarMouth5', () => require('../assets/avatar/mouth/5.png'))
+  },
+  avatarMouth6 () {
+    return images.fetch('avatarMouth6', () => require('../assets/avatar/mouth/6.png'))
+  },
   avatarNose1 () {
     return images.fetch('avatarNose1', () => require('../assets/avatar/nose/1.png'))
   },
@@ -204,6 +249,15 @@ export const Asset = {
   },
   avatarNose3 () {
     return images.fetch('avatarNose3', () => require('../assets/avatar/nose/3.png'))
+  },
+  avatarNose4 () {
+    return images.fetch('avatarNose4', () => require('../assets/avatar/nose/4.png'))
+  },
+  avatarNose5 () {
+    return images.fetch('avatarNose5', () => require('../assets/avatar/nose/5.png'))
+  },
+  avatarNose6 () {
+    return images.fetch('avatarNose6', () => require('../assets/avatar/nose/6.png'))
   },
   avatarUnknown () {
     return images.fetch('avatarUnknown', () => require('../assets/avatar/unknown.png'))

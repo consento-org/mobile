@@ -3,12 +3,12 @@ import { tProp, model, modelAction, Model, types, modelIdKey, BaseModel } from '
 import { now } from './now'
 
 export enum TRequestState {
-  deleted = 'deleted',
-  accepted = 'accepted',
-  denied = 'denied',
-  cancelled = 'cancelled',
-  expired = 'expired',
-  active = 'active'
+  accepted = 'accepted', // When "accept" on a request is pressed
+  confirmed = 'confirmed', // When the "accept" call is confirmed by the other party
+  denied = 'denied', // When the "deny" on the request is pressed
+  cancelled = 'cancelled', // When the other party cancelled the request
+  expired = 'expired', // When the request expired
+  active = 'active' // When the hasn't expired yet and is active
 }
 
 export interface IRequestBase extends BaseModel<any, any> {
@@ -43,7 +43,9 @@ export class RequestBase extends Model({
   keepAlive: tProp(types.number),
   accepted: tProp(types.maybeNull(types.number), () => null),
   denied: tProp(types.maybeNull(types.number), () => null),
-  cancelled: tProp(types.maybeNull(types.number), () => null)
+  confirmed: tProp(types.maybeNull(types.number), () => null),
+  cancelled: tProp(types.maybeNull(types.number), () => null),
+  deleted: tProp(types.boolean, () => false)
 }) {
   @modelAction accept (): boolean {
     if (this.isActive) {
@@ -64,6 +66,18 @@ export class RequestBase extends Model({
   @modelAction deny (): boolean {
     if (this.isActive) {
       this.denied = Date.now()
+      return true
+    }
+    return false
+  }
+
+  acceptAndConfirm (): boolean {
+    return this.accept() && this.confirm()
+  }
+
+  @modelAction confirm (): boolean {
+    if (this.isAccepted) {
+      this.confirmed = Date.now()
       return true
     }
     return false

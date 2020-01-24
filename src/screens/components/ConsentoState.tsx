@@ -6,12 +6,16 @@ import { elementConsentosBaseIdle } from '../../styles/component/elementConsento
 import { elementConsentosBaseDenied } from '../../styles/component/elementConsentosBaseDenied'
 import { elementConsentosBaseExpired } from '../../styles/component/elementConsentosBaseExpired'
 import { elementConsentosBaseAccepted } from '../../styles/component/elementConsentosBaseAccepted'
+import { elementConsentosBaseConfirming } from '../../styles/component/elementConsentosBaseConfirming'
 import { TRequestState } from '../../model/RequestBase'
+import { exists } from '../../util/exists'
+import { useHumanUntil } from '../../util/useHumanUntil'
+import { elementConsentosBaseCancelled } from '../../styles/component/elementConsentosBaseCancelled'
 
 interface IStateStyle {
   state: Text
   line: Polygon
-  deleteButton: Link<any, { label: string }>
+  deleteButton?: Link<any, { label: string }>
 }
 
 function HorzLine ({ proto }: { proto: Polygon }): JSX.Element {
@@ -24,14 +28,26 @@ function HorzLine ({ proto }: { proto: Polygon }): JSX.Element {
   }} />
 }
 
-export function ConsentoState ({ state, style, onDelete, onAccept }: { state: TRequestState, onDelete: () => any, onAccept: () => any, style?: ViewStyle }): JSX.Element {
+export interface IConsentoState {
+  state: TRequestState
+  onDelete: () => any
+  onAccept: () => any
+  style?: ViewStyle
+  expiration?: number
+}
+
+export const TimeDisplay = ({ expiration }: { expiration: number }): JSX.Element => {
+  return <elementConsentosBaseIdle.timeLeft.Render value={useHumanUntil(expiration)} />
+}
+
+export function ConsentoState ({ state, style, onDelete, onAccept, expiration }: IConsentoState): JSX.Element {
   const viewStyle: ViewStyle = {
     position: 'absolute',
     ...style
   }
   if (state === TRequestState.active) {
     return <View style={viewStyle}>
-      <elementConsentosBaseIdle.timeLeft.Render value='1235' />
+      {exists(expiration) ? <TimeDisplay expiration={expiration} /> : null}
       <ConsentoButton
         style={{ ...elementConsentosBaseIdle.allowButton.place.style(), position: 'absolute' }}
         light
@@ -49,22 +65,30 @@ export function ConsentoState ({ state, style, onDelete, onAccept }: { state: TR
     </View>
   }
   const stateStyle: IStateStyle = (
-    state === TRequestState.denied
-      ? elementConsentosBaseDenied
-      : state === TRequestState.expired
-        ? elementConsentosBaseExpired
-        : elementConsentosBaseAccepted
+    state === TRequestState.cancelled
+      ? elementConsentosBaseCancelled
+      : state === TRequestState.denied
+        ? elementConsentosBaseDenied
+        : state === TRequestState.expired
+          ? elementConsentosBaseExpired
+          : state === TRequestState.confirmed
+            ? elementConsentosBaseAccepted
+            : elementConsentosBaseConfirming
   )
   return <View style={viewStyle}>
     <HorzLine proto={stateStyle.line} />
     <stateStyle.state.Render />
-    <ConsentoButton
-      style={{ ...stateStyle.deleteButton.place.style(), position: 'absolute' }}
-      thin
-      title={
-        stateStyle.deleteButton.text.label
-      }
-      onPress={onDelete}
-    />
+    {
+      exists(stateStyle.deleteButton)
+        ? <ConsentoButton
+          style={{ ...stateStyle.deleteButton.place.style(), position: 'absolute' }}
+          thin
+          title={
+            stateStyle.deleteButton.text.label
+          }
+          onPress={onDelete}
+        />
+        : null
+    }
   </View>
 }

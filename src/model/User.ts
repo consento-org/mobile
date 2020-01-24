@@ -14,6 +14,7 @@ import { mapSubscriptions } from './mapSubscriptions'
 import { exists } from '../util/exists'
 import { combinedDispose } from '../util/combinedDispose'
 import { map } from '../util/map'
+import { reduce } from '../util/reduce'
 
 const ASSUMED_SAFETY_DELAY: number = 1000 // Lets count off a second for network overhead
 
@@ -93,6 +94,11 @@ export class User extends Model({
             if (consento.isCancelled && consento.isHidden) {
               // TODO: this cleanup process for consentos that are deleted works but it its
               //       very had to understand
+              this.consentos.delete(consento)
+            }
+          }
+          if (consento instanceof ConsentoUnlockVault) {
+            if (consento.deleted) {
               this.consentos.delete(consento)
             }
           }
@@ -239,7 +245,7 @@ export class User extends Model({
   }
 
   availableRelations (vault: Vault): Relation[] {
-    const usedRelations = vault.data?.lockees.items.reduce((map: { [key: string]: true }, vaultLockee) => {
+    const usedRelations = reduce(vault.data?.lockees.values(), (map: { [key: string]: true }, vaultLockee) => {
       map[vaultLockee.relationId] = true
       return map
     }, {})

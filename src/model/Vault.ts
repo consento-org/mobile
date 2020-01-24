@@ -168,13 +168,15 @@ export class Vault extends Model({
         for (const notification of this.pendingNotifications) {
           this.pendingNotifications.delete(notification)
           const message = notification.body as Message
-          if (message.type !== MessageType.confirmLockee) {
-            continue
-          }
-          for (const pendingLock of this.pendingLocks) {
-            if (pendingLock.lockeeId === message.lockId) {
-              this.processPendingNotification(pendingLock, notification, api)
-              break
+          if (
+            message.type === MessageType.confirmLockee ||
+            message.type === MessageType.denyLockee
+          ) {
+            for (const pendingLock of this.pendingLocks) {
+              if (pendingLock.lockeeId === message.lockId) {
+                this.processPendingNotification(pendingLock, notification, api)
+                break
+              }
             }
           }
         }
@@ -188,6 +190,13 @@ export class Vault extends Model({
       if (message.type === MessageType.confirmLockee) {
         this.confirmLockee(pendingLock, message, api)
           .catch(confirmLockeeError => console.error({ confirmLockeeError }))
+      }
+      if (message.type === MessageType.denyLockee) {
+        try {
+          this.denyLockee(pendingLock)
+        } catch (denyLockeeError) {
+          console.error({ denyLockeeError })
+        }
       }
     } else {
       this.pendingNotifications.add(notification)
@@ -261,6 +270,15 @@ export class Vault extends Model({
   @modelAction _addPendingLockee (lockee: VaultLockee, pendingLock: PendingLock): void {
     this.data.lockees.add(lockee)
     this.pendingLocks.add(pendingLock)
+  }
+
+  denyLockee (pendingLock: PendingLock): void {
+    const { vaultLockee } = pendingLock
+    if (!vaultLockee.initPending) {
+      console.log(`Warning: Repeat denial for vaultLockee ${vaultLockee.$modelId}`)
+      return
+    }
+    this._removePendingLockee(vaultLockee, pendingLock)
   }
 
   async confirmLockee (pendingLock: PendingLock, confirm: IConfirmLockeeMessage, api: IAPI): Promise<void> {

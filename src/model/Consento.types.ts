@@ -47,6 +47,7 @@ export enum MessageType {
   cancelLockee = 'cancelLockee',
   finalizeLockee = 'finalizeLockee',
   requestUnlock = 'requestUnlock',
+  denyLockee = 'denyLockee',
   unlock = 'unlock',
   revokeLockee = 'revokeLockee'
 }
@@ -55,7 +56,7 @@ export interface IMessage {
   version: number
 }
 
-export type Message = IRequestLockeeMessage | IConfirmLockeeMessage | IUnlockMessage | IFinalizeLockeeMessage | IRequestUnlockMessage | IRevokeLockeeMessage
+export type Message = IRequestLockeeMessage | IConfirmLockeeMessage | IDenyLockeeMessage | IUnlockMessage | IFinalizeLockeeMessage | IRequestUnlockMessage | IRevokeLockeeMessage
 
 export interface IRequestUnlockMessage extends IMessage {
   type: MessageType.requestUnlock
@@ -66,6 +67,11 @@ export interface IRequestUnlockMessage extends IMessage {
 export interface IUnlockMessage extends IMessage {
   type: MessageType.unlock
   shareHex: string
+}
+
+export interface IDenyLockeeMessage extends IMessage {
+  type: MessageType.denyLockee
+  lockId: string
 }
 
 export interface IRequestLockeeMessage extends IMessage {

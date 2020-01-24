@@ -7,10 +7,10 @@ const timespan = new Timespan({
 })
 
 function stringify (timestamp): string {
-  return `${timespan.parse(Date.now() - timestamp)} ago`
+  return `${timespan.parse(timestamp - Date.now())} left`
 }
 
-export function useHumanSince (timestamp: number): string {
+export function useHumanUntil (timestamp: number): string {
   const [humanTime, setHumanTime] = useState<string>(() => stringify(timestamp))
   useInterval(() => {
     const newTimestamp = stringify(timestamp)

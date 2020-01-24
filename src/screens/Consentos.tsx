@@ -1,4 +1,4 @@
-import React, { useContext } from 'react'
+import React, { useContext, useEffect } from 'react'
 import { View, ViewStyle, ScrollView } from 'react-native'
 import { observer } from 'mobx-react'
 import { EmptyView } from './components/EmptyView'
@@ -119,6 +119,9 @@ export const ConsentosScreen = observer(() => {
   if (!exists(user)) {
     return
   }
+  useEffect(() => {
+    user.recordConsentosView()
+  }, [])
   const { consentos } = user
   const visibleConsentos = filter(
     consentos.values(),

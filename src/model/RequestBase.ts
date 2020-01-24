@@ -47,6 +47,10 @@ export class RequestBase extends Model({
   cancelled: tProp(types.maybeNull(types.number), () => null),
   deleted: tProp(types.boolean, () => false)
 }) {
+  get creationTime (): number {
+    return this.time
+  }
+
   @modelAction accept (): boolean {
     if (this.isActive) {
       this.accepted = Date.now()

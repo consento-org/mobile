@@ -4,6 +4,7 @@ import { Relation } from './Relation'
 import { IAnyConsento, ConsentoBecomeLockee, ConsentoUnlockVault } from './Consentos'
 import { computed, autorun } from 'mobx'
 import { find } from '../util/find'
+import { contains } from '../util/contains'
 import { mobxPersist } from '../util/mobxPersist'
 import { compareNames, ISortable } from '../util/compareNames'
 import { VaultLockee } from './VaultData'
@@ -139,6 +140,9 @@ export class User extends Model({
           }
           ;(async () => {
             const accept = await api.crypto.acceptHandshake(Buffer.from(message.firstMessageBase64, 'base64'))
+            if (contains(this.consentos, consento => consento instanceof ConsentoBecomeLockee && consento.lockId === message.lockId)) {
+              return
+            }
             this.consentos.add(new ConsentoBecomeLockee({
               relation: relationRefInUser(relation),
               acceptHandshakeJSON: accept.toJSON(),

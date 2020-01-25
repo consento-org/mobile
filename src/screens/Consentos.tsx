@@ -119,9 +119,7 @@ export const ConsentosScreen = observer(() => {
   if (!exists(user)) {
     return
   }
-  useEffect(() => {
-    user.recordConsentosView()
-  }, [])
+  user.recordConsentosView()
   const { consentos } = user
   const visibleConsentos = filter(
     consentos.values(),

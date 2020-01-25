@@ -1,8 +1,8 @@
-import { ReactNode } from 'react'
-import { createMaterialTopTabNavigator } from 'react-navigation-tabs'
+import { FunctionComponent } from 'react'
+import { createMaterialTopTabNavigator, NavigationMaterialTabOptions, NavigationTabProp } from 'react-navigation-tabs'
 import { elementTabBarTabActive } from '../../styles/component/elementTabBarTabActive'
 import { elementTabBarTabResting } from '../../styles/component/elementTabBarTabResting'
-import { resources } from '../../resources'
+import { NavigationRouteConfigMap, NavigationRoute, NavigationParams, NavigationRouteConfig } from 'react-navigation'
 
 const config = {
   tabBarOptions: {
@@ -23,21 +23,30 @@ const config = {
   }
 }
 
-const { t } = resources.ctx('navigation')
+export interface ITabConfig {
+  [key: string]: {
+    label: string
+    screen: FunctionComponent<any>
+  }
+}
 
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-function createTabs (tabs: { [key: string]: () => ReactNode }) {
+type NavigationTab = NavigationTabProp<NavigationRoute<NavigationParams>, any>
+type BottomTabBarTabs = NavigationRouteConfigMap<NavigationMaterialTabOptions, NavigationTab>
+
+function createTabs (tabs: ITabConfig): BottomTabBarTabs {
   const res = {}
   for (const key in tabs) {
-    res[t(key)] = {
+    const { label, screen } = tabs[key]
+    const tab: NavigationRouteConfig<NavigationMaterialTabOptions, NavigationTab> = {
       path: key,
-      screen: tabs[key]
+      screen
     }
+    res[label] = tab
   }
   return res
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export function createTabBar (tabs: { [key: string]: () => ReactNode }) {
+export function createTabBar (tabs: ITabConfig) {
   return createMaterialTopTabNavigator(createTabs(tabs), config)
 }

@@ -1,4 +1,4 @@
-import { model, Model, prop, arraySet, Ref, findParent, tProp, types, modelAction, customRef, JsonPatch, SnapshotOutOf, ArraySet } from 'mobx-keystone'
+import { model, Model, prop, arraySet, Ref, findParent, tProp, types, modelAction, customRef, JsonPatch, SnapshotOutOf } from 'mobx-keystone'
 import { Vault } from './Vault'
 import { Relation } from './Relation'
 import { IAnyConsento, ConsentoBecomeLockee, ConsentoUnlockVault } from './Consentos'

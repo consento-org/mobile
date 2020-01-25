@@ -50,9 +50,18 @@ function confirmDelete (user: User, vault: VaultModel, navigation: TNavigation):
 }
 
 const VaultNavigator = createTabBar({
-  vaultData: () => <FileList />,
-  vaultLocks: () => <Locks />,
-  vaultLog: () => <Logs />
+  vaultData: {
+    label: 'Vaults',
+    screen: () => <FileList />
+  },
+  vaultLocks: {
+    label: 'Locks',
+    screen: () => <Locks />
+  },
+  vaultLog: {
+    label: 'Logs',
+    screen: () => <Logs />
+  }
 })
 
 function LockButton (props: { onPress?: () => any }): JSX.Element {

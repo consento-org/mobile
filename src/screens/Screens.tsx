@@ -20,6 +20,17 @@ import { Camera } from './Camera'
 import { TextEditor } from './TextEditor'
 import { ImageEditor } from './ImageEditor'
 import { ConsentoContext } from '../model/Consento'
+import { Asset } from '../Asset'
+
+const ConsentosIcon = observer(({ focused }: { focused: boolean }): JSX.Element => {
+  const { user } = useContext(ConsentoContext)
+  const hasNewNotifications = user.newConsentosCount > 0
+  return focused
+    ? Asset.iconConsentoActive().img()
+    : hasNewNotifications
+      ? Asset.iconConsentoNotificationNew().img()
+      : Asset.iconConsentoIdle().img()
+})
 
 export const Screens = observer((): JSX.Element => {
   const { user } = useContext(ConsentoContext)
@@ -28,9 +39,21 @@ export const Screens = observer((): JSX.Element => {
       main: {
         path: '',
         screen: createBottomTabBar({
-          vaults: () => <VaultsScreen />,
-          consentos: () => <ConsentosScreen />,
-          relations: () => <RelationsScreen />
+          vaults: {
+            label: 'Vaults',
+            screen: () => <VaultsScreen />,
+            tabBarIcon: ({ focused }) => focused ? Asset.iconVaultActive().img() : Asset.iconVaultIdle().img()
+          },
+          consentos: {
+            label: 'Consentos',
+            screen: () => <ConsentosScreen />,
+            tabBarIcon: ({ focused }: { focused: boolean }) => <ConsentosIcon focused={focused} />
+          },
+          relations: {
+            label: 'Relations',
+            screen: () => <RelationsScreen />,
+            tabBarIcon: ({ focused }) => focused ? Asset.iconRelationsActive().img() : Asset.iconRelationsIdle().img()
+          }
         })
       },
       vault: {

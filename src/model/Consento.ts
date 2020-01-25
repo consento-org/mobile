@@ -68,14 +68,14 @@ function createTransport (address: string): {
   destructTransport: () => void
 } {
   if (/^\/\//.test(address)) {
-    address = `https://${address}`
+    address = `https:${address}`
   }
   const notificationTransport = new ExpoTransport({
     address,
     getToken: getExpoToken
   })
   notificationTransport.on('error', (error) => {
-    console.log({ transportError: error })
+    console.log({ transportError: error, address })
   })
   let cancel: () => void
   const stateChange = (state: AppStateStatus): void => {

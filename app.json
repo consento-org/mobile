@@ -2,8 +2,8 @@
   "name": "consento",
   "displayName": "Consento",
   "expo": {
-    "name": "consento",
-    "slug": "expo-template-bare",
+    "name": "Consento",
+    "slug": "consento",
     "privacy": "unlisted",
     "sdkVersion": "36.0.0",
     "version": "1.0.0",
@@ -13,6 +13,19 @@
       "android",
       "web"
     ],
-    "description": "Consento Mobile App"
+    "description": "Consento Mobile",
+    "icon": "./assets/icon/logo@16x.png",
+    "githubUrl": "https://github.com/consento-org/mobile",
+    "androidStatusBar": {
+      "barStyle": "light-content",
+      "backgroundColor": "#484848"
+    },
+    "splash": {
+      "backgroundColor": "#FCFCFC"
+    },
+    "android": {
+      "package": "org.consento.mobile",
+      "versionCode": 1
+    }
   }
 }

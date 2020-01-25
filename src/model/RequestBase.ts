@@ -93,6 +93,10 @@ export class RequestBase extends Model({
   }
 
   @computed get state (): TRequestState {
+    return this._state
+  }
+
+  get _state (): TRequestState {
     if (this.cancelled !== null) {
       return TRequestState.cancelled
     }

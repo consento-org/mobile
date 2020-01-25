@@ -1,6 +1,6 @@
 import { Relation } from './Relation'
 import { RequestBase, TRequestState } from './RequestBase'
-import { tProp, types, model, ExtendedModel, Model, modelAction, prop, Ref } from 'mobx-keystone'
+import { tProp, types, model, ExtendedModel, Model, modelAction, prop } from 'mobx-keystone'
 import { computed, toJS } from 'mobx'
 import { requireAPI, IConfirmLockeeMessage, MessageType, hasAPI, IUnlockMessage, IDenyLockeeMessage } from './Consento.types'
 import { IHandshakeAcceptMessage, IHandshakeAcceptJSON, IHandshakeAccept, IAPI, IConnection } from '@consento/api'
@@ -8,6 +8,7 @@ import { Alert } from 'react-native'
 import { Receiver, Sender } from './Connection'
 import { Buffer } from 'buffer'
 import { humanModelId } from '../util/humanModelId'
+import { exists } from '../util/exists'
 
 function confirmLockeeMessage (lockId: string, acceptMessage: IHandshakeAcceptMessage): IConfirmLockeeMessage {
   return {
@@ -195,37 +196,41 @@ export class ConsentoBecomeLockee extends Model({
 
 @model('consento/consentos/UnlockVault')
 export class ConsentoUnlockVault extends ExtendedModel(RequestBase, {
-  becomeUnlockee: tProp(types.ref<ConsentoBecomeLockee>())
+  becomeUnlockee: tProp(types.ref<ConsentoBecomeLockee>()),
+  relation: tProp(types.ref<Relation>()),
+  vaultName: tProp(types.string)
 }) {
   get receiver (): Receiver {
     return null
   }
 
-  @computed get relationName (): string {
-    return this.becomeUnlockee.current.relationName
+  @computed get state (): TRequestState {
+    if (!exists(this.becomeUnlockee.maybeCurrent)) {
+      return TRequestState.cancelled
+    }
+    if (this.becomeUnlockee.current.isCancelled) {
+      return TRequestState.cancelled
+    }
+    return this._state
   }
 
-  @computed get relationHumanId (): string {
-    return this.becomeUnlockee.current.relationHumanId
+  @computed get relationName (): string {
+    return this.relation.maybeCurrent?.name
   }
 
   @computed get relationAvatarId (): string {
-    return this.becomeUnlockee.current.relationAvatarId
+    return this.relation.maybeCurrent?.avatarId
   }
 
-  get vaultName (): string {
-    return this.becomeUnlockee.current.vaultName
-  }
-
-  get relation (): Ref<Relation> {
-    return this.becomeUnlockee.current.relation
+  @computed get relationHumanId (): string {
+    return humanModelId(this.relation.id)
   }
 
   @computed get handleAccept (): () => any {
     if (this.isActive) {
       const api = requireAPI(this)
       return () => {
-        const { shareHex, sender } = this.becomeUnlockee.current
+        const { shareHex, sender } = this.becomeUnlockee.maybeCurrent
         ;(async (): Promise<void> => {
           this.acceptAndConfirm()
           await api.notifications.send(

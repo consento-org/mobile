@@ -208,6 +208,8 @@ export class User extends Model({
             const becomeUnlockee = becomeUnlockeeRefInUser(consento.$modelId)
             this.consentos.add(new ConsentoUnlockVault({
               keepAlive: message.keepAlive - ASSUMED_SAFETY_DELAY,
+              relation: relationRefInUser(consento.relation.id),
+              vaultName: consento.vaultName,
               time: message.time,
               becomeUnlockee
             }))

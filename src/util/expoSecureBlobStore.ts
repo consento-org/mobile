@@ -1,7 +1,11 @@
 import { sodium } from '@consento/crypto/core/sodium'
 import { Buffer, bufferToString, IEncodable, toBuffer } from '@consento/crypto/util/buffer'
 import { expoStore } from './expoStore'
-import { readAsStringAsync, deleteAsync } from 'expo-file-system'
+import { askAsync, CAMERA_ROLL } from 'expo-permissions'
+import * as Sharing from 'expo-sharing'
+import { cache } from './expoFsUtils'
+import { readAsStringAsync, deleteAsync } from 'expo-file-system/build/FileSystem'
+import { Clipboard } from 'react-native'
 
 export async function pathForSecretKey (secretKey: Uint8Array): Promise<string[]> {
   const locationKey = await sodium.deriveKdfKey(secretKey)
@@ -42,6 +46,78 @@ export async function importFile (fileUri: string, doDelete?: boolean): Promise<
       })
   }
   return writeBlob(toBuffer(dataAsString))
+}
+
+export async function share (data: string | Uint8Array, filename: string): Promise<void> {
+  const permission = await askAsync(CAMERA_ROLL)
+  if (!permission.granted) {
+    return null
+  }
+  const path = [...await cache.mkdirTmpAsync(), filename]
+  await cache.write(path, data)
+  await Sharing.shareAsync(cache.resolve(path))
+  await cache.delete(path)
+}
+
+export async function shareBlob (input: string | Uint8Array | IEncryptedBlob, target: string): Promise<void> {
+  const data = await readBlob(input)
+  if (typeof data === 'string' || data instanceof Uint8Array) {
+    return share(data, target)
+  }
+  return share(JSON.stringify(data, null, 2), target)
+}
+
+export async function copyToClipboard (input: string | Uint8Array, title: string): Promise<boolean> {
+  const data = await readBlob(input)
+  if (typeof data === 'string') {
+    Clipboard.setString(`${title}
+
+${data}`)
+    return true
+  }
+  return false
+}
+
+export async function exportData (data: string | Uint8Array, target: string): Promise<string> {
+  const permission = await askAsync(CAMERA_ROLL)
+  if (!permission.granted) {
+    return null
+  }
+  /*
+  const id = bufferToBase32(randomBytes(new Uint8Array(4))).toUpperCase()
+  const filename = `${target}`
+  const cacheDir = `${cacheDirectory}${id}/`
+  await makeDirectoryAsync(cacheDir)
+  const cacheUri = `${cacheDir}${filename}`
+  await writeAsStringAsync(
+    cacheUri,
+    typeof data === 'string' ? data : bufferToString(data, 'base64'),
+    { encoding: typeof data === 'string' ? 'utf8' : 'base64' }
+  )
+  // await MediaLibrary.saveToLibraryAsync(cacheUri)
+  const asset = await MediaLibrary.createAssetAsync(cacheUri)
+  const album = await MediaLibrary.createAlbumAsync('Consento', asset, true)
+  // await deleteAsync(cacheUri)
+  console.log(asset)
+  const info = await MediaLibrary.getAssetInfoAsync(asset.id)
+  // MediaLibrary.getAssetsAsync()
+  // await Sharing.shareAsync(asset.uri)
+  // console.log(info)
+  console.log(album)
+  console.log(info)
+  console.log(await Sharing.isAvailableAsync())
+  await Sharing.shareAsync(cacheUri)
+  await deleteAsync(cacheUri)
+  */
+  return null
+}
+
+export async function exportBlob (input: string | Uint8Array | IEncryptedBlob, target: string): Promise<string> {
+  const data = await readBlob(input)
+  if (typeof data === 'string' || data instanceof Uint8Array) {
+    return exportData(data, target)
+  }
+  return exportData(JSON.stringify(data, null, 2), target)
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function

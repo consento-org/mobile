@@ -14,12 +14,31 @@ export interface IEncryptedBlob {
   path: string[]
 }
 
+export function isEncryptedBlob (input: any): input is IEncryptedBlob {
+  if (typeof input !== 'object' || input === null) {
+    return false
+  }
+  if (!(input.secretKey instanceof Uint8Array)) {
+    return false
+  }
+  const { path } = input
+  if (!Array.isArray(path)) {
+    return false
+  }
+  for (const element of path) {
+    if (typeof element !== 'string') {
+      return false
+    }
+  }
+  return input.size === null || input.size === undefined || typeof input.size === 'number'
+}
+
 export async function importFile (fileUri: string, doDelete?: boolean): Promise<IEncryptedBlob> {
   const dataAsString = await readAsStringAsync(fileUri, { encoding: 'base64' })
   if (doDelete) {
     deleteAsync(fileUri)
       .catch(err => {
-        console.log(`Warning: Import of ${fileUri} worked but the original file was not deleted: ${err}`)
+        console.log(`Warning: Import of ${fileUri} worked, but the original file was not deleted: ${String(err)}`)
       })
   }
   return writeBlob(toBuffer(dataAsString))
@@ -36,6 +55,7 @@ export async function writeBlob (encodable: IEncodable): Promise<IEncryptedBlob>
     .encrypt(secretKey, encodable)
     .then(async encrypted => expoStore.write(path, encrypted))
     .then(() => {
+      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
       delete CACHE[path.join('/')]
       return encodable
     })

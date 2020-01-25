@@ -10,7 +10,7 @@ import { getExpoToken } from '../util/getExpoToken'
 import { Notifications } from 'expo'
 import { Notification } from 'expo/build/Notifications/Notifications.types'
 import { cryptoCore } from '../cryptoCore'
-import { rimraf } from '../util/expoRimraf'
+import { systemRimraf } from '../util/systemRimraf'
 import { first } from '../util/first'
 import { combinedDispose } from '../util/combinedDispose'
 import { vaultStore } from './VaultStore'
@@ -207,7 +207,7 @@ export class Consento extends Model({
     const api = this._api
     this._setApi(undefined)
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    rimraf('').finally(() => this._setApi(api))
+    systemRimraf().finally(() => this._setApi(api))
   }
 
   onAttachedToRootStore (): () => void {

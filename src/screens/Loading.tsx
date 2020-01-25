@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { View, ViewStyle, TouchableWithoutFeedback, Alert } from 'react-native'
 import { screen01Welcome } from '../styles/component/screen01Welcome'
-import { rimraf } from '../util/expoRimraf'
+import { systemRimraf } from '../util/systemRimraf'
 
 const style: ViewStyle = {
   justifyContent: 'center',
@@ -35,7 +35,7 @@ export function Loading (): JSX.Element {
           {
             text: 'reset',
             onPress: () => {
-              rimraf('').catch(rimrafError => console.error({ rimrafError }))
+              systemRimraf().catch(rimrafError => console.error({ rimrafError }))
             },
             style: 'destructive'
           },

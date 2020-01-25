@@ -328,6 +328,7 @@ export class Vault extends Model({
     }
     this.pendingLocks.delete(find(this.pendingLocks, (pendingLock): pendingLock is PendingLock => pendingLock.lockId === lockee.lockId))
     this.locks.delete(find(this.locks, (lock): lock is Lock => lock.lockId === lockee.lockId))
+    this._updateLocks()
     const { notifications, crypto } = requireAPI(this)
     const sender = lockee.sender ?? relation?.connection.sender ?? null
     if (sender === null) {
@@ -341,7 +342,8 @@ export class Vault extends Model({
 
   _updateLocks (): void {
     (async (): Promise<void> => {
-      return expoVaultSecrets.toggleDevicePersistence(this.dataKeyHex, this.locks.size > 0)
+      const persistOnDevice = this.locks.size === 0
+      return expoVaultSecrets.toggleDevicePersistence(this.dataKeyHex, persistOnDevice)
     })().catch(error => console.log({ error }))
   }
 

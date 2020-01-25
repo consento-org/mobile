@@ -47,6 +47,10 @@ export class RequestBase extends Model({
   cancelled: tProp(types.maybeNull(types.number), () => null),
   deleted: tProp(types.boolean, () => false)
 }) {
+  get creationTime (): number {
+    return this.time
+  }
+
   @modelAction accept (): boolean {
     if (this.isActive) {
       this.accepted = Date.now()
@@ -72,7 +76,8 @@ export class RequestBase extends Model({
   }
 
   acceptAndConfirm (): boolean {
-    return this.accept() && this.confirm()
+    this.accept()
+    return this.confirm()
   }
 
   @modelAction confirm (): boolean {
@@ -90,6 +95,9 @@ export class RequestBase extends Model({
   @computed get state (): TRequestState {
     if (this.cancelled !== null) {
       return TRequestState.cancelled
+    }
+    if (this.confirmed !== null) {
+      return TRequestState.confirmed
     }
     if (this.denied !== null) {
       return TRequestState.denied

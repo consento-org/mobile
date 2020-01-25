@@ -24,7 +24,7 @@ export function Loading (): JSX.Element {
     return () => clearInterval(interval)
   })
   if (count > 0) {
-    console.log(`${count}/${DELETE_THRESHOLD}`)
+    console.log(`${count.toString()}/${DELETE_THRESHOLD.toString()}`)
   }
   return <TouchableWithoutFeedback onPress={() => {
     if (count > DELETE_THRESHOLD) {

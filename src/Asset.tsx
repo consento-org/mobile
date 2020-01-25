@@ -310,6 +310,12 @@ export const Asset = {
   iconConsentoIdle () {
     return images.fetch('iconConsentoIdle', () => require('../assets/icon/consento/idle.png'))
   },
+  iconConsentoNotificationNew () {
+    return images.fetch('iconConsentoNotificationNew', () => require('../assets/icon/consento/notification-new.png'))
+  },
+  iconConsentoNotificationWithNumber () {
+    return images.fetch('iconConsentoNotificationWithNumber', () => require('../assets/icon/consento/notification-with-number.png'))
+  },
   iconCrossGrey () {
     return images.fetch('iconCrossGrey', () => require('../assets/icon/cross/grey.png'))
   },

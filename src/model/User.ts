@@ -84,7 +84,8 @@ export class User extends Model({
   loaded: tProp(types.boolean, false),
   vaults: prop(() => arraySet<Vault>()),
   relations: prop(() => arraySet<Relation>()),
-  consentos: prop(() => arraySet<IAnyConsento>())
+  consentos: prop(() => arraySet<IAnyConsento>()),
+  lastConsentosView: prop(() => null)
 }) {
   onAttachedToRootStore (): () => any {
     return combinedDispose(
@@ -169,6 +170,22 @@ export class User extends Model({
         consento instanceof ConsentoBecomeLockee &&
         consento.lockId === lockId
     )
+  }
+
+  @modelAction recordConsentosView (): void {
+    this.lastConsentosView = Date.now()
+  }
+
+  @computed get newConsentosCount (): number {
+    let count = 0
+    const lastConsentosView = this.lastConsentosView
+    for (const consento of Array.from(this.consentos.values()).reverse()) {
+      if (consento.creationTime < lastConsentosView) {
+        break
+      }
+      count += 1
+    }
+    return count
   }
 
   @computed get consentoSubscriptions (): ISubscriptionMap {

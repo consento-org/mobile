@@ -372,7 +372,7 @@ export class Vault extends Model({
     return last(this.accessLog)
   }
 
-  @modelAction requestUnlock (): void {
+  requestUnlock (): void {
     if (!this.isClosable) {
       throw new Error('not-closable')
     }
@@ -383,7 +383,7 @@ export class Vault extends Model({
       return
     }
     const request = new VaultOpenRequest({ keepAlive: VaultOpenRequest.KEEP_ALIVE })
-    this.accessLog.push(request)
+    this._addAccessEntry(request)
     const api = requireAPI(this)
     Promise.all(
       map(this.locks.values(), async (lock): Promise<void> => {
@@ -398,7 +398,7 @@ export class Vault extends Model({
       throw new Error('not-closable')
     }
     if (this.isPending) {
-      const entry = this.accessLog[this.accessLog.length - 1]
+      const entry = last(this.accessLog)
       if (entry instanceof VaultOpenRequest) {
         entry.cancel()
       }
@@ -406,7 +406,12 @@ export class Vault extends Model({
     if (!this.isOpen) {
       return // Nothing to see/nothing to do.
     }
+    this._addAccessEntry(new VaultClose({}))
     return expoVaultSecrets.delete(this.dataKeyHex)
+  }
+
+  @modelAction _addAccessEntry (entry: VaultAccessEntry): void {
+    this.accessLog.push(entry)
   }
 
   async unlock (secretKeyBase64: string, persistOnDevice: boolean): Promise<void> {

@@ -57,6 +57,7 @@ function createTabs (tabs: IBottomTabConfig): BottomTabBarTabs {
       path: key,
       screen,
       navigationOptions: {
+        tabBarAccessibilityLabel: label,
         tabBarLabel: ({ focused }: { focused: boolean }) =>
           <Text style={focused ? elementBottomNavConsentosActive.title.style : elementBottomNavConsentosResting.title.style}>
             {label}

@@ -1,13 +1,13 @@
-import React, { useContext, useEffect } from 'react'
+import React, { useContext, useLayoutEffect } from 'react'
 import { View, ViewStyle, ScrollView } from 'react-native'
 import { observer } from 'mobx-react'
+import Svg, { Circle, Rect, G } from 'react-native-svg'
 import { EmptyView } from './components/EmptyView'
 import { TopNavigation } from './components/TopNavigation'
 import { elementConsentosEmpty } from '../styles/component/elementConsentosEmpty'
 import { IAnyConsento, ConsentoBecomeLockee, ConsentoUnlockVault } from '../model/Consentos'
 import { screen02Consentos } from '../styles/component/screen02Consentos'
 import { ConsentoState } from './components/ConsentoState'
-import Svg, { Circle, Rect, G } from 'react-native-svg'
 import { elementConsentosLockeeIdle } from '../styles/component/elementConsentosLockeeIdle'
 import { ConsentoContext } from '../model/Consento'
 import { useHumanSince } from '../util/useHumanSince'
@@ -15,6 +15,7 @@ import { Avatar } from './components/Avatar'
 import { elementConsentosAccessIdle } from '../styles/component/elementConsentosAccessIdle'
 import { filter } from '../util/filter'
 import { exists } from '../util/exists'
+import { withNavigationFocus } from 'react-navigation'
 
 const cardMargin = screen02Consentos.b.place.top - screen02Consentos.a.place.bottom
 
@@ -114,17 +115,22 @@ const listStyle: ViewStyle = {
   marginBottom: 20
 }
 
-export const ConsentosScreen = observer(() => {
+export const ConsentosScreen = withNavigationFocus(observer(({ isFocused }: { isFocused: boolean }) => {
   const { user } = useContext(ConsentoContext)
   if (!exists(user)) {
     return
   }
-  user.recordConsentosView()
   const { consentos } = user
   const visibleConsentos = filter(
     consentos.values(),
     (consento): consento is IAnyConsento => !(consento instanceof ConsentoBecomeLockee) || !consento.isHidden
-  )
+  ).reverse()
+  useLayoutEffect(() => {
+    if (!isFocused) {
+      return
+    }
+    user.recordConsentosView()
+  }, [visibleConsentos[0], isFocused])
   return <View style={{ flex: 1 }}>
     <TopNavigation title='Consentos' />
     {
@@ -133,10 +139,10 @@ export const ConsentosScreen = observer(() => {
         : <ScrollView centerContent>
           <View style={listStyle}>
             {
-              visibleConsentos.map(consento => <Consento consento={consento} key={consento.$modelId} />).reverse()
+              visibleConsentos.map(consento => <Consento consento={consento} key={consento.$modelId} />)
             }
           </View>
         </ScrollView>
     }
   </View>
-})
+}))

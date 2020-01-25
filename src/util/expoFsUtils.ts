@@ -17,6 +17,10 @@ export interface IFSUtils {
   info (path: string[], options?: { md5?: boolean, size?: boolean }): Promise<FileInfo>
 }
 
+export interface ICacheFSUtils extends IFSUtils {
+  mkdirTmpAsync (): Promise<string[]>
+}
+
 function pathToString (root: string, path: string[]): string {
   let result = root
   if (path === null || path === undefined) {
@@ -95,7 +99,7 @@ function createFSUtils (root: string): IFSUtils {
 
 const _cache = createFSUtils(cacheDirectory)
 
-export const cache = {
+export const cache: ICacheFSUtils = {
   ..._cache,
   async mkdirTmpAsync (): Promise<string[]> {
     const id = generateId()

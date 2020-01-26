@@ -18,6 +18,9 @@ jobs:
     - name: Checkout project repository
       uses: actions/checkout@v2
 
+    - name: Setup kernel for react native, increase watchers
+      run: echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
+
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
       with:
@@ -31,4 +34,4 @@ jobs:
       run: npx expo-cli login -u ${{ secrets.EXPO_USERNAME }} -p ${{ secrets.EXPO_PASSWORD }}
 
     - name: Publish to Expo
-      run: npx expo publish --non-interactive
+      run: npx expo publish --non-interactive --release-channel mvp

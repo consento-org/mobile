@@ -3,11 +3,19 @@ import { View, ViewStyle, Text, TextStyle, GestureResponderEvent, BackHandler } 
 import { elementPopUpMenu } from '../../styles/component/elementPopUpMenu'
 import { TouchableWithoutFeedback, TouchableOpacity } from 'react-native-gesture-handler'
 
-export interface IPopupMenuItem<T = any> {
+export interface IPopupMenuItem<TContext = any> {
   name: string
   dangerous?: boolean
-  action (context: T, event: GestureResponderEvent): any
+  action (context: TContext, event: GestureResponderEvent): any
 }
+
+export const DIVIDER = Symbol('consento/context/divider')
+
+export function isDivider <TContext = any> (input: TPopupMenuItem<TContext>): input is Symbol {
+  return input === DIVIDER
+}
+
+export type TPopupMenuItem <TContext = any> = IPopupMenuItem<TContext> | Symbol
 
 const style: ViewStyle = {
   position: 'absolute',
@@ -36,7 +44,7 @@ const itemStyle: TextStyle = {
 const { borderRadius } = elementPopUpMenu.buttonBg
 
 export interface IPopupContext {
-  open <T> (actions: Array<IPopupMenuItem<T>>, context?: T, event?: GestureResponderEvent): void
+  open <TContext = any, TItem = any> (actions: Array<IPopupMenuItem<TContext, TItem>>, context?: TContext, event?: GestureResponderEvent): void
   close (): void
 }
 
@@ -106,8 +114,11 @@ export const PopupMenuDisplay = ({ items, onItemSelect }: { items?: IPopupMenuIt
         borderTopLeftRadius: borderRadius
       }}>{elementPopUpMenu.description.text}</Text>
       {
-        items?.map((item, index) =>
-          <TouchableOpacity containerStyle={{ width: '100%' }} key={index} activeOpacity={0.8} onPress={event => onItemSelect(item, event)}>
+        items?.map((item, index) => {
+          if (item instanceof Symbol) {
+            return null
+          }
+          return <TouchableOpacity containerStyle={{ width: '100%' }} key={index} activeOpacity={0.8} onPress={event => onItemSelect(item, event)}>
             <Text style={{
               ...elementPopUpMenu.createText.style,
               ...itemStyle,
@@ -116,7 +127,7 @@ export const PopupMenuDisplay = ({ items, onItemSelect }: { items?: IPopupMenuIt
               backgroundColor: elementPopUpMenu.buttonBg.fill.color
             }}>{item.name}</Text>
           </TouchableOpacity>
-        )
+        })
       }
       <Text style={{
         ...elementPopUpMenu.disabled.style,

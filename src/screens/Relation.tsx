@@ -1,37 +1,19 @@
 import React, { useContext } from 'react'
-import { View, Alert } from 'react-native'
+import { View } from 'react-native'
 import { TopNavigation } from './components/TopNavigation'
 import { observer } from 'mobx-react'
-import { User } from '../model/User'
 import { withNavigation, TNavigation } from './navigation'
 import { elementRelationName } from '../styles/component/elementRelationName'
 import { BottomButtonView } from './components/BottomButtonView'
 import { RelationContext } from '../model/RelationContext'
 import { InputField } from './components/InputField'
 import { useForm } from '../util/useForm'
-import { Relation as RelationModel } from '../model/Relation'
 import { ConsentoContext } from '../model/Consento'
 import { TouchableOpacity } from 'react-native-gesture-handler'
 import { exists } from '../util/exists'
 import { Avatar, randomAvatarId } from './components/Avatar'
 import { ScreenshotContext } from '../util/screenshots'
-
-function confirmDelete (user: User, relation: RelationModel, navigation: TNavigation): void {
-  Alert.alert(
-    'Delete',
-    'Are you sure you want to delete this Relation?',
-    [
-      {
-        text: 'Delete',
-        onPress: () => {
-          user.relations.delete(relation)
-          navigation.navigate('relations')
-        }
-      },
-      { text: 'Cancel' }
-    ]
-  )
-}
+import { deleteWarning } from './components/deleteWarning'
 
 const avatar = elementRelationName.elementAvatarGenerate.component
 
@@ -60,7 +42,13 @@ export const Relation = withNavigation(observer(({ navigation }: { navigation: T
     <TopNavigation
       title={relation.displayName}
       back={() => leave(() => navigation.navigate('relations'))}
-      onDelete={() => confirmDelete(user, relation, navigation)}
+      onDelete={() => deleteWarning({
+        onPress (): void {
+          user.relations.delete(relation)
+          navigation.navigate('relations')
+        },
+        itemName: 'Relation'
+      })}
     />
     <BottomButtonView prototype={elementRelationName} onPress={save}>
       <InputField

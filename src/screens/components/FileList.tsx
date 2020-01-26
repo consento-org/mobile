@@ -4,19 +4,17 @@ import { elementFileList } from '../../styles/component/elementFileList'
 import { elementVaultEmpty } from '../../styles/component/elementVaultEmpty'
 import { ContextMenuContext } from './ContextMenu'
 import { EmptyView } from './EmptyView'
-import { PopupContext, IPopupMenuItem } from './PopupMenu'
+import { PopupContext, TPopupMenuItem, DIVIDER, IPopupMenuItem } from './PopupMenu'
 import { TNavigation, withNavigation } from '../navigation'
 import { elementPopUpMenu } from '../../styles/component/elementPopUpMenu'
 import { VaultContext } from '../../model/VaultContext'
 import { ImageFile, FileType, TextFile, File } from '../../model/VaultData'
 import { filter } from '../../util/filter'
 import { observer } from 'mobx-react'
+import { Vault } from '../../model/Vault'
 import { ScreenshotContext } from '../../util/screenshots'
-
-interface IFileListAction <T extends File> {
-  name: string
-  action (item: T): void
-}
+import { shareBlob, copyToClipboard } from '../../util/expoSecureBlobStore'
+import { deleteWarning } from './deleteWarning'
 
 export interface ISectionProps <T extends File> {
   name: string
@@ -28,8 +26,88 @@ export interface IFileListItemProps <T extends File> {
   navigation: TNavigation
 }
 
+function safeFileName (filename: string): string {
+  return filename.replace(/\s\t/ig, '_').replace(/[^a-z0-9_-]/ig, encodeURIComponent)
+}
+
 const section = elementFileList.sectionText.component
 const itemProto = elementFileList.entry.component
+
+interface IFileContext {
+  vault: Vault
+  file: File
+}
+const shareAction: IPopupMenuItem<IFileContext> = {
+  name: 'Share',
+  action: ({ file }) => {
+    shareBlob(file.secretKey, `${safeFileName(file.name)}.${file.type === FileType.image ? 'jpg' : 'txt'}`)
+      .catch(exportError => console.log({ exportError }))
+  }
+}
+const copyAction: IPopupMenuItem<IFileContext> = {
+  name: 'Copy Content',
+  action: ({ file }) => {
+    copyToClipboard(file.secretKey, file.name)
+      .catch(clipboardError => console.log({ clipboardError }))
+  }
+}
+const deleteAction: IPopupMenuItem<IFileContext> = {
+  name: 'Delete',
+  action: ({ file, vault }): void => {
+    deleteWarning({
+      onPress: () => vault.data.deleteFile(file),
+      itemName: 'file'
+    })
+  },
+  dangerous: true
+}
+
+const textActions: Array<TPopupMenuItem<IFileContext>> = [
+  shareAction,
+  copyAction,
+  DIVIDER,
+  deleteAction
+]
+
+const imageActions: Array<TPopupMenuItem<IFileContext>> = [
+  shareAction,
+  DIVIDER,
+  deleteAction
+]
+
+const addActions: Array<TPopupMenuItem<{ vault: Vault, navigation: TNavigation }>> = [
+  {
+    name: elementPopUpMenu.takePicture.text,
+    action: ({ vault, navigation }) =>
+      navigation.navigate('camera', {
+        onPicture (input: ImageFile): void {
+          vault.data.addFile(input)
+          navigation.navigate('editor', {
+            vault: vault.$modelId,
+            file: input.$modelId
+          })
+        },
+        onClose () {
+          navigation.navigate('vault', {
+            valut: vault.$modelId
+          })
+        }
+      })
+  },
+  {
+    name: elementPopUpMenu.createText.text,
+    action: ({ vault, navigation }) => {
+      const textFile = new TextFile({
+        name: vault.newFilename()
+      })
+      vault.data.addFile(textFile)
+      navigation.navigate('editor', {
+        vault: vault.$modelId,
+        file: textFile.$modelId
+      })
+    }
+  }
+]
 
 const FileListItem = withNavigation(observer(function <T extends File> ({ item, navigation }: IFileListItemProps<T>): JSX.Element {
   const { open } = useContext(ContextMenuContext)
@@ -49,20 +127,11 @@ const FileListItem = withNavigation(observer(function <T extends File> ({ item, 
       horz='end' onPress={(event) => {
         if (item.type === FileType.image) {
           screenshots.vaultFilesImageContext.takeSync(200)
+          open<IFileContext>(imageActions, { file: item, vault }, event)
         } else {
           screenshots.vaultFilesTextContext.takeSync(200)
+          open<IFileContext>(textActions, { file: item, vault }, event)
         }
-        open([
-          { name: 'Rename', action (item): void { console.log(`Rename ${item.name}`) } },
-          { name: 'Share', action (item): void { console.log(`Share ${item.name}`) } },
-          { name: 'Other', action (item): void { console.log(`Other ${item.name}`) } },
-          null,
-          {
-            name: 'Delete',
-            action: (file: File): void => vault.data.deleteFile(file),
-            dangerous: true
-          }
-        ], item, event)
       }} style={{ zIndex: 1 }} />
   </View>
 }))
@@ -87,39 +156,6 @@ export const FileList = withNavigation(observer(({ navigation }: { navigation: T
   const textFiles = filter(files, (item): item is TextFile => item.type === FileType.text)
   const imageFiles = filter(files, (item): item is ImageFile => item.type === FileType.image)
   const { open } = useContext(PopupContext)
-  const popupActions: IPopupMenuItem[] = [
-    {
-      name: elementPopUpMenu.takePicture.text,
-      action: () =>
-        navigation.navigate('camera', {
-          onPicture (input: ImageFile): void {
-            vault.data.addFile(input)
-            navigation.navigate('editor', {
-              vault: vault.$modelId,
-              file: input.$modelId
-            })
-          },
-          onClose () {
-            navigation.navigate('vault', {
-              valut: vault.$modelId
-            })
-          }
-        })
-    },
-    {
-      name: elementPopUpMenu.createText.text,
-      action: () => {
-        const textFile = new TextFile({
-          name: vault.newFilename()
-        })
-        vault.data.addFile(textFile)
-        navigation.navigate('editor', {
-          vault: vault.$modelId,
-          file: textFile.$modelId
-        })
-      }
-    }
-  ]
   if (files.length === 0) {
     screenshots.vaultFilesEmpty.takeSync(500)
   }

@@ -1,5 +1,5 @@
 import React, { useContext, useEffect } from 'react'
-import { View, ViewStyle, Alert, Image } from 'react-native'
+import { View, ViewStyle, Image } from 'react-native'
 import { TopNavigation } from './components/TopNavigation'
 import { createTabBar } from './components/createTabBar'
 import { TNavigation } from './navigation'
@@ -14,11 +14,10 @@ import { observer } from 'mobx-react'
 import { VaultContext } from '../model/VaultContext'
 import { PopupMenu } from './components/PopupMenu'
 import { FileList } from './components/FileList'
-import { User } from '../model/User'
-import { Vault as VaultModel } from '../model/Vault'
 import { Locks } from './components/Locks'
 import { ConsentoContext } from '../model/Consento'
 import { ScreenshotContext } from '../util/screenshots'
+import { deleteWarning } from './components/deleteWarning'
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const animation = require('../../assets/animation/consento_symbol_animation.gif')
@@ -31,23 +30,6 @@ const lockStyle: ViewStyle = {
   display: 'flex',
   justifyContent: 'center',
   alignItems: 'center'
-}
-
-function confirmDelete (user: User, vault: VaultModel, navigation: TNavigation): void {
-  Alert.alert(
-    'Delete',
-    'Are you sure you want to delete this Vault? This can not be reverted!',
-    [
-      {
-        text: 'Delete',
-        onPress: () => {
-          user.vaults.delete(vault)
-          navigation.navigate('vaults')
-        }
-      },
-      { text: 'Cancel' }
-    ]
-  )
 }
 
 const VaultNavigator = createTabBar({
@@ -87,7 +69,15 @@ export const Vault = withNavigation(observer(({ navigation }: { navigation: TNav
     }
   }, [vault.isPending, vault.isLoading])
   const handleNameEdit = vault.isOpen ? newName => vault.setName(newName) : undefined
-  const handleDelete = (): void => confirmDelete(user, vault, navigation)
+  const handleDelete = (): void => {
+    deleteWarning({
+      onPress (): void {
+        user.vaults.delete(vault)
+        navigation.navigate('vaults')
+      },
+      itemName: 'Vault'
+    })
+  }
   const handleLock = vault.isClosable ? () => {
     navigation.navigate('vaults')
     vault.lock()

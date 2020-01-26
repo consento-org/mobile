@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect } from 'react'
 import { View, GestureResponderEvent, TouchableWithoutFeedback, TouchableOpacity, BackHandler } from 'react-native'
-import { IPopupContext, IPopupMenuItem } from './PopupMenu'
+import { IPopupContext, TPopupMenuItem, IPopupMenuItem, isDivider } from './PopupMenu'
 import { useVUnits } from '../../styles/Component'
 import { useSafeArea } from 'react-native-safe-area-context'
 import { elementContextMenu } from '../../styles/component/elementContextMenu'
@@ -93,7 +93,7 @@ export interface IConsentMenuDisplayProps {
     top: number
     left: number
   }
-  items?: IPopupMenuItem[]
+  items?: TPopupMenuItem[]
   onItemSelect: (item: IPopupMenuItem, event: GestureResponderEvent) => void
   context: any
   close: () => any
@@ -114,6 +114,7 @@ export const ContextMenuDisplay = ({ items, onItemSelect, pos, context, close }:
 
   const left = (pos.left + width > maxLeft) ? maxLeft - width : pos.left
   const top = (pos.top + height > maxTop) ? maxTop - height : pos.top
+  const top = (pos.top + height > maxTop) ? maxTop - height : Math.max(pos.top, padding.top)
 
   return <View style={{
     position: 'absolute',
@@ -126,8 +127,8 @@ export const ContextMenuDisplay = ({ items, onItemSelect, pos, context, close }:
     </TouchableWithoutFeedback>
     <View style={{ position: 'absolute', top, left, width, height, backgroundColor: elementContextMenu.bg.fill.color, borderRadius: elementContextMenu.bg.borderRadius }}>
       <View style={{ marginTop: elementContextMenu.copy.place.top, display: 'flex', flexDirection: 'column' }}>
-        {items.map((item, index) => {
-          if (item === null) {
+        {items.filter(Boolean).map((item, index) => {
+          if (isDivider(item)) {
             return <Divider key={index} />
           }
           return <Item key={index} item={item} context={context} close={close} />

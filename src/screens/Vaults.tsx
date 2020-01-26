@@ -6,12 +6,13 @@ import { Asset } from '../Asset'
 import { observer } from 'mobx-react'
 import { map } from '../util/map'
 import { Vault } from '../model/Vault'
-import { withNavigation, TNavigation } from './navigation'
+import { TNavigation } from './navigation'
 import { useVUnits } from '../styles/Component'
 import { elementCardVaultClose } from '../styles/component/elementCardVaultClose'
 import { ConsentoContext } from '../model/Consento'
 import { EmptyView } from './components/EmptyView'
 import { elementVaultsEmpty } from '../styles/component/elementVaultsEmpty'
+import { withNavigationFocus } from 'react-navigation'
 
 const listStyle: ViewStyle = {
   display: 'flex',
@@ -25,7 +26,7 @@ const listStyle: ViewStyle = {
 const AddButton = Asset.buttonAddHexagonal().component
 const HorzPadding = 10
 
-export const VaultsScreen = withNavigation(observer(({ navigation }: { navigation: TNavigation }) => {
+const FocussedVaultsScreen = observer(({ navigation }: { navigation: TNavigation }) => {
   const { user: { vaults } } = useContext(ConsentoContext)
   const { vw } = useVUnits()
   const entryWidth = elementCardVaultClose.width
@@ -59,4 +60,11 @@ export const VaultsScreen = withNavigation(observer(({ navigation }: { navigatio
       }}
     />
   </View>
-}))
+})
+
+export const VaultsScreen = withNavigationFocus(({ navigation, isFocused }: { navigation: TNavigation, isFocused: boolean }) => {
+  if (isFocused) {
+    return <FocussedVaultsScreen navigation={navigation} />
+  }
+  return <View />
+})

@@ -115,7 +115,7 @@ const listStyle: ViewStyle = {
   marginBottom: 20
 }
 
-export const ConsentosScreen = withNavigationFocus(observer(({ isFocused }: { isFocused: boolean }) => {
+const FocusedConsentosScreen = observer((): JSX.Element => {
   const { user } = useContext(ConsentoContext)
   if (!exists(user)) {
     return
@@ -126,11 +126,8 @@ export const ConsentosScreen = withNavigationFocus(observer(({ isFocused }: { is
     (consento): consento is IAnyConsento => !(consento instanceof ConsentoBecomeLockee) || !consento.isHidden
   ).reverse()
   useLayoutEffect(() => {
-    if (!isFocused) {
-      return
-    }
     user.recordConsentosView()
-  }, [visibleConsentos[0], isFocused])
+  }, [visibleConsentos[0]])
   return <View style={{ flex: 1 }}>
     <TopNavigation title='Consentos' />
     {
@@ -145,4 +142,11 @@ export const ConsentosScreen = withNavigationFocus(observer(({ isFocused }: { is
         </ScrollView>
     }
   </View>
-}))
+})
+
+export const ConsentosScreen = withNavigationFocus(({ isFocused }: { isFocused: boolean }) => {
+  if (isFocused) {
+    return <FocusedConsentosScreen />
+  }
+  return <View />
+})

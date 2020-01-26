@@ -15,6 +15,7 @@ const DELETE_THRESHOLD = 8
 
 export const Loading = forwardRef((_, ref: Ref<View>): JSX.Element => {
   const [count, setCount] = useState<number>(0)
+  const [alertShown, setAlertShown] = useState<boolean>(false)
   useEffect(() => {
     const interval = setInterval(() => {
       if (count > 0) {
@@ -39,10 +40,17 @@ export const Loading = forwardRef((_, ref: Ref<View>): JSX.Element => {
             },
             style: 'destructive'
           },
-          { text: 'cancel' }
-        ]
+          {
+            text: 'cancel'
+          }
+        ],
+        {
+          onDismiss: () => { setAlertShown(false) }
+        }
       )
-    } else {
+      setAlertShown(true)
+      setCount(0)
+    } else if (!alertShown) {
       setCount(count + 1)
     }
   }}>

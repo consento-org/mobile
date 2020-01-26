@@ -8,7 +8,6 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     strategy:
@@ -24,12 +23,12 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
 
-    - name: npm install, build, and test
+    - name: Install, build and test
       run: |
         npm install
 
     - name: Login into Expo
       run: npx expo-cli login -u ${{ secrets.EXPO_USERNAME }} -p ${{ secrets.EXPO_PASSWORD }}
 
-    # - name: Publish to Expo
-    #   run: npx expo publish --non-interactive
+    - name: Publish to Expo
+      run: npx expo publish --non-interactive

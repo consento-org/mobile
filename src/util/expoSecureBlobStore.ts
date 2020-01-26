@@ -147,10 +147,7 @@ export async function writeBlob (encodable: IEncodable): Promise<IEncryptedBlob>
   } as IEncryptedBlob
 }
 
-async function toBlob (input: string | Uint8Array | IEncryptedBlob): Promise<IEncryptedBlob> {
-  if (typeof input === 'string') {
-    input = Buffer.from(input, 'hex')
-  }
+async function _toBlob (input: Uint8Array | IEncryptedBlob): Promise<IEncryptedBlob> {
   if (input instanceof Uint8Array) {
     return {
       secretKey: input,
@@ -158,6 +155,13 @@ async function toBlob (input: string | Uint8Array | IEncryptedBlob): Promise<IEn
     }
   }
   return input
+}
+
+async function toBlob (input: string | Uint8Array | IEncryptedBlob): Promise<IEncryptedBlob> {
+  if (typeof input === 'string') {
+    return _toBlob(Buffer.from(input, 'hex'))
+  }
+  return _toBlob(input)
 }
 
 export async function deleteBlob (input: string | Uint8Array | IEncryptedBlob): Promise<boolean> {

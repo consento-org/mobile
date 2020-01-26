@@ -29,7 +29,7 @@ jobs:
         npm install
 
     - name: Login into Expo
-      run: npx expo-cli login -u $EXPO_USERNAME -p $EXPO_PASSWORD
+      run: npx expo-cli login -u ${{ secrets.EXPO_USERNAME }} -p ${{ secrets.EXPO_PASSWORD }}
 
     # - name: Publish to Expo
     #   run: npx expo publish --non-interactive

@@ -3,6 +3,7 @@ import { Receiver } from './Connection'
 import { BaseModel, findParent } from 'mobx-keystone'
 
 export interface IRelationEntry {
+  readonly relationId: string
   readonly humanId: string
   readonly name: string
   readonly avatarId: string

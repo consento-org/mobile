@@ -62,6 +62,10 @@ export class Lockee implements IRelationEntry, ISortable {
     this.vaultLockee = vaultLockee
   }
 
+  get relationId (): string {
+    return this.vaultLockee.relationId
+  }
+
   get avatarId (): string {
     return this.relation?.avatarId
   }

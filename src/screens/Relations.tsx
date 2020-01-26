@@ -7,7 +7,8 @@ import { elementRelationsEmpty } from '../styles/component/elementRelationsEmpty
 import { Asset } from '../Asset'
 import { TNavigation } from './navigation'
 import { elementRelationListItem } from '../styles/component/elementRelationListItem'
-import { RelationListEntry, IRelationEntry } from './components/RelationListEntry'
+import { RelationListEntry } from './components/RelationListEntry'
+import { IRelationEntry } from '../model/Consento.types'
 import { ConsentoContext } from '../model/Consento'
 import { withNavigationFocus } from 'react-navigation'
 
@@ -20,10 +21,10 @@ export interface IRelationListProps {
 
 const RelationsList = observer(({ entries, navigation }: IRelationListProps): JSX.Element => {
   const onPress = (entry: IRelationEntry): void => {
-    navigation.navigate('relation', { relation: entry.$modelId })
+    navigation.navigate('relation', { relation: entry.relationId })
   }
   return <>
-    {entries.map(entry => <RelationListEntry prototype={elementRelationListItem} key={entry.$modelId} entry={entry} onPress={onPress} />)}
+    {entries.map(entry => <RelationListEntry prototype={elementRelationListItem} key={entry.relationId} entry={entry} onPress={onPress} />)}
   </>
 })
 

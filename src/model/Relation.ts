@@ -27,6 +27,10 @@ export class Relation extends Model({
     return this.name
   }
 
+  get relationId (): string {
+    return this.$modelId
+  }
+
   @computed get sortBy (): string {
     return this.name ?? this.humanId
   }

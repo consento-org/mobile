@@ -1,5 +1,5 @@
 {
-  "name": "consento",
+  "name": "consento-screenshot",
   "displayName": "Consento",
   "expo": {
     "name": "Consento",
@@ -7,7 +7,7 @@
     "privacy": "unlisted",
     "sdkVersion": "36.0.0",
     "version": "1.0.0",
-    "entryPoint": "./index.js",
+    "entryPoint": "./screenshot/index.js",
     "platforms": [
       "ios",
       "android",

@@ -1,4 +1,4 @@
-import React, { useContext } from 'react'
+import React, { useContext, forwardRef, Ref } from 'react'
 import { observer } from 'mobx-react'
 import { createAppContainer, withNavigation } from 'react-navigation'
 import { createStackNavigator } from 'react-navigation-stack'
@@ -32,7 +32,7 @@ const ConsentosIcon = observer(({ focused }: { focused: boolean }): JSX.Element 
       : Asset.iconConsentoIdle().img()
 })
 
-export const Screens = observer((): JSX.Element => {
+export const Screens = observer(forwardRef((_, ref: Ref<any>): JSX.Element => {
   const { user } = useContext(ConsentoContext)
   const Container = (() => {
     const AppNavigator = createStackNavigator({
@@ -131,5 +131,5 @@ export const Screens = observer((): JSX.Element => {
     })
     return createAppContainer(AppNavigator)
   })()
-  return <Container />
-})
+  return <Container ref={ref} />
+}))

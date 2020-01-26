@@ -7,6 +7,7 @@
     "ios": "expo ios",
     "web": "expo start --web",
     "start": "expo start",
+    "screenshot": "./screenshot/screenshot-recorder.js",
     "test": "jest",
     "lint": "eslint --ext .js,.ts,.jsx,.tsx .",
     "android:reload": "adb shell input text \"RR\"",
@@ -75,6 +76,7 @@
     "jest-enzyme": "^7.1.2",
     "jest-expo": "^36.0.1",
     "jetifier": "^1.6.5",
+    "nicer": "^1.0.0",
     "ts-jest": "^25.0.0",
     "typescript": "^3.7.5",
     "unimodules-permissions-interface": "~5.0.0"

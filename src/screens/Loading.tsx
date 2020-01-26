@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, forwardRef, Ref } from 'react'
 import { View, ViewStyle, TouchableWithoutFeedback, Alert } from 'react-native'
 import { screen01Welcome } from '../styles/component/screen01Welcome'
 import { systemRimraf } from '../util/systemRimraf'
@@ -13,7 +13,7 @@ const style: ViewStyle = {
 
 const DELETE_THRESHOLD = 8
 
-export function Loading (): JSX.Element {
+export const Loading = forwardRef((_, ref: Ref<View>): JSX.Element => {
   const [count, setCount] = useState<number>(0)
   useEffect(() => {
     const interval = setInterval(() => {
@@ -46,8 +46,8 @@ export function Loading (): JSX.Element {
       setCount(count + 1)
     }
   }}>
-    <View style={style}>
+    <View style={style} ref={ref}>
       {screen01Welcome.illustration.asset().img()}
     </View>
   </TouchableWithoutFeedback>
-}
+})

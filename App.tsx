@@ -7,10 +7,19 @@ import { loadFonts } from './src/styles/Font'
 import { exists } from './src/util/exists'
 import { setGlobalConfig } from 'mobx-keystone'
 import { generateId } from './src/util/generateId'
+import { initScreenshot, ScreenshotContext } from './src/util/Screenshot'
 
 setGlobalConfig({
   modelIdGenerator: generateId
 })
+
+export const Screenshot = (address: string): (() => JSX.Element) => {
+  const system = initScreenshot(address)
+  return () =>
+    <ScreenshotContext.Provider value={system}>
+      <App />
+    </ScreenshotContext.Provider>
+}
 
 export default function App (): JSX.Element {
   const [error, setError] = useState<Error>()

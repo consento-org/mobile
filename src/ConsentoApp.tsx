@@ -1,16 +1,16 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useContext } from 'react'
 import { Screens } from './screens/Screens'
 import { Consento, ConsentoContext } from './model/Consento'
 import { registerRootStore, unregisterRootStore } from 'mobx-keystone'
 import { Loading } from './screens/Loading'
 import { ContextMenu } from './screens/components/ContextMenu'
 import { autorun } from 'mobx'
-import { useScreenshot } from './util/Screenshot'
+import { ScreenshotContext } from './util/screenshots'
 
 export const ConsentoApp = (): JSX.Element => {
   const [consento, setConsento] = useState<Consento>(() => new Consento({}))
   const [ready, setReady] = useState<boolean>(false)
-  const screenshot = useScreenshot('loading')
+  const screenshot = useContext(ScreenshotContext).loading.use()
 
   useEffect(
     () => {
@@ -34,8 +34,8 @@ export const ConsentoApp = (): JSX.Element => {
     [consento, ready]
   )
 
-  if (!ready || !screenshot.ok) {
-    screenshot.take()
+  if (!ready || !screenshot.done) {
+    screenshot.take(100)
     return <Loading />
   }
 

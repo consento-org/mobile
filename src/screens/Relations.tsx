@@ -11,6 +11,7 @@ import { RelationListEntry } from './components/RelationListEntry'
 import { IRelationEntry } from '../model/Consento.types'
 import { ConsentoContext } from '../model/Consento'
 import { withNavigationFocus } from 'react-navigation'
+import { ScreenshotContext, useScreenshotEnabled } from '../util/screenshots'
 
 const AddButton = Asset.buttonAddRound().component
 
@@ -30,7 +31,17 @@ const RelationsList = observer(({ entries, navigation }: IRelationListProps): JS
 
 const FocussedRelationsScreen = observer(({ navigation }: { navigation: TNavigation }) => {
   const { user } = useContext(ConsentoContext)
+  const screenshots = useContext(ScreenshotContext)
   const relations = user.relationsSorted
+  if (relations.length === 0) {
+    screenshots.relationsEmpty.takeSync(300)
+  }
+  if (relations.length === 1) {
+    screenshots.relationsOne.takeSync(300)
+  }
+  if (relations.length === 2) {
+    screenshots.relationsTwo.takeSync(300)
+  }
   return <View style={{ flex: 1 }}>
     <TopNavigation title='Relations' />
     <EmptyView prototype={elementRelationsEmpty}>
@@ -41,7 +52,8 @@ const FocussedRelationsScreen = observer(({ navigation }: { navigation: TNavigat
 })
 
 export const RelationsScreen = withNavigationFocus(({ navigation, isFocused }: { navigation: TNavigation, isFocused: boolean }) => {
-  if (isFocused) {
+  const isScreenshotEnabled = useScreenshotEnabled()
+  if (!isScreenshotEnabled || isFocused) {
     return <FocussedRelationsScreen navigation={navigation} />
   }
   return <View />

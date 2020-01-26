@@ -14,8 +14,9 @@ import { useHumanSince } from '../util/useHumanSince'
 import { Avatar } from './components/Avatar'
 import { elementConsentosAccessIdle } from '../styles/component/elementConsentosAccessIdle'
 import { filter } from '../util/filter'
-import { exists } from '../util/exists'
 import { withNavigationFocus } from 'react-navigation'
+import { ScreenshotContext, useScreenshotEnabled } from '../util/screenshots'
+import { TRequestState } from '../model/RequestBase'
 
 const cardMargin = screen02Consentos.b.place.top - screen02Consentos.a.place.bottom
 
@@ -117,15 +118,8 @@ const listStyle: ViewStyle = {
 
 const FocusedConsentosScreen = observer((): JSX.Element => {
   const { user } = useContext(ConsentoContext)
-  // const screenshots = {
-  //   empty: useScreenshot('consentos-empty'),
-  //   becomeLockeePending: useScreenshot('consentos-become-lockee-pending'),
-  //   becomeLockeeConfirming: useScreenshot('consentos-become-lockee-confirming'),
-  //   becomeLockeeConfirming: useScreenshot('consentos-become-lockee-confirming'),
-  // }
-  if (!exists(user)) {
-    return
-  }
+  const screenshots = useContext(ScreenshotContext)
+  const isScreenshotEnabled = useScreenshotEnabled()
   const { consentos } = user
   const visibleConsentos = filter(
     consentos.values(),
@@ -134,6 +128,39 @@ const FocusedConsentosScreen = observer((): JSX.Element => {
   useLayoutEffect(() => {
     user.recordConsentosView()
   }, [visibleConsentos[0]])
+  if (isScreenshotEnabled) {
+    if (visibleConsentos.length === 0) {
+      screenshots.consentosEmpty.takeSync(500)
+    } else {
+      for (const consento of visibleConsentos) {
+        if (consento instanceof ConsentoUnlockVault) {
+          console.log(consento.state)
+          if (consento.state === TRequestState.active) {
+            screenshots.consentosUnlockPending.takeSync(200)
+          } else if (consento.state === TRequestState.confirmed) {
+            screenshots.consentosUnlockAccepted.takeSync(200)
+          } else if (consento.state === TRequestState.expired) {
+            screenshots.consentosUnlockExpired.takeSync(200)
+          } else if (consento.state === TRequestState.denied) {
+            screenshots.consentosUnlockDenied.takeSync(200)
+          }
+        }
+        if (consento instanceof ConsentoBecomeLockee) {
+          if (consento.state === TRequestState.confirmed) {
+            screenshots.consentosBecomeUnlockeeAccepted.takeSync(200)
+          } else if (consento.state === TRequestState.cancelled) {
+            screenshots.consentosBecomeUnlockeeRevoked.takeSync(200)
+          } else if (consento.state === TRequestState.accepted) {
+            screenshots.consentosBecomeUnlockeeConfirming.takeSync(200)
+          } else if (consento.state === TRequestState.denied) {
+            screenshots.consentosBecomeUnlockeeDenied.takeSync(200)
+          } else {
+            screenshots.consentosBecomeUnlockeePending.takeSync(200)
+          }
+        }
+      }
+    }
+  }
   return <View style={{ flex: 1 }}>
     <TopNavigation title='Consentos' />
     {

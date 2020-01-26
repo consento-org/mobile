@@ -18,6 +18,7 @@ import { User } from '../model/User'
 import { Vault as VaultModel } from '../model/Vault'
 import { Locks } from './components/Locks'
 import { ConsentoContext } from '../model/Consento'
+import { ScreenshotContext } from '../util/screenshots'
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const animation = require('../../assets/animation/consento_symbol_animation.gif')
@@ -51,7 +52,7 @@ function confirmDelete (user: User, vault: VaultModel, navigation: TNavigation):
 
 const VaultNavigator = createTabBar({
   vaultData: {
-    label: 'Vaults',
+    label: 'Files',
     screen: () => <FileList />
   },
   vaultLocks: {
@@ -74,6 +75,7 @@ export const VaultRouter = VaultNavigator.router
 export const Vault = withNavigation(observer(({ navigation }: { navigation: TNavigation }): JSX.Element => {
   const { user } = useContext(ConsentoContext)
   const { vault } = useContext(VaultContext)
+  const screenshots = useContext(ScreenshotContext)
   useEffect(() => {
     if (!vault.isOpen && !vault.isLoading) {
       vault.requestUnlock()
@@ -91,6 +93,9 @@ export const Vault = withNavigation(observer(({ navigation }: { navigation: TNav
     vault.lock()
       .catch(lockError => console.error(lockError))
   } : undefined
+  if (!vault.isOpen && !vault.isLoading) {
+    screenshots.vaultPending.takeSync(1000)
+  }
   return <PopupMenu>
     <View style={{ position: 'absolute', width: '100%', height: '100%' }}>
       <TopNavigation title={vault.name} titlePlaceholder={vault.humanId} back='vaults' onEdit={handleNameEdit} onDelete={handleDelete} />

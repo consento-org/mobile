@@ -11,9 +11,10 @@ import { InputField } from './components/InputField'
 import { useForm } from '../util/useForm'
 import { Relation as RelationModel } from '../model/Relation'
 import { ConsentoContext } from '../model/Consento'
-import { TouchableOpacity, TouchableWithoutFeedback } from 'react-native-gesture-handler'
+import { TouchableOpacity } from 'react-native-gesture-handler'
 import { exists } from '../util/exists'
 import { Avatar, randomAvatarId } from './components/Avatar'
+import { ScreenshotContext } from '../util/screenshots'
 
 function confirmDelete (user: User, relation: RelationModel, navigation: TNavigation): void {
   Alert.alert(
@@ -36,8 +37,9 @@ const avatar = elementRelationName.elementAvatarGenerate.component
 
 export const Relation = withNavigation(observer(({ navigation }: { navigation: TNavigation }): JSX.Element => {
   const { relation } = useContext(RelationContext)
+  const screenshots = useContext(ScreenshotContext)
   const { user } = useContext(ConsentoContext)
-  const { leave, save, useField } = useForm(
+  const { leave, save, useField, isDirty } = useForm(
     navigation,
     fields => {
       relation.setName(fields.name ?? '')
@@ -46,6 +48,14 @@ export const Relation = withNavigation(observer(({ navigation }: { navigation: T
   )
   const name = useField('name', relation.name)
   const avatarId = useField('avatarId', relation.avatarId)
+  if (!isDirty) {
+    if (relation.name !== '' && relation.avatarId !== null) {
+      screenshots.relationFull.takeSync(500)
+    }
+    if (relation.name === '' && relation.avatarId === null) {
+      screenshots.relationEmpty.takeSync(500)
+    }
+  }
   return <View style={{ flex: 1 }}>
     <TopNavigation
       title={relation.displayName}

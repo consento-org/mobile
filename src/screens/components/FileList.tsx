@@ -11,6 +11,7 @@ import { VaultContext } from '../../model/VaultContext'
 import { ImageFile, FileType, TextFile, File } from '../../model/VaultData'
 import { filter } from '../../util/filter'
 import { observer } from 'mobx-react'
+import { ScreenshotContext } from '../../util/screenshots'
 
 interface IFileListAction <T extends File> {
   name: string
@@ -33,6 +34,7 @@ const itemProto = elementFileList.entry.component
 const FileListItem = withNavigation(observer(function <T extends File> ({ item, navigation }: IFileListItemProps<T>): JSX.Element {
   const { open } = useContext(ContextMenuContext)
   const { vault } = useContext(VaultContext)
+  const screenshots = useContext(ScreenshotContext)
 
   return <View style={{ height: itemProto.height, width: '100%' }}>
     <itemProto.label.Render horz='stretch' value={item.name} />
@@ -44,17 +46,24 @@ const FileListItem = withNavigation(observer(function <T extends File> ({ item, 
       })}
     />
     <itemProto.menu.Render
-      horz='end' onPress={(event) => open([
-        { name: 'Rename', action (item): void { console.log(`Rename ${item.name}`) } },
-        { name: 'Share', action (item): void { console.log(`Share ${item.name}`) } },
-        { name: 'Other', action (item): void { console.log(`Other ${item.name}`) } },
-        null,
-        {
-          name: 'Delete',
-          action: (file: File): void => vault.data.deleteFile(file),
-          dangerous: true
+      horz='end' onPress={(event) => {
+        if (item.type === FileType.image) {
+          screenshots.vaultFilesImageContext.takeSync(200)
+        } else {
+          screenshots.vaultFilesTextContext.takeSync(200)
         }
-      ], item, event)} style={{ zIndex: 1 }} />
+        open([
+          { name: 'Rename', action (item): void { console.log(`Rename ${item.name}`) } },
+          { name: 'Share', action (item): void { console.log(`Share ${item.name}`) } },
+          { name: 'Other', action (item): void { console.log(`Other ${item.name}`) } },
+          null,
+          {
+            name: 'Delete',
+            action: (file: File): void => vault.data.deleteFile(file),
+            dangerous: true
+          }
+        ], item, event)
+      }} style={{ zIndex: 1 }} />
   </View>
 }))
 
@@ -73,6 +82,7 @@ const Section = function <T extends File> ({ name, items }: ISectionProps<T>): J
 
 export const FileList = withNavigation(observer(({ navigation }: { navigation: TNavigation }): JSX.Element => {
   const { vault } = useContext(VaultContext)
+  const screenshots = useContext(ScreenshotContext)
   const files = vault.data?.files ?? []
   const textFiles = filter(files, (item): item is TextFile => item.type === FileType.text)
   const imageFiles = filter(files, (item): item is ImageFile => item.type === FileType.image)
@@ -110,6 +120,12 @@ export const FileList = withNavigation(observer(({ navigation }: { navigation: T
       }
     }
   ]
+  if (files.length === 0) {
+    screenshots.vaultFilesEmpty.takeSync(500)
+  }
+  if (textFiles.length > 0 && imageFiles.length > 0) {
+    screenshots.vaultFilesFull.takeSync(500)
+  }
   return <EmptyView prototype={elementVaultEmpty} onAdd={() => open(popupActions)}>
     {
       files.length > 0

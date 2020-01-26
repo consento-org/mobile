@@ -10,10 +10,12 @@ import isURL from 'is-url-superb'
 import { ConsentoButton } from './components/ConsentoButton'
 import { ConsentoContext } from '../model/Consento'
 import { observer } from 'mobx-react'
+import { ScreenshotContext } from '../util/screenshots'
 
 export const Config = withNavigation(observer(
   ({ navigation }: { navigation: TNavigation }): JSX.Element => {
     const [resetBarrier, setBarrier] = useState(true)
+    const screenshots = useContext(ScreenshotContext)
     const { config, updateConfig, deleteEverything } = useContext(ConsentoContext)
     const { leave, save, useField } = useForm(navigation,
       (config) => {
@@ -40,7 +42,7 @@ export const Config = withNavigation(observer(
       ])
     }
 
-    return <View style={{ flex: 1 }}>
+    return <View style={{ flex: 1 }} onLayout={screenshots.config.handle(200)}>
       <TopNavigation title='Consento' back={() => leave(() => navigation.navigate('vaults'))} />
       <BottomButtonView prototype={elementConfig} onPress={save}>
         <InputField

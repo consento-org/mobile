@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 const { createServer } = require('http')
-const { createWriteStream } = require('fs')
+const { createWriteStream, stat, unlinkSync } = require('fs')
+const { readdir } = require('fs').promises
 const { Transform } = require('stream')
 const { spawn } = require('child_process')
 const { networkInterfaces } = require('os')
@@ -54,9 +55,11 @@ function getFileInfo (header) {
   const headerStr = header.toString()
   const filename = /filename="([^"]+)"/ig.exec(headerStr)
   const contentType = /Content-Type: ([^ \n\r]+)/ig.exec(headerStr)
+  const contentLength = /Content-Length: (\d+)/ig.exec(headerStr)
   return {
     filename: filename && filename[1],
-    contentType: contentType && contentType[1]
+    contentType: contentType && contentType[1],
+    contentLength: contentLength ? parseInt(contentLength[1], 10) : -1
   }
 }
 
@@ -72,9 +75,33 @@ async function processScreenshot (req) {
         transform ({ header, stream }, _, next) {
           const fileInfo = getFileInfo(header)
           if (fileReg.test(fileInfo.filename)) {
-            stream.pipe(createWriteStream(`${__dirname}/recorded/${fileInfo.filename}`))
-              .on('error', next)
-              .on('close', next)
+            const localPath = `${__dirname}/recorded/${fileInfo.filename}`
+            if (fileInfo.contentLength === -1) {
+              next(Object.assign(new Error('Content-Length required'), { httpStatus: 411 }))
+              return
+            }
+            let verify = (error) => {
+              verify = () => {}
+              if (error) {
+                next(error)
+                return
+              }
+              stat(localPath, (error, stat) => {
+                if (error) {
+                  next(error)
+                  return
+                }
+                if (stat.size !== fileInfo.contentLength) {
+                  unlinkSync(localPath)
+                  next(Object.assign(new Error(`Didnt receive whole file ${fileInfo.filename},  ${stat.size} !== ${fileInfo.contentLength}. You need to try again.`), { httpStatus: 417 }))
+                  return
+                }
+                next()
+              })
+            }
+            stream.pipe(createWriteStream(localPath))
+              .on('error', verify)
+              .on('close', verify)
             return
           }
           next()
@@ -89,7 +116,7 @@ async function processScreenshot (req) {
 
 const devices = []
 
-async function processDevice (req, res) {
+async function processDevice (req) {
   const deviceId = req.headers['installation-id']
   if (deviceId === null || deviceId === undefined) {
     throw Object.assign(new Error('Missing installation-id header'), { httpStatus: 400 })
@@ -102,18 +129,29 @@ async function processDevice (req, res) {
   return `device-${index}`
 }
 
-async function processRequest (req, res) {
+async function processList () {
+  const list = (await readdir(`${__dirname}/recorded`))
+    .filter(name => /\.png/.test(name)) // Only .pngs
+    .map(name => name.substr(0, name.length - 4)) // Without endings
+
+  return JSON.stringify(list, null, 2)
+}
+
+async function processRequest (req) {
   if (req.url === '/post') {
-    return processScreenshot(req, res)
+    return processScreenshot(req)
   }
   if (req.url === '/device') {
-    return processDevice(req, res)
+    return processDevice(req)
+  }
+  if (req.url === '/list') {
+    return processList()
   }
   throw Object.assign(new Error('not-found'), { httpStatus: 404 })
 }
 
 const server = createServer((req, res) => {
-  processRequest(req, res)
+  processRequest(req)
     .then(
       data => {
         res.writeHead(200, { 'Content-Type': 'text/plain' })
@@ -126,6 +164,7 @@ const server = createServer((req, res) => {
       }
     )
 })
+
 const conn = server.listen(5432, () => {
   const serverUrl = `http://${networkInterfaces().en0.find(network => network.family === 'IPv4').address}:${conn.address().port}`
   console.log(`Listening to ${serverUrl}`)

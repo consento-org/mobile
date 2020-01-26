@@ -17,6 +17,7 @@ interface IEmptyContentProps {
 
 export interface IEmptyViewProps extends IEmptyContentProps {
   onAdd?: () => any
+  onEmpty?: () => any
   children?: React.ReactChild | React.ReactChild[]
   isEmpty?: boolean
 }
@@ -36,10 +37,14 @@ const EmptyContent = ({ prototype: proto }: IEmptyContentProps): JSX.Element => 
   </View>
 }
 
-export function EmptyView ({ prototype: proto, onAdd, children, isEmpty }: IEmptyViewProps): JSX.Element {
+export function EmptyView ({ prototype: proto, onAdd, children, isEmpty, onEmpty }: IEmptyViewProps): JSX.Element {
+  isEmpty = (isEmpty || !exists(children))
+  if (isEmpty && typeof onEmpty === 'function') {
+    onEmpty()
+  }
   return <BottomButtonView prototype={proto} onPress={onAdd}>
     {
-      (isEmpty || !exists(children)) ? <EmptyContent prototype={proto} /> : children
+      isEmpty ? <EmptyContent prototype={proto} /> : children
     }
   </BottomButtonView>
 }

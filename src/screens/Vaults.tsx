@@ -12,6 +12,7 @@ import { elementCardVaultClose } from '../styles/component/elementCardVaultClose
 import { ConsentoContext } from '../model/Consento'
 import { EmptyView } from './components/EmptyView'
 import { elementVaultsEmpty } from '../styles/component/elementVaultsEmpty'
+import { ScreenshotContext, useScreenshotEnabled } from '../util/screenshots'
 import { withNavigationFocus } from 'react-navigation'
 
 const listStyle: ViewStyle = {
@@ -28,6 +29,7 @@ const HorzPadding = 10
 
 const FocussedVaultsScreen = observer(({ navigation }: { navigation: TNavigation }) => {
   const { user: { vaults } } = useContext(ConsentoContext)
+  const screenshots = useContext(ScreenshotContext)
   const { vw } = useVUnits()
   const entryWidth = elementCardVaultClose.width
   let space = vw(100)
@@ -41,6 +43,23 @@ const FocussedVaultsScreen = observer(({ navigation }: { navigation: TNavigation
     count++
   } while (space > 0)
   const width = count * entryWidth + (count * 2 + 1) * HorzPadding
+
+  if (vaults.size === 0) {
+    screenshots.vaultsEmpty.takeSync(500)
+  }
+  if (vaults.size > 0) {
+    screenshots.vaultsFull.takeSync(500)
+  }
+  for (const vault of vaults) {
+    if (vault.isPending) {
+      screenshots.vaultsVaultOnePending.takeSync(500)
+      break
+    }
+    if (!vault.isOpen) {
+      screenshots.vaultsVaultOneLocked.takeSync(500)
+      break
+    }
+  }
 
   return <View style={{ display: 'flex', height: '100%' }}>
     <TopNavigation title='Vaults' />
@@ -63,7 +82,8 @@ const FocussedVaultsScreen = observer(({ navigation }: { navigation: TNavigation
 })
 
 export const VaultsScreen = withNavigationFocus(({ navigation, isFocused }: { navigation: TNavigation, isFocused: boolean }) => {
-  if (isFocused) {
+  const isScreenshotEnabled = useScreenshotEnabled()
+  if (!isScreenshotEnabled || isFocused) {
     return <FocussedVaultsScreen navigation={navigation} />
   }
   return <View />

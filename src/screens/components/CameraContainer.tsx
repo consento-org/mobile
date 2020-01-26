@@ -76,22 +76,6 @@ async function getBestSize (camera: Camera, algo: (sizeLists: ICameraNativeSize[
   return algo(sizeList)
 }
 
-/*
-let biggestSize: Promise<ICameraNativeSize>
-async function getBiggestSize (camera: Camera): Promise<ICameraNativeSize> {
-  if (biggestSize === undefined) {
-    biggestSize = getBestSize(camera, (sizeLists: ICameraNativeSize[]) => {
-      return sizeLists[0]
-    })
-  }
-  return biggestSize
-    .catch(async err => {
-      biggestSize = undefined
-      return Promise.reject(err)
-    })
-}
-*/
-
 let minCameraSize: Promise<ICameraNativeSize>
 async function getMinCameraSize (camera: Camera, minSpace: number): Promise<ICameraNativeSize> {
   if (minCameraSize === undefined) {
@@ -121,7 +105,7 @@ function updateCamera (camera: RefObject<Camera>, setNativeSize: (size: ICameraN
       if (camera.current === null) {
         return
       }
-      console.log(`Notice: trying to update the native size doesn't always work, here is this times error: ${err}`)
+      console.log(`Notice: trying to update the native size doesn't always work, here is this times error: ${String(err)}`)
       setTimeout(updateCamera, 100, camera, setNativeSize)
     }) // Sometimes the camera is not immediately running, retrying again in 100ms is not a bad plan
 }
@@ -163,7 +147,7 @@ const permissionStyle: ViewStyle = {
 
 export const CameraContainer = forwardRef(({ onCode, children, style, zoom, flashMode, type, onCameraReady }: ICameraContainerProps, ref: RefObject<Camera>): JSX.Element => {
   const { status, reask } = usePermission(Permissions.CAMERA, error => {
-    console.log(`Error while fetching permissions: ${error}`) // TODO: Create a system error log
+    console.log(`Error while fetching permissions: ${String(error)}`) // TODO: Create a system error log
   })
   const { isHorz } = useVUnits()
   const [nativeSize, setNativeSize] = useState<ICameraNativeSize>(undefined)

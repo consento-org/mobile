@@ -4,13 +4,14 @@ import { elementTextEditor } from '../../styles/component/elementTextEditor'
 import { useVUnits } from '../../styles/Component'
 import { useSafeArea } from 'react-native-safe-area-context'
 import { ContextMenuContext } from './ContextMenu'
-import { File } from '../../model/VaultData'
+import { File, FileType } from '../../model/VaultData'
 import { useForm } from '../../util/useForm'
 import { observer } from 'mobx-react'
 import { TNavigation } from '../navigation'
 import { Vault } from '../../model/Vault'
 import { Color } from '../../styles/Color'
 import { DarkBar } from './DarkBar'
+import { ScreenshotContext } from '../../util/screenshots'
 
 const saveSize: ViewStyle = {
   position: 'absolute',
@@ -38,6 +39,7 @@ export interface IEditorProps {
 export const Editor = observer(({ navigation, file, vault, children }: IEditorProps): JSX.Element => {
   const { vh, vw } = useVUnits()
   const { open } = useContext(ContextMenuContext)
+  const screenshots = useContext(ScreenshotContext)
   const { Form, useField, save, leave, isDirty } = useForm(navigation, undefined, (): any => navigation.navigate('vault', { vault: vault.$modelId }))
   const filename = useField(
     'filename',
@@ -46,6 +48,16 @@ export const Editor = observer(({ navigation, file, vault, children }: IEditorPr
     (newName: string): void => vault.data.setFilename(file, newName)
   )
   const insets = useSafeArea()
+
+  if (!isDirty) {
+    if (!/^Untitled-/.test(file.name)) {
+      if (file.type === FileType.image) {
+        screenshots.vaultImageEditor.takeSync(200)
+      } else {
+        screenshots.vaultTextEditor.takeSync(200)
+      }
+    }
+  }
 
   return <Form>
     <DarkBar />

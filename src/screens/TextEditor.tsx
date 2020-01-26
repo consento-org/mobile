@@ -41,7 +41,7 @@ const Input = ({ file }: IInputProps): JSX.Element => {
   if (!fullText.loaded) {
     return <Text style={loadingStyle}>Loading...</Text>
   }
-  return <TextInput style={inputStyle} onChangeText={fullText.handleValue} defaultValue={fullText.initial} editable multiline />
+  return <TextInput ref={input => input?.focus()} style={inputStyle} onChangeText={fullText.handleValue} defaultValue={fullText.initial} editable multiline />
 }
 
 export const TextEditor = ({ textFile, vault, navigation }: ITextEditorProps): JSX.Element => {

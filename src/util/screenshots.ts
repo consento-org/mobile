@@ -13,6 +13,7 @@ enum Screens {
   relationFull = 'relationFull',
   relationsOne = 'relationsOne',
   relationsTwo = 'relationsTwo',
+  vaultFilesPopup = 'vaultFilesPopup',
   vaultTextEditor = 'vaultTextEditor',
   vaultImageEditor = 'vaultImageEditor',
   vaultFilesFull = 'vaultFilesFull',

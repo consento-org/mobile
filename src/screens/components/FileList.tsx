@@ -162,7 +162,13 @@ export const FileList = withNavigation(observer(({ navigation }: { navigation: T
   if (textFiles.length > 0 && imageFiles.length > 0) {
     screenshots.vaultFilesFull.takeSync(500)
   }
-  return <EmptyView prototype={elementVaultEmpty} onAdd={() => open(popupActions)}>
+  return <EmptyView
+    prototype={elementVaultEmpty}
+    onAdd={() => {
+      screenshots.vaultFilesPopup.takeSync(500)
+      open(addActions, { vault, navigation })
+    }}
+  >
     {
       files.length > 0
         ? <View>

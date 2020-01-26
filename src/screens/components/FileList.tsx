@@ -1,5 +1,5 @@
 import React, { useContext } from 'react'
-import { View } from 'react-native'
+import { View, Alert } from 'react-native'
 import { elementFileList } from '../../styles/component/elementFileList'
 import { elementVaultEmpty } from '../../styles/component/elementVaultEmpty'
 import { ContextMenuContext } from './ContextMenu'
@@ -13,7 +13,7 @@ import { filter } from '../../util/filter'
 import { observer } from 'mobx-react'
 import { Vault } from '../../model/Vault'
 import { ScreenshotContext } from '../../util/screenshots'
-import { shareBlob, copyToClipboard } from '../../util/expoSecureBlobStore'
+import { shareBlob, copyToClipboard, exportBlob, safeFileName } from '../../util/expoSecureBlobStore'
 import { deleteWarning } from './deleteWarning'
 
 export interface ISectionProps <T extends File> {
@@ -26,10 +26,6 @@ export interface IFileListItemProps <T extends File> {
   navigation: TNavigation
 }
 
-function safeFileName (filename: string): string {
-  return filename.replace(/\s\t/ig, '_').replace(/[^a-z0-9_-]/ig, encodeURIComponent)
-}
-
 const section = elementFileList.sectionText.component
 const itemProto = elementFileList.entry.component
 
@@ -40,7 +36,7 @@ interface IFileContext {
 const shareAction: IPopupMenuItem<IFileContext> = {
   name: 'Share',
   action: ({ file }) => {
-    shareBlob(file.secretKey, `${safeFileName(file.name)}.${file.type === FileType.image ? 'jpg' : 'txt'}`)
+    shareBlob(file.secretKey, file.fileName)
       .catch(exportError => console.log({ exportError }))
   }
 }
@@ -49,6 +45,25 @@ const copyAction: IPopupMenuItem<IFileContext> = {
   action: ({ file }) => {
     copyToClipboard(file.secretKey, file.name)
       .catch(clipboardError => console.log({ clipboardError }))
+  }
+}
+const exportAction: IPopupMenuItem<IFileContext> = {
+  name: 'Export',
+  action: ({ file, vault }): void => {
+    const albumName = `Consento | ${safeFileName(vault.name)}`
+    exportBlob(file.secretKey, albumName, file.fileName)
+      .then(
+        () => {
+          Alert.alert(
+            'Successfully exported',
+            `Added "${file.fileName}"\n → "${albumName}"`,
+            [
+              { text: 'ok' }
+            ]
+          )
+        },
+        exportBlobError => console.log({ exportBlobError })
+      )
   }
 }
 const deleteAction: IPopupMenuItem<IFileContext> = {
@@ -64,6 +79,7 @@ const deleteAction: IPopupMenuItem<IFileContext> = {
 
 const textActions: Array<TPopupMenuItem<IFileContext>> = [
   shareAction,
+  exportAction,
   copyAction,
   DIVIDER,
   deleteAction
@@ -71,6 +87,7 @@ const textActions: Array<TPopupMenuItem<IFileContext>> = [
 
 const imageActions: Array<TPopupMenuItem<IFileContext>> = [
   shareAction,
+  exportAction,
   DIVIDER,
   deleteAction
 ]

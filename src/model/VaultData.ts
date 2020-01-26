@@ -2,7 +2,7 @@ import { model, Model, tProp, types, modelAction, prop, objectMap, getParent, ar
 import { computed } from 'mobx'
 import { toBuffer, bufferToString, Buffer } from '@consento/crypto/util/buffer'
 import { find } from '../util/find'
-import { readBlob, writeBlob } from '../util/expoSecureBlobStore'
+import { readBlob, writeBlob, safeFileName } from '../util/expoSecureBlobStore'
 import { IHandshakeInitJSON, IHandshakeAcceptMessage, ISenderJSON, IConnectionJSON, IAPI } from '@consento/api'
 import { Sender } from './Connection'
 import { humanModelId } from '../util/humanModelId'
@@ -11,6 +11,7 @@ export interface IFile {
   readonly secretKeyBase64: string
   readonly secretKey: Uint8Array
   readonly type: FileType
+  readonly fileName: string
 }
 
 export type File = ImageFile | TextFile
@@ -37,6 +38,10 @@ export class ImageFile extends Model({
 
   @computed get secretKey (): Uint8Array {
     return toBuffer(this.secretKeyBase64)
+  }
+
+  get fileName (): string {
+    return `${safeFileName(this.name)}.jpg`
   }
 }
 
@@ -72,6 +77,10 @@ export class TextFile extends Model({
 
   @computed get secretKey (): Uint8Array {
     return toBuffer(this.secretKeyBase64)
+  }
+
+  get fileName (): string {
+    return `${safeFileName(this.name)}.txt`
   }
 }
 

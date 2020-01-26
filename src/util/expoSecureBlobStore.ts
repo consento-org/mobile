@@ -6,6 +6,7 @@ import * as Sharing from 'expo-sharing'
 import { cache } from './expoFsUtils'
 import { readAsStringAsync, deleteAsync } from 'expo-file-system/build/FileSystem'
 import { Clipboard } from 'react-native'
+import { createAssetAsync, getAssetInfoAsync, createAlbumAsync, saveToLibraryAsync, addAssetsToAlbumAsync } from 'expo-media-library'
 
 export async function pathForSecretKey (secretKey: Uint8Array): Promise<string[]> {
   const locationKey = await sodium.deriveKdfKey(secretKey)
@@ -78,46 +79,29 @@ ${data}`)
   return false
 }
 
-export async function exportData (data: string | Uint8Array, target: string): Promise<string> {
+export function safeFileName (fileName: string): string {
+  return fileName.replace(/\s\t/ig, '_').replace(/[^a-z0-9_-]/ig, encodeURIComponent).replace(/%20/ig, ' ')
+}
+
+export async function exportData (data: string | Uint8Array, albumName: string, fileName: string): Promise<void> {
   const permission = await askAsync(CAMERA_ROLL)
   if (!permission.granted) {
     return null
   }
-  /*
-  const id = bufferToBase32(randomBytes(new Uint8Array(4))).toUpperCase()
-  const filename = `${target}`
-  const cacheDir = `${cacheDirectory}${id}/`
-  await makeDirectoryAsync(cacheDir)
-  const cacheUri = `${cacheDir}${filename}`
-  await writeAsStringAsync(
-    cacheUri,
-    typeof data === 'string' ? data : bufferToString(data, 'base64'),
-    { encoding: typeof data === 'string' ? 'utf8' : 'base64' }
-  )
-  // await MediaLibrary.saveToLibraryAsync(cacheUri)
-  const asset = await MediaLibrary.createAssetAsync(cacheUri)
-  const album = await MediaLibrary.createAlbumAsync('Consento', asset, true)
-  // await deleteAsync(cacheUri)
-  console.log(asset)
-  const info = await MediaLibrary.getAssetInfoAsync(asset.id)
-  // MediaLibrary.getAssetsAsync()
-  // await Sharing.shareAsync(asset.uri)
-  // console.log(info)
-  console.log(album)
-  console.log(info)
-  console.log(await Sharing.isAvailableAsync())
-  await Sharing.shareAsync(cacheUri)
-  await deleteAsync(cacheUri)
-  */
-  return null
+  const cacheDir = await cache.mkdirTmpAsync()
+  const cacheFile = [...cacheDir, fileName]
+  await cache.write(cacheFile, data ?? ' ') // If the data is empty an unexpected error is thrown
+  const asset = await createAssetAsync(cache.resolve(cacheFile))
+  await createAlbumAsync(albumName, asset, false)
+  await cache.delete(cacheFile)
 }
 
-export async function exportBlob (input: string | Uint8Array | IEncryptedBlob, target: string): Promise<string> {
+export async function exportBlob (input: string | Uint8Array | IEncryptedBlob, albumName: string, fileName: string): Promise<void> {
   const data = await readBlob(input)
   if (typeof data === 'string' || data instanceof Uint8Array) {
-    return exportData(data, target)
+    return exportData(data, albumName, fileName)
   }
-  return exportData(JSON.stringify(data, null, 2), target)
+  return exportData(JSON.stringify(data, null, 2), albumName, fileName)
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function

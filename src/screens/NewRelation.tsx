@@ -12,6 +12,7 @@ import Svg, { Path } from 'react-native-svg'
 import { fromConnection } from '../model/Relation'
 import { useSafeArea } from 'react-native-safe-area-context'
 import { ConsentoContext } from '../model/Consento'
+import { useScreenshot } from '../util/Screenshot'
 
 const barContainer: ViewStyle = {
   position: 'absolute',
@@ -44,6 +45,12 @@ const retryButtonStyle: ViewStyle = {
 
 export const NewRelation = withNavigation(({ navigation }: { navigation: TNavigation }) => {
   const { user } = useContext(ConsentoContext)
+  const screenshots = {
+    ready: useScreenshot('new-relation-ready'),
+    outConnect: useScreenshot('new-relation-outgoing-connecting'),
+    outConfirm: useScreenshot('new-relation-outgoing-confirming'),
+    inConfirm: useScreenshot('new-relation-incoming-confirming')
+  }
   const { vw, vh, isHorz, isVert } = useVUnits()
   const inset = useSafeArea()
   // eslint-disable-next-line @typescript-eslint/require-await
@@ -99,6 +106,21 @@ export const NewRelation = withNavigation(({ navigation }: { navigation: TNaviga
   }
 
   const size = qrSpace - (screen09ScanQRCode.code.place.left * 2)
+
+  if (exists(incoming)) {
+    if (incoming.state === IncomingState.ready) {
+      screenshots.ready.take()
+    } else if (incoming.state === IncomingState.confirming) {
+      screenshots.inConfirm.take()
+    }
+  }
+  if (exists(outgoing)) {
+    if (outgoing.state === OutgoingState.connecting) {
+      screenshots.outConnect.take()
+    } else if (outgoing.state === OutgoingState.confirming) {
+      screenshots.outConfirm.take()
+    }
+  }
 
   return <View style={{ width: '100%', height: '100%', display: 'flex', flexDirection: isHorz ? 'row' : 'column', backgroundColor: screen09ScanQRCode.backgroundColor }}>
     <CameraContainer style={camSpace} onCode={onCode}>

@@ -117,6 +117,12 @@ const listStyle: ViewStyle = {
 
 const FocusedConsentosScreen = observer((): JSX.Element => {
   const { user } = useContext(ConsentoContext)
+  // const screenshots = {
+  //   empty: useScreenshot('consentos-empty'),
+  //   becomeLockeePending: useScreenshot('consentos-become-lockee-pending'),
+  //   becomeLockeeConfirming: useScreenshot('consentos-become-lockee-confirming'),
+  //   becomeLockeeConfirming: useScreenshot('consentos-become-lockee-confirming'),
+  // }
   if (!exists(user)) {
     return
   }

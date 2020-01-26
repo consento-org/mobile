@@ -1,6 +1,6 @@
-import { useState, useContext, createContext, createRef, useLayoutEffect, useEffect } from 'react'
+import { useState, useContext, createContext, createRef, useEffect } from 'react'
 import { View } from 'react-native'
-import { captureRef } from 'react-native-view-shot'
+import { captureScreen } from 'react-native-view-shot'
 import { deleteAsync } from 'expo-file-system'
 import { exists } from './exists'
 
@@ -23,15 +23,13 @@ export interface IScreenshot {
 
 export interface IScreenshotSystem {
   serverUrl: string
-  ref
   deviceId: Promise<String>
   takenScreenshots: Set<string>
   takeScreenshot (name: string, forDeviceId: string): Promise<void>
 }
 
 export function initScreenshot (serverUrl: string): IScreenshotSystem {
-  const ref = createRef<View>()
-  const deviceId = requestDeviceId(serverUrl).catch(deviceIdError => {
+  const deviceId: Promise<string> = requestDeviceId(serverUrl).catch(deviceIdError => {
     console.log({ deviceIdError })
     return null
   })
@@ -39,26 +37,31 @@ export function initScreenshot (serverUrl: string): IScreenshotSystem {
   return {
     deviceId,
     async takeScreenshot (name: string, forDeviceId: string): Promise<void> {
-      if (await deviceId === forDeviceId && ref.current !== null && !takenScreenshots.has(name)) {
-        takenScreenshots.add(name)
-        const uri = await captureRef(ref, {})
-        ;(async () => {
-          const formData = new FormData()
-          formData.append('file', { uri, name: `${name}.png`, type: 'image/png' } as any)
-          await fetch(`${serverUrl}/post`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'multipart/form-data; charset=UTF-8'
-            },
-            body: formData
-          })
-          await deleteAsync(uri)
-        })().catch(screenshotStoreError => console.log({ screenshotStoreError }))
+      const thisDeviceId = await deviceId
+      if (thisDeviceId !== forDeviceId) {
+        console.log(`Skipping Screenshot ${name}@${thisDeviceId} - id mismatch ${forDeviceId}`)
       }
+      if (takenScreenshots.has(name)) {
+        console.log(`Skipping Screenshot ${name}@${thisDeviceId} - already taken`)
+      }
+      takenScreenshots.add(name)
+      const uri = await captureScreen({})
+      console.log(`Captured Screenshot ${name}@${thisDeviceId} - ${uri}`)
+      ;(async () => {
+        const formData = new FormData()
+        formData.append('file', { uri, name: `${name}.png`, type: 'image/png' } as any)
+        await fetch(`${serverUrl}/post`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'multipart/form-data; charset=UTF-8'
+          },
+          body: formData
+        })
+        await deleteAsync(uri)
+      })().catch(screenshotStoreError => console.log({ screenshotStoreError }))
     },
     takenScreenshots,
-    serverUrl,
-    ref
+    serverUrl
   }
 }
 

@@ -351,17 +351,21 @@ export function useForm (
   })[0]
 
   useEffect(() => {
-    if (!form.isDirty) return
-    const next = (): void => {
+    const next = (): boolean => {
       if (leave !== undefined) {
         leave()
       } else {
         navigation.goBack()
       }
+      return true
+    }
+    if (!form.isDirty) {
+      BackHandler.addEventListener('hardwareBackPress', next)
+      return () => BackHandler.removeEventListener('hardwareBackPress', next)
     }
     const fnc = (): boolean => {
       if (!form.isDirty) {
-        return false
+        return next()
       }
       if (form.isInvalid) {
         alertInvalid(next)

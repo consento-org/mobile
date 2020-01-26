@@ -99,6 +99,17 @@ export interface IConsentMenuDisplayProps {
   close: () => any
 }
 
+const padding = {
+  left: 10,
+  right: 10,
+  top: 10,
+  bottom: 10
+}
+const offset = {
+  top: -50,
+  left: -50
+}
+
 export const ContextMenuDisplay = ({ items, onItemSelect, pos, context, close }: IConsentMenuDisplayProps): JSX.Element => {
   const cancel = (): void => onItemSelect(null, null)
   const { vw, vh } = useVUnits()
@@ -106,14 +117,16 @@ export const ContextMenuDisplay = ({ items, onItemSelect, pos, context, close }:
 
   const width = elementContextMenu.width
   const height = items
-    .map(item => item === null ? elementContextMenu.divider.place.height : elementContextMenu.copy.place.height)
+    .map(item => isDivider(item) ? elementContextMenu.divider.place.height : elementContextMenu.copy.place.height)
     .reduce((height, itemHeight) => height + itemHeight) + elementContextMenu.copy.place.top + (elementContextMenu.height - elementContextMenu.delete.place.bottom)
 
-  const maxLeft = vw(100) - inset.right
-  const maxTop = vh(100) - inset.bottom
+  const maxLeft = vw(100) - inset.right - padding.right
+  const maxTop = vh(100) - inset.bottom - padding.bottom
 
-  const left = (pos.left + width > maxLeft) ? maxLeft - width : pos.left
-  const top = (pos.top + height > maxTop) ? maxTop - height : pos.top
+  pos.left += offset.left
+  pos.top += offset.top
+
+  const left = (pos.left + width > maxLeft) ? maxLeft - width : Math.max(pos.left, padding.left)
   const top = (pos.top + height > maxTop) ? maxTop - height : Math.max(pos.top, padding.top)
 
   return <View style={{

@@ -18,19 +18,20 @@ export const ConsentoApp = (): JSX.Element => {
     [Consento]
   )
 
-  useEffect(
-    () => autorun(() => setReady(consento.ready)),
-    [Consento]
-  )
-
   if (!(consento instanceof Consento)) {
     setReady(false)
     setConsento(new Consento({}))
-    return <Loading />
   }
 
-  if (!ready) {
-    return <Loading />
+  useEffect(
+    () => autorun(() => {
+      if (ready !== consento.ready) {
+        setReady(consento.ready)
+      }
+    }),
+    [consento, ready]
+  )
+
   }
 
   return <ContextMenu>

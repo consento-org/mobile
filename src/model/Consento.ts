@@ -198,7 +198,7 @@ export class Consento extends Model({
     this.users.clear()
     this._api = api
     this._apiReady.set(Date.now())
-    if (this._api !== undefined && first(this.users) === undefined) {
+    if (this._api !== undefined) {
       this.users.add(createDefaultUser())
     }
   }
@@ -286,7 +286,8 @@ export class Consento extends Model({
               }
             })
           )
-        }
+        },
+        { fireImmediately: true }
       ),
       safeReaction(
         () => this.config?.address,
@@ -307,7 +308,8 @@ export class Consento extends Model({
             this._setApi(undefined)
             destructTransport()
           }
-        }
+        },
+        { fireImmediately: true }
       )
     )
   }

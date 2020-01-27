@@ -184,7 +184,7 @@ export function createSecureStore <LogEntry> (secretKey: Uint8Array, options: IS
         .filter(logVersion => logVersion <= maxLogVersion)
 
       if (logVersions.length !== maxLogVersion) {
-        throw new Error(`Can not restore index: missing log entries! ${maxLogVersion} != ${logVersions.length}`)
+        throw new Error(`Can not restore index: missing log entries! ${maxLogVersion.toString()} != ${String(logVersions.length)}`)
       }
       return processIndex(0, data, logVersions)
     })()

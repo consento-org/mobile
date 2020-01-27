@@ -39,7 +39,7 @@ async function _getExpoToken (): Promise<string> {
     return Notifications.getExpoPushTokenAsync()
   } catch (error) {
     if (Constants.debugMode) {
-      console.warn(`[DEV MODE ONLY!] Error while collecting expo token, using dummy token: ${error}`)
+      console.warn(`[DEV MODE ONLY!] Error while collecting expo token, using dummy token: ${String(error)}`)
       return randomDummyExpoToken()
     }
     throw error

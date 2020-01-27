@@ -10,7 +10,7 @@ export const jsonEncoding = {
     try {
       return JSON.parse(str)
     } catch (err) {
-      throw new Error(`${err}: \n ${str}`)
+      throw new Error(`${String(err)}: \n ${str}`)
     }
   }
 }

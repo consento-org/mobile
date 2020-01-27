@@ -5,6 +5,7 @@ on:
     branches:
       - master
       - next
+      - fix/*
 
 jobs:
   setup:

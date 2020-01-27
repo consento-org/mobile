@@ -26,17 +26,12 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
 
-  build:
-    runs-on: ubuntu-latest
-    needs: setup
-
-    steps:
     - name: Install, build and test
       run: npm ci && npm test
 
   publish:
     runs-on: ubuntu-latest
-    needs: build
+    needs: setup
 
     steps:
     - name: Login into Expo

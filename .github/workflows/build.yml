@@ -23,4 +23,4 @@ jobs:
         node-version: ${{ matrix.node-version }}
 
     - name: Install, build and test
-      run: npm ci
+      run: npm ci && npm test

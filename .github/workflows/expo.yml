@@ -43,12 +43,14 @@ jobs:
     - name: Login into Expo
       run: npx expo-cli login -u ${{ secrets.EXPO_USERNAME }} -p ${{ secrets.EXPO_PASSWORD }}
 
-    - name: Publish to Expo channel "default"
+    - name: Publish & build with Expo channel "default"
       if: endsWith(github.ref, '/master')
       run: | 
-        npx expo build:android -t app-bundle --non-interactive --no-wait --release-channel default
+        npx expo publish --non-interactive --release-channel default
+        npx expo build:android -t app-bundle --non-interactive --no-wait --no-publish --release-channel default
 
-    - name: Publish to Expo channel "next"
+    - name: Publish & build with Expo channel "next"
       if: endsWith(github.ref, '/next')
       run: |
-        npx expo build:android -t app-bundle --non-interactive --no-wait --release-channel next
+        npx expo publish --non-interactive --release-channel next
+        npx expo build:android -t app-bundle --non-interactive --no-wait --no-publish --release-channel next

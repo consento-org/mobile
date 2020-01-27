@@ -127,7 +127,7 @@ Make it exportable and specify the export preset settings.
 
 We use the export sizes: `1x`, `2x`, `3x` and `1.5x`.
 
-<img src="./docs/03b-add-exportable.png" />
+<img src="./docs/03c-add-preset.png" />
 
 To make it more convenient for you, you can specify a default preset in Sketch that is applied every time you make an artboart exportable.
 

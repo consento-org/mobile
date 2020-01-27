@@ -148,5 +148,5 @@ We are committed to do some good tech that can be of valuable use for users and 
 
 ### Social contact
 
-Keybase chat: https://keybase.io/team/consento
-Questions, mail to: [keepsafe@consento.org](mailto:keepsafe@consento.org)
+- Keybase chat: https://keybase.io/team/consento
+- Questions, mail to: [keepsafe@consento.org](mailto:keepsafe@consento.org) or as [issue](https://github.com/consento-org/mobile/issues/new)

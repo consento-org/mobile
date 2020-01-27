@@ -1,8 +1,9 @@
 import { createVaultSecrets, IVaultSecrets, IVaultSecretsProps } from '../createVaultSecrets'
 import { cryptoCore } from '../../cryptoCore'
+import { exists } from '../exists'
 
 async function waitABit <T> (next: () => T): Promise<T> {
-  return new Promise<T> (resolve => {
+  return new Promise <T>(resolve => {
     setTimeout(
       () => resolve(next()),
       (Math.random() * 20) | 0
@@ -11,10 +12,10 @@ async function waitABit <T> (next: () => T): Promise<T> {
 }
 
 function factory (store?: { [key: string]: string }, impl?: Partial<IVaultSecretsProps>): {
-  store: { [key: string]: string },
+  store: { [key: string]: string }
   vaultSecrets: IVaultSecrets
 } {
-  if (!store) {
+  if (!exists(store)) {
     store = {}
   }
   const vaultSecrets = createVaultSecrets({
@@ -29,6 +30,7 @@ function factory (store?: { [key: string]: string }, impl?: Partial<IVaultSecret
     },
     async deleteItemAsync (key: string): Promise<void> {
       return waitABit(() => {
+        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
         delete store[key]
       })
     },
@@ -134,7 +136,6 @@ describe('secrets', () => {
       fail('should throw')
     } catch (err) {
       expect(err.code).toBe('unpersist-no-key')
-      return
     }
   })
   it('toggling a missing key on a device throws error', async () => {
@@ -144,7 +145,6 @@ describe('secrets', () => {
       fail('should throw')
     } catch (err) {
       expect(err.code).toBe('persist-no-key')
-      return
     }
   })
   it('toggling deleted key throws error, but keeps read intact', async () => {
@@ -159,7 +159,6 @@ describe('secrets', () => {
     } catch (err) {
       expect(err.code).toBe('unpersist-no-key')
       expect(await vaultSecrets.get(keyHex)).toBeUndefined()
-      return
     }
   })
   it('persist a secret that is already persisted stays persisted', async () => {
@@ -210,7 +209,7 @@ describe('secrets', () => {
     expect(store).toEqual({})
   })
   it('removing an item that isnt indexed', async () => {
-    const { vaultSecrets, store } = factory()
+    const { vaultSecrets } = factory()
     await vaultSecrets.set('a', '1', true)
     await vaultSecrets.set('b', '2', false)
     expect(await vaultSecrets.persistedKeys()).toEqual(['a'])

@@ -56,6 +56,7 @@ async function createStore (secretKey?: Uint8Array, dataStore?: any): Promise<{ 
       },
       // eslint-disable-next-line @typescript-eslint/require-await
       async delete (path: string[]): Promise<void> {
+        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
         delete dataStore[path.join('/')]
       }
     },

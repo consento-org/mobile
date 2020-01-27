@@ -18,7 +18,7 @@ const height = elementVaultUnlock.active.place.height
 const radius = elementVaultUnlock.inactive.borderRadius
 const { box, width: outWidth, height: outHeight } = createBoxOutline(width, height, radius, 'inside', thickness)
 const adjust = -thickness / 2
-const viewBox = `${adjust} ${adjust} ${outWidth} ${outHeight}`
+const viewBox = `${adjust.toString()} ${adjust.toString()} ${outWidth.toString()} ${outHeight.toString()}`
 const textStyle: TextStyle = {
   ...elementVaultUnlock.waiting.style,
   position: 'absolute',

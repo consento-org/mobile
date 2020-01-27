@@ -40,7 +40,7 @@ export class Line implements ILinePart {
 
   target (to: number): string {
     this.point(to, P)
-    return `L ${P.x} ${P.y}`
+    return `L ${P.x.toString()} ${P.y.toString()}`
   }
 }
 
@@ -69,7 +69,7 @@ export class Arc implements ILinePart {
 
   target (to: number): string {
     this.point(to, P)
-    return `A ${this.radius} ${this.radius} 0, 0, 1, ${P.x} ${P.y}`
+    return `A ${this.radius.toString()} ${this.radius.toString()} 0, 0, 1, ${P.x.toString()} ${P.y.toString()}`
   }
 }
 
@@ -91,7 +91,7 @@ export class LineAnimation {
       entry = entry.next
     }
     entry.node.point(offset, P)
-    let result = `M ${P.x} ${P.y}`
+    let result = `M ${P.x.toString()} ${P.y.toString()}`
     let i = 0
     while (length > 0 && i < 40) {
       let partLength: number

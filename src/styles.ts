@@ -1,5 +1,4 @@
-import { StyleSheet, StatusBar, Platform } from 'react-native'
-import { Color } from './styles/Color'
+import { Platform } from 'react-native'
 
 interface AndroidShadow {
   elevation: number
@@ -37,33 +36,3 @@ export function shadow (elevation: number = 4): Shadow {
   }
   return shadow
 }
-
-export const styles = StyleSheet.create({
-  label: {
-    color: '#999',
-    marginTop: 8,
-    fontStyle: 'italic'
-  },
-  firstButton: {
-    margin: 10
-  },
-  screen: {
-    backgroundColor: Color.grey
-  },
-  input: {
-    borderBottomColor: '#999',
-    paddingBottom: 2,
-    borderBottomWidth: 1,
-    marginTop: 10,
-    marginBottom: 20,
-    width: 200,
-    height: 20
-  },
-  container: {
-    flex: 1,
-    padding: 10,
-    backgroundColor: '#fff',
-    flexDirection: 'column',
-    alignItems: 'flex-start'
-  }
-})

@@ -6,7 +6,7 @@ import * as Sharing from 'expo-sharing'
 import { cache } from './expoFsUtils'
 import { readAsStringAsync, deleteAsync } from 'expo-file-system/build/FileSystem'
 import { Clipboard } from 'react-native'
-import { createAssetAsync, getAssetInfoAsync, createAlbumAsync, saveToLibraryAsync, addAssetsToAlbumAsync } from 'expo-media-library'
+import { createAssetAsync, createAlbumAsync } from 'expo-media-library'
 
 export async function pathForSecretKey (secretKey: Uint8Array): Promise<string[]> {
   const locationKey = await sodium.deriveKdfKey(secretKey)

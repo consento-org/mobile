@@ -94,8 +94,8 @@ export class VaultOpen extends Model({
 @model('consento/Vault/OpenRequest')
 export class VaultOpenRequest extends ExtendedModel(RequestBase, {
 }) {
-  static KEEP_ALIVE = 1 * 60 * 1000 // five minutes should be good?
-  // static KEEP_ALIVE = 5 * 60 * 1000 // five minutes should be good?
+  // static KEEP_ALIVE = 1 * 60 * 1000 // one minutes should be good?
+  static KEEP_ALIVE = 5 * 60 * 1000 // five minutes should be good?
 }
 
 export type VaultAccessEntry = typeof VaultOpenRequest | VaultClose | VaultOpen

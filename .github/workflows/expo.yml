@@ -32,8 +32,7 @@ jobs:
 
     steps:
     - name: Install, build and test
-      run: |
-        npm install
+      run: npm ci && npm test
 
   publish:
     runs-on: ubuntu-latest

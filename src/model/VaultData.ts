@@ -6,6 +6,7 @@ import { readBlob, writeBlob, safeFileName } from '../util/expoSecureBlobStore'
 import { IHandshakeInitJSON, IHandshakeAcceptMessage, ISenderJSON, IConnectionJSON, IAPI } from '@consento/api'
 import { Sender } from './Connection'
 import { humanModelId } from '../util/humanModelId'
+import { ILogEntry } from './Consento.types'
 
 export interface IFile {
   readonly secretKeyBase64: string
@@ -30,6 +31,7 @@ export class ImageFile extends Model({
   secretKeyBase64: tProp(types.string),
   width: tProp(types.number),
   height: tProp(types.number),
+  size: tProp(types.number, () => -1),
   exif: prop(() => objectMap())
 }) implements IFile {
   get type (): FileType {
@@ -48,19 +50,25 @@ export class ImageFile extends Model({
 @model('consento/VaultData/Text')
 export class TextFile extends Model({
   name: tProp(types.maybeNull(types.string), () => null),
-  secretKeyBase64: tProp(types.maybeNull(types.string), () => null)
+  secretKeyBase64: tProp(types.maybeNull(types.string), () => null),
+  size: tProp(types.number, () => -1)
 }) implements IFile {
   get type (): FileType {
     return FileType.text
   }
 
-  async saveText (text: string): Promise<void> {
-    const { secretKey } = await writeBlob(text)
-    this._saveText(bufferToString(secretKey, 'base64'))
+  get log (): ILogEntry[] {
+    return []
   }
 
-  @modelAction _saveText (secretKeyBase64: string): void {
+  async saveText (text: string): Promise<void> {
+    const { secretKey, size } = await writeBlob(text)
+    this._saveText(bufferToString(secretKey, 'base64'), size)
+  }
+
+  @modelAction _saveText (secretKeyBase64: string, size: number): void {
     this.secretKeyBase64 = secretKeyBase64
+    this.size = size
   }
 
   async loadText (): Promise<string> {
@@ -88,6 +96,37 @@ export interface IVaultLockeeConfirmation {
   connectionJSON: IConnectionJSON
   shareHex: string
   finalMessage: Uint8Array
+}
+
+@model('consento/VaultData/log/addLockee')
+export class AddLockeeEntry extends Model({
+  time: tProp(types.number, () => Date.now()),
+  relationId: tProp(types.string),
+  vaultLockeeId: tProp(types.string)
+}) implements ILogEntry {
+  get key (): string {
+    return this.$modelId
+  }
+
+  get text (): string {
+    return 'You added a new lockee.'
+  }
+}
+
+@model('consento/VaultData/log/revokeLockee')
+export class RevokeLockeeEntry extends Model({
+  time: tProp(types.number, () => Date.now()),
+  relationId: tProp(types.string),
+  reason: prop<TVaultRevokeReason>(),
+  vaultLockeeId: tProp(types.string)
+}) implements ILogEntry {
+  get key (): string {
+    return this.$modelId
+  }
+
+  get text (): string {
+    return 'You removed a lockee.'
+  }
 }
 
 @model('consento/VaultData/Lockee')
@@ -139,12 +178,19 @@ export class VaultLockee extends Model({
   }
 }
 
+export enum TVaultRevokeReason {
+  denied = 'denied',
+  error = 'error',
+  revoked = 'revoked'
+}
+
 @model('consento/VaultData')
 export class VaultData extends Model({
   dataKeyHex: tProp(types.string),
   loaded: tProp(types.boolean, () => false),
   files: prop((): File[] => []),
-  lockees: prop(() => arraySet<VaultLockee>())
+  lockees: prop(() => arraySet<VaultLockee>()),
+  log: prop((): ILogEntry[] => [])
 }) {
   findFile (modelId: string): File {
     return find(this.files, (file: File): file is File => file.$modelId === modelId)
@@ -169,11 +215,28 @@ export class VaultData extends Model({
     this.files.splice(index, 1)
   }
 
-  @modelAction revokeLockee (lockee: VaultLockee): boolean {
+  @modelAction revokeLockee (lockee: VaultLockee, reason: TVaultRevokeReason): boolean {
     if (!this.lockees.has(lockee)) {
       return false
     }
     this.lockees.delete(lockee)
+    this.log.push(new RevokeLockeeEntry({
+      vaultLockeeId: lockee.$modelId,
+      relationId: lockee.relationId,
+      reason
+    }))
+    return true
+  }
+
+  @modelAction addLockee (lockee: VaultLockee): boolean {
+    if (this.lockees.has(lockee)) {
+      return false
+    }
+    this.lockees.add(lockee)
+    this.log.push(new AddLockeeEntry({
+      vaultLockeeId: lockee.$modelId,
+      relationId: lockee.relationId
+    }))
     return true
   }
 

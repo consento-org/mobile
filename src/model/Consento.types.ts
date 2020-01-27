@@ -9,6 +9,12 @@ export interface IRelationEntry {
   readonly avatarId: string
 }
 
+export interface ILogEntry {
+  readonly key: string
+  readonly time: number
+  readonly text: string
+}
+
 export interface ISubscription {
   receiver: Receiver
   action: (notification: ISuccessNotification, api: IAPI) => void

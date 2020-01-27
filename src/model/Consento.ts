@@ -130,6 +130,7 @@ function diffSubscriptions (stored: ISubscriptionMap, current: ISubscriptionMap)
 @model(CONSENTO)
 export class Consento extends Model({
   users: prop<ArraySet<User>>(() => arraySet()),
+  appStart: prop(),
   config: prop<Config>(() => null)
 }) implements IConsentoModel {
   _apiReady = observable.box(Date.now())

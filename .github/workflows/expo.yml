@@ -47,10 +47,10 @@ jobs:
       if: endsWith(github.ref, '/master')
       run: | 
         npx expo publish --non-interactive --release-channel default
-        npx expo build:android -t app-bundle --non-interactive --no-wait --no-publish --release-channel default
+        npx expo build:android -t app-bundle --non-interactive --no-publish --release-channel default
 
     - name: Publish & build with Expo channel "next"
       if: endsWith(github.ref, '/next')
       run: |
         npx expo publish --non-interactive --release-channel next
-        npx expo build:android -t app-bundle --non-interactive --no-wait --no-publish --release-channel next
+        npx expo build:android -t app-bundle --non-interactive --no-publish --release-channel next

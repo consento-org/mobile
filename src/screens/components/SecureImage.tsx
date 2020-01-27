@@ -47,7 +47,7 @@ export const SecureImage = ({ secretKey: input, style, resizeMode, loadingIndica
         }
       })
       .catch(err => {
-        console.error(`Error Reading Image: ${err}`)
+        console.error(`Error Reading Image: ${String(err)}`)
       })
     return () => {
       response = noop
@@ -57,7 +57,7 @@ export const SecureImage = ({ secretKey: input, style, resizeMode, loadingIndica
   if (source === undefined) {
     if (loadingIndicatorSource === undefined || loadingIndicatorSource === null) {
       return <View style={finalStyle}>
-        <elementSecureImage.decrypting.Render horz='center' vert='center' />
+        {elementSecureImage.decrypting.render({})}
       </View>
     }
     source = loadingIndicatorSource

@@ -1,7 +1,7 @@
-// This file has been generated with expo-export@3.6.1, a Sketch plugin.
+// This file has been generated with expo-export@3.6.2, a Sketch plugin.
 import React, { useState, useEffect } from 'react'
 import { ImageAsset, Slice9 } from '../Asset'
-import { Image, ImageStyle, TextStyle, TextInput, Text as NativeText, View, ViewStyle, FlexStyle, TouchableOpacity, GestureResponderEvent, Dimensions, Insets, ReturnKeyTypeOptions } from 'react-native'
+import { Image, ImageStyle, TextStyle, TextInput, Text as NativeText, View, ViewStyle, FlexStyle, TouchableOpacity, GestureResponderEvent, Dimensions, Insets, ReturnKeyTypeOptions, Keyboard, KeyboardEvent } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 
 export type TRenderGravity = 'start' | 'end' | 'center' | 'stretch'
@@ -14,10 +14,9 @@ export interface IRenderOptions {
   onLayout?: () => any
 }
 
-export function createGlobalEffect <T> ({ update, init, exit }: {
+export function createGlobalEffect <T> ({ update, init }: {
   update (): T | undefined
-  init (handler: () => any): void
-  exit (handler: () => any): void
+  init (handler: () => any): () => any
 }): () => T {
   const listeners = new Set<(lastUpdate: number) => any>()
   let output: T = update()
@@ -33,17 +32,18 @@ export function createGlobalEffect <T> ({ update, init, exit }: {
       update(globalLastUpdate)
     }
   }
+  let exit: () => any
   return () => {
     const setLastUpdate = useState<number>(globalLastUpdate)[1]
     useEffect(() => {
       listeners.add(setLastUpdate)
       if (listeners.size === 1) {
-        init(updateOutput)
+        exit = init(updateOutput)
       }
       return () => {
         listeners.delete(setLastUpdate)
         if (listeners.size === 0) {
-          exit(updateOutput)
+          exit()
         }
       }
     }, [false]) // Only update the effect once
@@ -71,11 +71,12 @@ const mem = {
   vh: null
 }
 
+let keyboardSize = 0
 export const useVUnits = createGlobalEffect({
   update () {
     const { width, height } = Dimensions.get('window')
     const vw = width / 100
-    const vh = height / 100
+    const vh = (height - keyboardSize) / 100
     if (vw === mem.vw && vh === mem.vh) {
       return
     }
@@ -92,8 +93,22 @@ export const useVUnits = createGlobalEffect({
       isVert: orientation === TOrientation.vertical
     })
   },
-  init: handler => Dimensions.addEventListener('change', handler),
-  exit: handler => Dimensions.removeEventListener('change', handler)
+  init: handler => {
+    Dimensions.addEventListener('change', handler)
+    const keyboardHandler = (e: KeyboardEvent): void => {
+      keyboardSize = e.endCoordinates.height
+      handler()
+    }
+    Keyboard.addListener('keyboardDidChangeFrame', keyboardHandler)
+    Keyboard.addListener('keyboardDidShow', keyboardHandler)
+    Keyboard.addListener('keyboardDidHide', keyboardHandler)
+    return () => {
+      Dimensions.removeEventListener('change', handler)
+      Keyboard.removeListener('keyboardDidShow', keyboardHandler)
+      Keyboard.removeListener('keyboardDidChangeFrame', keyboardHandler)
+      Keyboard.removeListener('keyboardDidHide', keyboardHandler)
+    }
+  }
 })
 
 function applyRenderOptions<T extends FlexStyle> ({ horz, vert }: IRenderOptions = {}, place: Placement, style?: T): T {

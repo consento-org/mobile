@@ -44,7 +44,7 @@ const itemStyle: TextStyle = {
 const { borderRadius } = elementPopUpMenu.buttonBg
 
 export interface IPopupContext {
-  open <TContext = any, TItem = any> (actions: Array<IPopupMenuItem<TContext, TItem>>, context?: TContext, event?: GestureResponderEvent): void
+  open <TContext = any> (actions: Array<TPopupMenuItem<TContext>>, context?: TContext, event?: GestureResponderEvent): void
   close (): void
 }
 

@@ -53,6 +53,7 @@ export type IScreenshots = Record<Screens, IScreenshot>
 async function requestDeviceId (serverUrl: string): Promise<string> {
   const res = await fetch(`${serverUrl}/device`, {
     headers: {
+      // @ts-ignore
       'installation-id': Expo.Constants.installationId as string
     }
   })

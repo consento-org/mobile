@@ -11,6 +11,10 @@ export const useAppState = createGlobalEffect({
       isActive: state === 'active'
     }
   },
-  init: handler => AppState.addEventListener('change', handler),
-  exit: handler => AppState.removeEventListener('change', handler)
+  init: handler => {
+    AppState.addEventListener('change', handler)
+    return () => {
+      AppState.removeEventListener('change', handler)
+    }
+  }
 })

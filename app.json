@@ -13,7 +13,7 @@
       "android",
       "web"
     ],
-    "description": "Consento Mobile",
+    "description": "The first (currently alpha) Consento mobile application.",
     "icon": "./assets/icon/logo@16x.png",
     "githubUrl": "https://github.com/consento-org/mobile",
     "androidStatusBar": {

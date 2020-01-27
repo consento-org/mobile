@@ -3,7 +3,7 @@ name: Build CI
 on: [pull_request]
 
 jobs:
-  setup:
+  build:
     runs-on: ubuntu-latest
 
     strategy:
@@ -22,11 +22,5 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
 
-  build:
-    runs-on: ubuntu-latest
-    needs: setup
-
-    steps:
     - name: Install, build and test
-      run: |
-        npm ci
+      run: npm ci

@@ -5,6 +5,8 @@ import { useHumanSince } from '../util/useHumanSince'
 import { ILogEntry } from '../model/Consento.types'
 import { observer } from 'mobx-react'
 import { VaultContext } from '../model/VaultContext'
+import { ScreenshotContext, useScreenshotEnabled } from '../util/screenshots'
+import { withNavigationFocus } from 'react-navigation'
 
 const LogEntry = ({ item }: { item: ILogEntry }): JSX.Element =>
   <View style={{ display: 'flex', flexDirection: 'column' }}>
@@ -31,7 +33,17 @@ const style: ViewStyle = {
   backgroundColor: elementLogLine.backgroundColor
 }
 
-export const Logs = observer((): JSX.Element => {
+const FocusedLog = observer((): JSX.Element => {
   const { vault } = useContext(VaultContext)
+  const screenshots = useContext(ScreenshotContext)
+  screenshots.vaultLog.takeSync(500)
   return <FlatList style={style} renderItem={renderItem} data={vault.log} />
+})
+
+export const Logs = withNavigationFocus(({ isFocused }: { isFocused: boolean }) => {
+  const isScreenshotEnabled = useScreenshotEnabled()
+  if (!isScreenshotEnabled || isFocused) {
+    return <FocusedLog />
+  }
+  return <View />
 })

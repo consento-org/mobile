@@ -125,6 +125,7 @@ export async function writeBlob (encodable: IEncodable): Promise<IEncryptedBlob>
   return {
     secretKey,
     path,
+    size: -1, // TODO: Improve performance to be able to get an actual size here
     toString: (): string => {
       return `[SecureBlob#${bufferToString(secretKey, 'hex')}@${path.join('/')}]`
     }

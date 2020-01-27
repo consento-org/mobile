@@ -54,15 +54,15 @@ const SelectedLockees = observer(({ onAdd: handleAdd }: { onAdd: () => void }): 
     let oneConfirmed = false
     for (const lockee of (lockees ?? [])) {
       if (lockee.vaultLockee.isConfirmed) {
-        screenshots.vaultLocksConfirmed.takeSync(700)
+        screenshots.vaultLocksConfirmed.takeSync(500)
         oneConfirmed = true
       }
     }
     if (!oneConfirmed) {
-      screenshots.vaultLocksPending.takeSync(700)
+      screenshots.vaultLocksPending.takeSync(500)
     }
   }
-  return <EmptyView prototype={elementLocksEmpty} onAdd={handleAdd} onEmpty={screenshots.vaultLocksNoLock.handle(100)}>
+  return <EmptyView prototype={elementLocksEmpty} onAdd={handleAdd} onEmpty={screenshots.vaultLocksNoLock.handle(500)}>
     {
       lockees?.map(
         lockee => <RelationListEntry
@@ -146,7 +146,7 @@ export const FocusedLocks = observer(({ navigation }: ILocksProps): JSX.Element 
     return <EmptyView
       prototype={user.relations.size === 0 ? elementLocksNoLockee : elementLocksEmpty}
       onAdd={() => navigation.navigate('newRelation')}
-      onEmpty={screenshots.vaultLocksNoRelation.handle(100)}
+      onEmpty={screenshots.vaultLocksNoRelation.handle(500)}
     />
   }
   return <LockeeList />

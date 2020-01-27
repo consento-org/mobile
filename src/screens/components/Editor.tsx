@@ -39,7 +39,7 @@ export interface IEditorProps {
 export const Editor = observer(({ navigation, file, vault, children }: IEditorProps): JSX.Element => {
   const { vh, vw } = useVUnits()
   const screenshots = useContext(ScreenshotContext)
-  const { Form, useField, save, leave, isDirty } = useForm(navigation, undefined, (): any => navigation.navigate('vault', { vault: vault.$modelId }))
+  const { Form, useField, save, leave, isDirty, error } = useForm(navigation, undefined, (): any => navigation.navigate('vault', { vault: vault.$modelId }))
   const filename = useField(
     'filename',
     file.name,
@@ -55,7 +55,7 @@ export const Editor = observer(({ navigation, file, vault, children }: IEditorPr
       }
     }
   }
-
+  console.log({ error })
   return <Form>
     <View style={{ position: 'absolute', height: vh(100), width: '100%', top: 0, left: 0, display: 'flex', justifyContent: 'flex-start', alignContent: 'stretch' }}>
       <DarkBar />
@@ -75,7 +75,7 @@ export const Editor = observer(({ navigation, file, vault, children }: IEditorPr
           style={filename.isInvalid ? { color: Color.red } : undefined}
           value={filename.initial}
         />
-        { /* TODO: <elementTextEditor.size.Render /> */ }
+        {/* TODO: <elementTextEditor.size.Render /> */}
       </View>
       <View
         style={{

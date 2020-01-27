@@ -1,0 +1,32 @@
+name: Build CI
+
+on: [pull_request]
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [12.x]
+
+    steps:
+    - name: Checkout project repository
+      uses: actions/checkout@v2
+
+    - name: Setup kernel for react native, increase watchers
+      run: echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+
+  build:
+    runs-on: ubuntu-latest
+    needs: setup
+
+    steps:
+    - name: Install, build and test
+      run: |
+        npm install

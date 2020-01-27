@@ -26,6 +26,9 @@
     "android": {
       "package": "org.consento.mobile",
       "versionCode": 1
+    },
+    "ios": {
+      "bundleIdentifier": "org.consento.mobile"
     }
   }
 }

@@ -3,7 +3,8 @@ name: Expo CI
 on:
   push:
     branches:
-      # - master
+      - master
+      - next
       - ftr/25-configure-ci
 
 jobs:
@@ -33,5 +34,17 @@ jobs:
     - name: Login into Expo
       run: npx expo-cli login -u ${{ secrets.EXPO_USERNAME }} -p ${{ secrets.EXPO_PASSWORD }}
 
-    - name: Publish to Expo
-      run: npx expo publish --non-interactive --release-channel mvp-v1
+    - name: Publish to Expo channel "default"
+      if: endsWith(github.ref, '/master')
+      run: | 
+        npx expo publish --non-interactive --release-channel default
+
+    - name: Publish to Expo channel "next"
+      if: endsWith(github.ref, '/next')
+      run: |
+        npx expo publish --non-interactive --release-channel next
+
+    - name: Publish to Expo channel "test"
+      if: endsWith(github.ref, '/25-configure-ci')
+      run: |
+        npx expo publish --non-interactive --release-channel test

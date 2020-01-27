@@ -75,7 +75,7 @@ export const Editor = observer(({ navigation, file, vault, children }: IEditorPr
           style={filename.isInvalid ? { color: Color.red } : undefined}
           value={filename.initial}
         />
-        <elementTextEditor.size.Render />
+        { /* TODO: <elementTextEditor.size.Render /> */ }
       </View>
       <View
         style={{

@@ -5,7 +5,7 @@
 - Get a Git client (we recommend [Sourcetree](https://www.sourcetreeapp.com/))
 - Enable `allow force push` in the `SourceTree` > `Preferences` > `Advanced` 
 
-    <img src="./docs/01-enable-force-push.png" >
+    <img src="./docs/01-enable-force-push.png" width="200"/>
 
     _Using force-push can have unexpected consequences but it is a crucial tool when working with big design files to keep the git repository of a reasonable size, also it allows to clean a messy branch before showing it to other people_
 
@@ -119,15 +119,15 @@ Changes in your `.sketch files` **will cause GIT conflicts**. But don't worry: *
 
 To add an asset, simply create a new artboard in the Sketch file.
 
-<img src="./docs/03a-create-artwork.png" />
+<img src="./docs/03a-create-artwork.png" width="200" />
 
 Make it exportable and specify the export preset settings.
 
-<img src="./docs/03b-make-exportable.png" />
+<img src="./docs/03b-make-exportable.png" width="200" />
 
 We use the export sizes: `1x`, `2x`, `3x` and `1.5x`.
 
-<img src="./docs/03c-add-preset.png" />
+<img src="./docs/03c-add-preset.png" width="200" />
 
 To make it more convenient for you, you can specify a default preset in Sketch that is applied every time you make an artboart exportable.
 

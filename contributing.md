@@ -8,9 +8,7 @@ TODO: Cleanup and add as documentation to github.com/consento-org/mobile
 - Get a Git client (we recommend [Sourcetree](https://www.sourcetreeapp.com/))
 - Enable `allow force push` in the `SourceTree` > `Preferences` > `Advanced` 
 
-- [ ] TODO: document the "why?" >>>  @martin
-
-[IMG]
+<media-tag src="https://drive.google.com/a/georepublic.de/file/d/1o0uA28zIDkDIdwPv4Ql52irGHcs-OHWp/"></media-tag>
 
 - Make sure you have [Node.js](https://nodejs.org/en/download/) - version 10 or newer
 
@@ -38,8 +36,6 @@ TODO: Cleanup and add as documentation to github.com/consento-org/mobile
 6. _(IPhone only):_ Open the camera and scan the QR code
 7. _(Android only):_ Open the expo app and scan the QR code
 8. TODO: document the simulator step
-
-[IMG]
 
 
 ## General Workflow
@@ -72,15 +68,13 @@ Always write a clear log message for your commits. One-line messages are fine fo
 
 Start reading our code and you'll get the hang of it. We optimize for readability:
 
-- [ ] @martin to read and doublecheck
-
-- *We indent using two spaces (soft tabs)*
-- *We use HAML for all views*
-- *We avoid logic in views, putting HTML generators into helpers*
-- *We ALWAYS put spaces after list items and method parameters ([1, 2, 3], not [1,2,3]), around operators (x += 1, not x+=1), and around hash arrows.*
-- *This is open source software. Consider the people who will read your code, and make it look nice for them. It's sort of like driving a car: Perhaps you love doing donuts when you're alone, but with passengers the goal is to make the ride as smooth as possible.*
-- *So that we can consistently serve images from the CDN, always use image_path or image_tag when referring to images. Never prepend "/images/" when using image_path or image_tag.*
-- *Also for the CDN, always use cwd-relative paths rather than root-relative paths in image URLs in any CSS. So instead of url('/images/blah.gif'), use url('../images/blah.gif').*
+- We indent using two spaces (soft tabs)
+- We use HAML for all views
+- We avoid logic in views, putting HTML generators into helpers
+- We ALWAYS put spaces after list items and method parameters ([1, 2, 3], not [1,2,3]), around operators (x += 1, not x+=1), and around hash arrows.
+- This is open source software. Consider the people who will read your code, and make it look nice for them. It's sort of like driving a car: Perhaps you love doing donuts when you're alone, but with passengers the goal is to make the ride as smooth as possible.
+- So that we can consistently serve images from the CDN, always use image_path or image_tag when referring to images. Never prepend "/images/" when using image_path or image_tag.
+- Also for the CDN, always use cwd-relative paths rather than root-relative paths in image URLs in any CSS. So instead of url('/images/blah.gif'), use url('../images/blah.gif').
 
 
 ## Update Workflow
@@ -131,11 +125,17 @@ TODO:
 
 ### Assets
 
-To add an asset, simply create a new artboard in the Sketch file and specify the export preset settings.
+To add an asset, simply create a new artboard in the Sketch file.
 
-[TODO: screenshot].
+<media-tag src="https://drive.google.com/a/georepublic.de/file/d/1o-Fi-2U_zS2hQrKEDzRj836xPO8LPLoH/"></media-tag>
+
+Make it exportable and specify the export preset settings.
+
+<media-tag src="https://drive.google.com/a/georepublic.de/file/d/1nzL3qdRTk4uB3Yfu1OKzJsvzSBoOhWO9/"></media-tag>
 
 We use the export sizes: `1x`, `2x`, `3x` and `1.5x`.
+
+<media-tag src="https://drive.google.com/a/georepublic.de/file/d/1nztidcC9nlBYclmR9J13FCTn0s2IbrSz/"></media-tag>
 
 To make it more convenient for you, you can specify a default preset in Sketch that is applied every time you make an artboart exportable.
 

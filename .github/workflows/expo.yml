@@ -34,4 +34,4 @@ jobs:
       run: npx expo-cli login -u ${{ secrets.EXPO_USERNAME }} -p ${{ secrets.EXPO_PASSWORD }}
 
     - name: Publish to Expo
-      run: npx expo publish --non-interactive --release-channel mvp
+      run: npx expo publish --non-interactive --release-channel mvp-v1

@@ -39,6 +39,13 @@
         "NSCameraUsageDescription": "This lets you take photos and scan QR codes."
       },
       "buildNumber": "1.0.0"
+    },
+    "notification": {
+      "icon": "./assets/icon/logo@1.5x.png",
+      "color": "#FCFCFC",
+      "iosDisplayInForeground": false,
+      "androidMode": "collapse",
+      "androidCollapsedTitle": "Consento"
     }
   }
 }

@@ -4,9 +4,11 @@
   "expo": {
     "name": "Consento",
     "slug": "consento",
+    "owner": "consento",
     "privacy": "public",
     "sdkVersion": "36.0.0",
     "version": "1.0.0",
+    "scheme": "consento",
     "entryPoint": "./index.js",
     "platforms": [
       "ios",
@@ -21,14 +23,15 @@
       "backgroundColor": "#484848"
     },
     "splash": {
-      "backgroundColor": "#FCFCFC"
+      "backgroundColor": "#FCFCFC",
+      "image": "./assets/icon/logo@16x.png"
     },
     "android": {
       "package": "org.consento.mobile",
-      "versionCode": 1
-    },
-    "ios": {
-      "bundleIdentifier": "org.consento.mobile"
+      "versionCode": 1,
+      "permissions": [
+        "CAMERA"
+      ]
     }
   }
 }

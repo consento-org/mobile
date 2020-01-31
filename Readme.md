@@ -36,3 +36,11 @@ You can also find more detailed information about Consento on our website: [http
 ## License
 
 [MIT](./LICENSE)
+
+
+## Credits
+
+This project has received funding from the European Union’s Horizon 2020 research and innovation programme within the framework of the LEDGER Project funded under grant agreement No825268.
+
+<img src="./docs/eu_flag.svg" style="height:2.5em;margin-right:20px;" >
+<img src="./docs/Logo-NGI-LEDGER.svg" style="height:2.5em;" >

@@ -32,6 +32,13 @@
       "permissions": [
         "CAMERA"
       ]
+    },
+    "ios": {
+      "bundleIdentifier": "org.consento.mobile",
+      "infoPlist": {
+        "NSCameraUsageDescription": "This lets you take photos and scan QR codes."
+      },
+      "buildNumber": "1.0.0"
     }
   }
 }

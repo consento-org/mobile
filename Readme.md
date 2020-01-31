@@ -42,5 +42,5 @@ You can also find more detailed information about Consento on our website: [http
 
 This project has received funding from the European Union’s Horizon 2020 research and innovation programme within the framework of the LEDGER Project funded under grant agreement No825268.
 
-<img src="./docs/eu_flag.svg" style="height:30px;margin-right:20px;" >
-<img src="./docs/Logo-NGI-LEDGER.svg" height="30" style="height:30px;" >
+<img src="./docs/eu_flag.svg" height="37" style="margin-right:20px;" >
+<img src="./docs/Logo-NGI-LEDGER.svg" height="37" style="" >

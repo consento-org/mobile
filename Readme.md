@@ -33,6 +33,10 @@ Usually we communicate about Consento on our [Keybase chat](https://keybase.io/t
 
 You can also find more detailed information about Consento on our website: [https://consento.org](https://consento.org).
 
+## Funding
+
+This project has received funding from the European Union’s Horizon 2020 research and innovation programme within the framework of the LEDGER Project funded under grant agreement No825268.
+
 ## License
 
 [MIT](./LICENSE)

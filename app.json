@@ -24,7 +24,7 @@
     },
     "splash": {
       "backgroundColor": "#FCFCFC",
-      "image": "./assets/splash/loading.png"
+      "image": "./assets/splash/centered_logo@3x.png"
     },
     "android": {
       "package": "org.consento.mobile",

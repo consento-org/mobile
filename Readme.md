@@ -35,11 +35,11 @@ You can also find more detailed information about Consento on our website: [http
 
 ## Funding
 
-<a href="https://ec.europa.eu/info/" target="_blank"><img src="https://raw.githubusercontent.com/consento-org/mobile/master/assets/icon/eu.png@2x.png" width="66"></a>
+<a href="https://ec.europa.eu/info/" target="_blank"><img src="https://raw.githubusercontent.com/consento-org/mobile/master/assets/icon/eu@2x.png" width="66"></a>
 
 This project has received funding from the European Union’s [Horizon 2020](https://ec.europa.eu/programmes/horizon2020/) research and innovation programme within the framework of the [LEDGER Project](https://www.ngi.eu/about/ledger/) funded under grant agreement [No825268](https://cordis.europa.eu/project/id/825268).
 
-<a href="https://www.ngi.eu/about/ledger/" target="_blank"><img src="https://raw.githubusercontent.com/consento-org/mobile/master/assets/icon/ngi-ledger.png@2x.png" width="189"></a>
+<a href="https://www.ngi.eu/about/ledger/" target="_blank"><img src="https://raw.githubusercontent.com/consento-org/mobile/master/assets/icon/ngi-ledger@2x.png" width="189"></a>
 
 ## License
 

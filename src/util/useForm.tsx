@@ -34,13 +34,16 @@ function alertSave (onOK: () => any, onDiscard: () => any): void {
 
 export interface IFormField <T> {
   value: T
+  valueString: string
   readonly initial: T
   readonly invalid?: string
   readonly isInvalid: boolean
   readonly isDirty: boolean
   readonly loaded: boolean
   setValue (newValue: T): void
+  setValueString (newValue: string): void
   handleValue (newValue: T): void
+  handleString (newValue: string): void
   setInitial (initial: TInitiator<T>): void
   reset (): void
 }
@@ -59,7 +62,8 @@ export interface IForm {
   isDirty: boolean
   isInvalid: boolean
   isSaving: boolean
-  useField <T> (key: string, initial: TInitiator<T>, validate?: (value: T) => boolean | string, save?: (value: T) => void | Promise<void>): IFormField<T>
+  useStringField (key: string, initial: TInitiator<string>, validate?: (value: string) => boolean | string, save?: (value: string) => void | Promise<void>): IFormField<string>
+  useField <T> (key: string, initial: TInitiator<T>, convert: IStringConvert<T>, validate?: (value: string) => boolean | string, save?: (value: T) => void | Promise<void>): IFormField<T>
 }
 
 export interface IMainForm extends IForm {
@@ -70,6 +74,21 @@ function isInitiatorFn <T> (input: TInitiator<T>): input is TInitiatorFn<T> {
   return typeof input === 'function'
 }
 
+export interface IStringConvert<T> {
+  fromString (string: string): T
+  toString (value: T): string
+}
+
+export const STRING_CONVERT: IStringConvert<string> = {
+  fromString: (string: string): string => string,
+  toString: (string: string): string => string
+}
+
+export const FLOAT_CONVERT: IStringConvert<number> = {
+  fromString: (string: string): number => parseFloat(string),
+  toString: (value: number): string => value.toString(10)
+}
+
 class FormField<T> implements IFormField<T> {
   initial: T
   invalid?: string
@@ -78,23 +97,27 @@ class FormField<T> implements IFormField<T> {
   loaded: boolean
 
   save: (newValue: T) => void | Promise<void>
-  _value: T
-  _validate: (defaultValue: T) => boolean | string
+  _value: string
+  _validate: (value: string) => boolean | string
   _triggerUpdate: () => void
   _initiator: TOrPromise<T>
   _initCount: number = 0
   _firstInitFinished: boolean = false
   _initiatorPromise: PromiseLike<T>
+  _convert: IStringConvert<T>
 
-  constructor (validate: (defaultValue: T) => boolean | string, triggerUpdate: () => void, save: (newValue: T) => void | Promise<void>) {
+  constructor (validate: (value: string) => boolean | string, triggerUpdate: () => void, save: (newValue: T) => void | Promise<void>, convert?: IStringConvert<T>) {
     this._triggerUpdate = triggerUpdate
     this._validate = validate
     this._triggerUpdate = triggerUpdate
+    this._convert = convert
     this.save = save
     this.validate = this.validate.bind(this)
     this.setValue = this.setValue.bind(this)
     this.handleValue = this.handleValue.bind(this)
     this.reset = this.reset.bind(this)
+    this.setValueString = this.setValueString.bind(this)
+    this.handleString = this.handleString.bind(this)
   }
 
   setInitial (initiator: TOrPromise<T>, async: boolean = false): void {
@@ -132,7 +155,7 @@ class FormField<T> implements IFormField<T> {
       this.initial = initial
       if (!this._firstInitFinished) {
         this._firstInitFinished = true
-        this._value = initial
+        this._value = this._convert.toString(initial)
         if (!async) {
           this.updateState()
           return
@@ -148,18 +171,34 @@ class FormField<T> implements IFormField<T> {
   }
 
   get value (): T {
-    return this._value
+    return this._convert.fromString(this._value)
   }
 
   set value (newValue: T) {
     this.setValue(newValue)
   }
 
+  get valueString (): string {
+    return this._value
+  }
+
+  set valueString (newValue: string) {
+    this.setValueString(newValue)
+  }
+
   handleValue (newValue: T): void {
     this.setValue(newValue)
   }
 
+  handleString (newValue: string): void {
+    this.setValueString(newValue)
+  }
+
   setValue (newValue: T): void {
+    this.setValueString(this._convert.toString(newValue))
+  }
+
+  setValueString (newValue: string): void {
     // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     if (!deepEqual(this._value, newValue)) {
       this._value = newValue
@@ -282,13 +321,16 @@ export function useForm (
         )
         return result
       },
-      useField <T> (key: string, initial: TInitiator<T>, validate?: (value: T) => boolean | string, save?: (value: T) => void | Promise<void>): IFormField<T> {
+      useStringField (key: string, initial: TInitiator<string>, validate?: (value: string) => boolean | string, save?: (value: string) => void | Promise<void>): IFormField<string> {
+        return this.useField(key, initial, STRING_CONVERT, validate, save)
+      },
+      useField <T> (key: string, initial: TInitiator<T>, convert: IStringConvert<T>, validate?: (value: string) => boolean | string, save?: (value: T) => void | Promise<void>): IFormField<T> {
         const setUpdate = useState<number>(Date.now())[1]
         const [field] = useState<FormField<T>>(() => {
-          const field = new FormField(validate, () => {
+          const field = new FormField<T>(validate, () => {
             triggerUpdate()
             setUpdate(Date.now())
-          }, save)
+          }, save, convert)
           return field
         })
         useEffect(() => {
@@ -315,6 +357,8 @@ export function useForm (
         return <FormContext.Provider value={form}>{children}</FormContext.Provider>
       }
     }
+
+    form.useStringField = form.useStringField.bind(form)
 
     const triggerUpdate = (): void => {
       let isDirty = false

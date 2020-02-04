@@ -41,7 +41,10 @@ function setupApp (serverUrl) {
   const indexPath = `${__dirname}/index.js`
   const templatePath = `${__dirname}/index.template.js`
   const template = readFileSync(templatePath, 'utf8')
-  const currentIndex = readFileSync(indexPath, 'utf8')
+  let currentIndex
+  try {
+    currentIndex = readFileSync(indexPath, 'utf8')
+  } catch (err) {}
 
   const newIndex = template.replace('$$serverUrl', serverUrl)
 

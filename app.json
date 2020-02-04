@@ -4,9 +4,11 @@
   "expo": {
     "name": "Consento",
     "slug": "consento",
+    "owner": "consento",
     "privacy": "public",
     "sdkVersion": "36.0.0",
     "version": "1.0.0",
+    "scheme": "consento",
     "entryPoint": "./index.js",
     "platforms": [
       "ios",
@@ -21,14 +23,29 @@
       "backgroundColor": "#484848"
     },
     "splash": {
-      "backgroundColor": "#FCFCFC"
+      "backgroundColor": "#FCFCFC",
+      "image": "./assets/splash/centered_logo@3x.png"
     },
     "android": {
       "package": "org.consento.mobile",
-      "versionCode": 1
+      "versionCode": 1,
+      "permissions": [
+        "CAMERA"
+      ]
     },
     "ios": {
-      "bundleIdentifier": "org.consento.mobile"
+      "bundleIdentifier": "org.consento.mobile",
+      "infoPlist": {
+        "NSCameraUsageDescription": "This lets you take photos and scan QR codes."
+      },
+      "buildNumber": "1.0.0"
+    },
+    "notification": {
+      "icon": "./assets/icon/logo@1.5x.png",
+      "color": "#FCFCFC",
+      "iosDisplayInForeground": false,
+      "androidMode": "collapse",
+      "androidCollapsedTitle": "Consento"
     }
   }
 }

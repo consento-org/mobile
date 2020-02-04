@@ -21,15 +21,15 @@ export const Relation = withNavigation(observer(({ navigation }: { navigation: T
   const { relation } = useContext(RelationContext)
   const screenshots = useContext(ScreenshotContext)
   const { user } = useContext(ConsentoContext)
-  const { leave, save, useField, isDirty } = useForm(
+  const { leave, save, useStringField, isDirty } = useForm(
     navigation,
     fields => {
       relation.setName(fields.name ?? '')
       relation.setAvatarId(fields.avatarId)
     }
   )
-  const name = useField('name', relation.name)
-  const avatarId = useField('avatarId', relation.avatarId)
+  const name = useStringField('name', relation.name)
+  const avatarId = useStringField('avatarId', relation.avatarId)
   if (!isDirty) {
     if (relation.name !== '' && relation.avatarId !== null) {
       screenshots.relationFull.takeSync(500)
@@ -61,7 +61,7 @@ export const Relation = withNavigation(observer(({ navigation }: { navigation: T
       <View style={{ width: '100%', display: 'flex', alignItems: 'center' }}>
         <View style={{
           position: 'relative',
-          marginTop: elementRelationName.elementAvatarGenerate.place.top - elementRelationName.relationName.place.bottom,
+          top: elementRelationName.elementAvatarGenerate.place.top,
           width: avatar.width,
           height: avatar.height
         }}>

@@ -55,12 +55,12 @@ function LockButton (props: { onPress?: () => any }): JSX.Element {
 
 export const VaultRouter = VaultNavigator.router
 export const Vault = withNavigation(observer(({ navigation }: { navigation: TNavigation }): JSX.Element => {
-  const { user } = useContext(ConsentoContext)
+  const { user, config } = useContext(ConsentoContext)
   const { vault } = useContext(VaultContext)
   const screenshots = useContext(ScreenshotContext)
   useEffect(() => {
     if (!vault.isOpen && !vault.isLoading) {
-      vault.requestUnlock()
+      vault.requestUnlock(config.expire * 1000)
     }
   }, [vault.isLoading])
   useEffect(() => {

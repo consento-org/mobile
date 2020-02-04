@@ -33,6 +33,7 @@ async function saveConfig (newConfig: IConfig): Promise<void> {
 
 interface IConfig {
   address?: string
+  expire?: number
 }
 
 interface IHackAPI extends IAPI {
@@ -45,8 +46,9 @@ interface IEventSubscription {
 
 @model('consento/Config')
 export class Config extends Model({
-  address: tProp(types.nonEmptyString, () => DEFAULT_ADDRESS)
-}) {}
+  address: tProp(types.nonEmptyString, () => DEFAULT_ADDRESS),
+  expire: tProp(types.number, () => 600)
+}) implements IConfig {}
 
 function assertConfig (config: any): asserts config is IConfig {
   if (typeof config !== 'object') {
@@ -291,8 +293,8 @@ export class Consento extends Model({
         { fireImmediately: true }
       ),
       safeReaction(
-        () => this.config?.address,
-        address => {
+        () => ({ address: this.config?.address, expire: this.config?.expire }), // We need to add expire for the config to reload ~^_^~
+        ({ address }) => {
           if (address === undefined || address === null) {
             return
           }

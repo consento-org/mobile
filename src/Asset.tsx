@@ -334,11 +334,20 @@ export const Asset = {
   iconEditGrey () {
     return images.fetch('iconEditGrey', () => require('../assets/icon/edit/grey.png'))
   },
+  iconEu () {
+    return images.fetch('iconEu', () => require('../assets/icon/eu.png'))
+  },
   iconForwardGrey () {
     return images.fetch('iconForwardGrey', () => require('../assets/icon/forward/grey.png'))
   },
   iconLogo () {
     return images.fetch('iconLogo', () => require('../assets/icon/logo.png'))
+  },
+  iconLogoWithBg () {
+    return images.fetch('iconLogoWithBg', () => require('../assets/icon/logo-with-bg.png'))
+  },
+  iconNgiLedger () {
+    return images.fetch('iconNgiLedger', () => require('../assets/icon/ngi-ledger.png'))
   },
   iconRelationsActive () {
     return images.fetch('iconRelationsActive', () => require('../assets/icon/relations/active.png'))

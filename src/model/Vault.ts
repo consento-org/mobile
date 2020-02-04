@@ -93,10 +93,7 @@ export class VaultOpen extends Model({
 
 @model('consento/Vault/OpenRequest')
 export class VaultOpenRequest extends ExtendedModel(RequestBase, {
-}) {
-  // static KEEP_ALIVE = 1 * 60 * 1000 // one minutes should be good?
-  static KEEP_ALIVE = 5 * 60 * 1000 // five minutes should be good?
-}
+}) {}
 
 export type VaultAccessEntry = typeof VaultOpenRequest | VaultClose | VaultOpen
 
@@ -429,7 +426,7 @@ export class Vault extends Model({
     return last(this.accessLog)
   }
 
-  requestUnlock (): void {
+  requestUnlock (keepAlive: number): void {
     if (!this.isClosable) {
       throw new Error('not-closable')
     }
@@ -439,7 +436,7 @@ export class Vault extends Model({
     if (this.isPending) {
       return
     }
-    const request = new VaultOpenRequest({ keepAlive: VaultOpenRequest.KEEP_ALIVE })
+    const request = new VaultOpenRequest({ keepAlive })
     this._addAccessEntry(request)
     const api = requireAPI(this)
     Promise.all(

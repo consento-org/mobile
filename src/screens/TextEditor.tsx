@@ -31,8 +31,8 @@ const loadingStyle = {
 }
 
 const Input = ({ file }: IInputProps): JSX.Element => {
-  const { useField } = useContext(FormContext)
-  const fullText = useField<string>(
+  const { useStringField } = useContext(FormContext)
+  const fullText = useStringField(
     'fullText',
     async () => file.loadText(),
     () => true,

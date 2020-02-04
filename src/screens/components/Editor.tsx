@@ -39,8 +39,8 @@ export interface IEditorProps {
 export const Editor = observer(({ navigation, file, vault, children }: IEditorProps): JSX.Element => {
   const { vh, vw } = useVUnits()
   const screenshots = useContext(ScreenshotContext)
-  const { Form, useField, save, leave, isDirty, error } = useForm(navigation, undefined, (): any => navigation.navigate('vault', { vault: vault.$modelId }))
-  const filename = useField(
+  const { Form, useStringField, save, leave, isDirty, error } = useForm(navigation, undefined, (): any => navigation.navigate('vault', { vault: vault.$modelId }))
+  const filename = useStringField(
     'filename',
     file.name,
     (newName: string): boolean => newName === file.name || vault.data.isUnusedFilename(newName),

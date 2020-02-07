@@ -85,13 +85,14 @@ export const Avatar = ({ avatarId, place }: IAvatarProps): JSX.Element => {
   const mouth = mouths[buffer.readUInt16LE(7)]
   const eye = eyes[buffer.readUInt16LE(9)]
   const color = colors[buffer.readUInt16LE(11)]
-  return <Svg width={place.width} height={place.height} viewBox='0 0 200 200' style={{ position: 'absolute', left: place.left, top: place.top }}>
-    <Circle cx={100} cy={100} r={100} fill={color} />
-    <TImage href={hair.below().source} />
-    <TImage href={face().source} />
-    <TImage href={eye().source} />
-    <TImage href={nose().source} />
-    <TImage href={mouth().source} />
-    <TImage href={hair.above().source} />
+  const { width: size } = place
+  return <Svg width={size} height={size} viewBox={`0 0 ${size.toString()} ${size.toString()}`} style={{ position: 'absolute', left: place.left, top: place.top }}>
+    <Circle cx={size / 2} cy={size / 2} r={size / 2} fill={color} />
+    <TImage href={hair.below().source} width={size} height={size} />
+    <TImage href={face().source} width={size} height={size} />
+    <TImage href={eye().source} width={size} height={size} />
+    <TImage href={nose().source} width={size} height={size} />
+    <TImage href={mouth().source} width={size} height={size} />
+    <TImage href={hair.above().source} width={size} height={size} />
   </Svg>
 }

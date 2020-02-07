@@ -60,7 +60,7 @@ export const Relation = withNavigation(observer(({ navigation }: { navigation: T
       />
       <View style={{ width: '100%', display: 'flex', alignItems: 'center' }}>
         <View style={{
-          position: 'relative',
+          position: 'absolute',
           top: elementRelationName.elementAvatarGenerate.place.top,
           width: avatar.width,
           height: avatar.height

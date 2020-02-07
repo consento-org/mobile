@@ -3,6 +3,7 @@ import { BackHandler, Alert } from 'react-native'
 import { TNavigation } from '../screens/navigation'
 import { isPromiseLike } from '@consento/crypto/util/isPromiseLike'
 import { deepEqual } from 'fast-equals'
+import throttle from 'lodash.throttle'
 
 function alertInvalid (onDiscard: () => any): void {
   Alert.alert('Unsaved Changes', 'Leaving this page will discard any changes!', [
@@ -116,7 +117,7 @@ class FormField<T> implements IFormField<T> {
     this.setValue = this.setValue.bind(this)
     this.handleValue = this.handleValue.bind(this)
     this.reset = this.reset.bind(this)
-    this.setValueString = this.setValueString.bind(this)
+    this.setValueString = throttle(this.setValueString.bind(this), 1000, { leading: true })
     this.handleString = this.handleString.bind(this)
   }
 

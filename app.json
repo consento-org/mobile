@@ -28,7 +28,6 @@
     },
     "android": {
       "package": "org.consento.mobile",
-      "versionCode": 2,
       "permissions": [
         "CAMERA"
       ]
@@ -38,7 +37,6 @@
       "infoPlist": {
         "NSCameraUsageDescription": "This lets you take photos and scan QR codes."
       },
-      "buildNumber": "1.0.1",
       "icon": "./assets/icon/logo-with-bg@16x.png"
     },
     "notification": {

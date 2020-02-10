@@ -35,13 +35,13 @@ jobs:
     - name: Publish & build with Expo channel "default"
       if: endsWith(github.ref, '/master')
       run: | 
-        ./.github/workflows/expo-build-number.sh
+        /bin/bash --noprofile --norc ./.github/workflows/expo-build-number.sh
         npx expo build:android -t app-bundle --non-interactive --release-channel default
         npx expo build:ios -t archive --release-channel default
 
     - name: Publish & build with Expo channel "next"
       if: endsWith(github.ref, '/next')
       run: |
-        ./.github/workflows/expo-build-number.sh d
+        /bin/bash --noprofile --norc ./.github/workflows/expo-build-number.sh d
         npx expo build:android -t app-bundle --non-interactive --release-channel next
         npx expo build:ios -t archive --release-channel next

@@ -1,4 +1,4 @@
-#!/bin/bash --no-profile --norc
+#!/bin/bash --noprofile --norc
 
 #
 # This script will update the versions in the app.json file.

@@ -79,6 +79,7 @@
     "jest-enzyme": "^7.1.2",
     "jest-expo": "^36.0.1",
     "jetifier": "^1.6.5",
+    "json": "^9.0.6",
     "nicer": "^1.0.0",
     "ts-jest": "^25.2.0",
     "typescript": "^3.7.5",

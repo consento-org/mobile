@@ -14,7 +14,7 @@
 # It will also set the versionCode for Android to the number of commits in the branch.
 #
 
-VERSION_CODE=`git rev-list --count HEAD`
+VERSION_CODE=`git rev-list --count origin/$(git rev-parse --abbrev-ref HEAD)`
 CURRENT=`npx json -f app.json expo.version`
 
 if [ -z $1 ]; then

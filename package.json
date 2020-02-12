@@ -16,7 +16,7 @@
   "dependencies": {
     "@consento/api": "0.0.21",
     "@consento/crypto": "0.0.12",
-    "@consento/notification-server": "0.0.18",
+    "@consento/notification-server": "0.0.19",
     "@consento/shamirs-secret-sharing": "^1.0.4",
     "@types/lodash.throttle": "^4.1.6",
     "@use-it/interval": "^0.1.3",

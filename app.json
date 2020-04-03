@@ -6,7 +6,7 @@
     "slug": "consento",
     "owner": "consento",
     "privacy": "public",
-    "sdkVersion": "36.0.0",
+    "sdkVersion": "37.0.0",
     "version": "1.0.2",
     "scheme": "consento",
     "entryPoint": "./index.js",

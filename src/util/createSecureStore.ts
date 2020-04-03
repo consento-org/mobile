@@ -155,7 +155,7 @@ export function createSecureStore <LogEntry> (secretKey: Uint8Array, options: IS
 
       try {
         const data = indexEncoding.fromBuffer(await read(['index', indexName, indexVersion.toString(10)]))
-        return processIndex(indexVersion, data, logVersions)
+        return await processIndex(indexVersion, data, logVersions)
       } catch (error) {
         console.log('Invalid index found')
         return null
@@ -186,7 +186,7 @@ export function createSecureStore <LogEntry> (secretKey: Uint8Array, options: IS
       if (logVersions.length !== maxLogVersion) {
         throw new Error(`Can not restore index: missing log entries! ${maxLogVersion.toString()} != ${String(logVersions.length)}`)
       }
-      return processIndex(0, data, logVersions)
+      return await processIndex(0, data, logVersions)
     })()
     indexLock.catch(noop)
     const lockIndex = async (): Promise<{ state: IIndexState<Index>, release: (newState: IIndexState<Index>) => void }> => {
@@ -272,13 +272,13 @@ export function createSecureStore <LogEntry> (secretKey: Uint8Array, options: IS
       version = newVersion
       release()
       await Promise.all(
-        Object.values(indexers).map(async indexer => indexer.update(entry))
+        Object.values(indexers).map(async indexer => await indexer.update(entry))
       )
     },
     async delete () {
       const release = await lock()
       await Promise.all(
-        Object.values(indexers).map(async indexer => indexer.delete())
+        Object.values(indexers).map(async indexer => await indexer.delete())
       )
       const entries = await cleanList(['data'])
       // Delete from oldest to newest, this way it is possible to append

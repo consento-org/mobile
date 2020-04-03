@@ -34,9 +34,9 @@ const Input = ({ file }: IInputProps): JSX.Element => {
   const { useStringField } = useContext(FormContext)
   const fullText = useStringField(
     'fullText',
-    async () => file.loadText(),
+    async () => await file.loadText(),
     () => true,
-    async newText => file.saveText(newText)
+    async newText => await file.saveText(newText)
   )
   if (!fullText.loaded) {
     return <Text style={loadingStyle}>Loading...</Text>

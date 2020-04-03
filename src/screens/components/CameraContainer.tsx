@@ -41,7 +41,7 @@ async function getBestSize (camera: Camera, algo: (sizeLists: ICameraNativeSize[
   let sizeLists: Array<{ ratio: string, sizes: string[] }>
   if (Platform.OS === 'android') {
     const ratios = await camera.getSupportedRatiosAsync()
-    sizeLists = await Promise.all(ratios.map(async ratio => camera
+    sizeLists = await Promise.all(ratios.map(async ratio => await camera
       .getAvailablePictureSizesAsync(ratio)
       .then(sizes => ({ ratio, sizes }))
     ))
@@ -91,10 +91,10 @@ async function getMinCameraSize (camera: Camera, minSpace: number): Promise<ICam
       return biggest
     })
   }
-  return minCameraSize
+  return await minCameraSize
     .catch(async err => {
       minCameraSize = undefined
-      return Promise.reject(err)
+      return await Promise.reject(err)
     })
 }
 

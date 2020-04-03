@@ -385,7 +385,7 @@ export class Vault extends Model({
   _updateLocks (): void {
     (async (): Promise<void> => {
       const persistOnDevice = this.locks.size === 0
-      return expoVaultSecrets.toggleDevicePersistence(this.dataKeyHex, persistOnDevice)
+      return await expoVaultSecrets.toggleDevicePersistence(this.dataKeyHex, persistOnDevice)
     })().catch(error => console.log({ error }))
   }
 
@@ -513,7 +513,7 @@ export class Vault extends Model({
       return // Nothing to see/nothing to do.
     }
     this._addAccessEntry(new VaultClose({}))
-    return expoVaultSecrets.delete(this.dataKeyHex)
+    return await expoVaultSecrets.delete(this.dataKeyHex)
   }
 
   @modelAction _addAccessEntry (entry: VaultAccessEntry): void {

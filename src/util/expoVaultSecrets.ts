@@ -16,7 +16,7 @@ export class ExpoVaultSecrets extends Model({
 }) {
   @modelAction async clear (): Promise<void> {
     this.secretsBase64.clear()
-    return vaultSecrets.clear()
+    return await vaultSecrets.clear()
   }
 
   createDataKeyHex (): string {

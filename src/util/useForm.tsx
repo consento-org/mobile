@@ -320,7 +320,7 @@ export function useForm (
           },
           next
         )
-        return result
+        return await result
       },
       useStringField (key: string, initial: TInitiator<string>, validate?: (value: string) => boolean | string, save?: (value: string) => void | Promise<void>): IFormField<string> {
         return this.useField(key, initial, STRING_CONVERT, validate, save)

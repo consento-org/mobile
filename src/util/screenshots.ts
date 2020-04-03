@@ -57,7 +57,7 @@ async function requestDeviceId (serverUrl: string): Promise<string> {
       'installation-id': Expo.Constants.installationId as string
     }
   })
-  return res.text()
+  return await res.text()
 }
 
 async function requestList (serverUrl: string): Promise<string[]> {
@@ -67,7 +67,7 @@ async function requestList (serverUrl: string): Promise<string[]> {
 
 // eslint-disable-next-line @typescript-eslint/promise-function-async
 function wait (delay: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, delay))
+  return await new Promise(resolve => setTimeout(resolve, delay))
 }
 
 async function storeScreenshot (uri: string, serverUrl: string, name: string): Promise<void> {
@@ -143,7 +143,7 @@ function createSystem (serverUrl?: string): IScreenshotSystem {
           )
           takenScreenshots.set(name, screenshot)
         }
-        return screenshot
+        return await screenshot
       }
     },
     isDone: (name: string): boolean => doneScreenshots.has(name)
@@ -156,7 +156,7 @@ function createScreenshot (name: string, system: IScreenshotSystem): IScreenshot
       .catch(screenshotError => console.log({ screenshotError }))
   }
   return {
-    take: async (delay: number = 0): Promise<void> => system.take(name, delay),
+    take: async (delay: number = 0): Promise<void> => await system.take(name, delay),
     takeSync,
     handle: (delay: number = 0): (() => void) => {
       return () => takeSync(delay)

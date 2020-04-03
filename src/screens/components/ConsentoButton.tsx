@@ -50,7 +50,7 @@ export interface IButtonProps {
 }
 
 export function ConsentoButton (props: IButtonProps): JSX.Element {
-  const isDisabled = props.onPress === undefined || props.enabled === false || props.disabled === true
+  const isDisabled = props.onPress === undefined || !props.enabled || props.disabled
   if (isDisabled) {
     return <Text style={{
       ...disabledStyle,

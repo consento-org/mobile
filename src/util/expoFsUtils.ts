@@ -63,7 +63,7 @@ async function mkdirp (root: string, path: string[]): Promise<string[]> {
 
 function createFSUtils (root: string): IFSUtils {
   const resolve = (path: string[]): string => pathToString(root, path)
-  const _mkdirp = async (path: string[]): Promise<string[]> => mkdirp(root, path)
+  const _mkdirp = async (path: string[]): Promise<string[]> => await mkdirp(root, path)
   return {
     write: async (path: string[], contents: string | Uint8Array, options?: { mkdir?: boolean }) => {
       const contentsAsString = typeof contents === 'string' ? contents : bufferToString(contents, 'base64')
@@ -83,15 +83,15 @@ function createFSUtils (root: string): IFSUtils {
       }
     },
     readString: async (path: string[]): Promise<string> => {
-      return readAsStringAsync(resolve(path), { encoding: 'utf8' })
+      return await readAsStringAsync(resolve(path), { encoding: 'utf8' })
     },
     readBuffer: async (path: string[]): Promise<Buffer> => {
       return Buffer.from(await readAsStringAsync(resolve(path), { encoding: 'base64' }), 'base64')
     },
-    delete: async (path: string[], options?: { idempotent?: boolean }) => deleteAsync(resolve(path), options),
-    rimraf: async (path: string[]) => rimraf(root, path),
-    list: async (path: string[]) => readDirectoryAsync(resolve(path)),
-    info: async (path: string[], options?: { md5?: boolean, size?: boolean }) => getInfoAsync(resolve(path), options),
+    delete: async (path: string[], options?: { idempotent?: boolean }) => await deleteAsync(resolve(path), options),
+    rimraf: async (path: string[]) => await rimraf(root, path),
+    list: async (path: string[]) => await readDirectoryAsync(resolve(path)),
+    info: async (path: string[], options?: { md5?: boolean, size?: boolean }) => await getInfoAsync(resolve(path), options),
     mkdirp: _mkdirp,
     resolve
   }

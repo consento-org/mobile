@@ -3,6 +3,7 @@ import { Notifications } from 'expo'
 import randomBytes from '@consento/sync-randombytes'
 import Constants from 'expo-constants'
 import { bufferToString } from '@consento/crypto/util/buffer'
+import { createError } from './createError'
 
 function rndChar (num: number): string {
   return bufferToString(randomBytes(new Uint8Array(num * 2)), 'hex')
@@ -28,7 +29,7 @@ async function _getExpoToken (): Promise<string> {
 
     // Stop here if the user did not grant permissions
     if (finalStatus !== 'granted') {
-      throw Object.assign(new Error('Permission to receive Notifications not granted!'), {
+      throw createError('Permission to receive Notifications not granted!', {
         status: finalStatus
       })
     }
@@ -36,7 +37,7 @@ async function _getExpoToken (): Promise<string> {
 
   // Get the token that uniquely identifies this device
   try {
-    return Notifications.getExpoPushTokenAsync()
+    return await Notifications.getExpoPushTokenAsync()
   } catch (error) {
     if (Constants.debugMode) {
       console.warn(`[DEV MODE ONLY!] Error while collecting expo token, using dummy token: ${String(error)}`)
@@ -49,5 +50,5 @@ async function _getExpoToken (): Promise<string> {
 const expoToken = _getExpoToken()
 
 export async function getExpoToken (): Promise<string> {
-  return expoToken
+  return await expoToken
 }

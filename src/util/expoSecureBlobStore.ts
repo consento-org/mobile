@@ -46,7 +46,7 @@ export async function importFile (fileUri: string, doDelete?: boolean): Promise<
         console.log(`Warning: Import of ${fileUri} worked, but the original file was not deleted: ${String(err)}`)
       })
   }
-  return writeBlob(toBuffer(dataAsString))
+  return await writeBlob(toBuffer(dataAsString))
 }
 
 export async function share (data: string | Uint8Array, filename: string): Promise<void> {
@@ -63,9 +63,9 @@ export async function share (data: string | Uint8Array, filename: string): Promi
 export async function shareBlob (input: string | Uint8Array | IEncryptedBlob, target: string): Promise<void> {
   const data = await readBlob(input)
   if (typeof data === 'string' || data instanceof Uint8Array) {
-    return share(data, target)
+    return await share(data, target)
   }
-  return share(JSON.stringify(data, null, 2), target)
+  return await share(JSON.stringify(data, null, 2), target)
 }
 
 export async function copyToClipboard (input: string | Uint8Array, title: string): Promise<boolean> {
@@ -99,9 +99,9 @@ export async function exportData (data: string | Uint8Array, albumName: string, 
 export async function exportBlob (input: string | Uint8Array | IEncryptedBlob, albumName: string, fileName: string): Promise<void> {
   const data = await readBlob(input)
   if (typeof data === 'string' || data instanceof Uint8Array) {
-    return exportData(data, albumName, fileName)
+    return await exportData(data, albumName, fileName)
   }
-  return exportData(JSON.stringify(data, null, 2), albumName, fileName)
+  return await exportData(JSON.stringify(data, null, 2), albumName, fileName)
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -113,7 +113,7 @@ export async function writeBlob (encodable: IEncodable): Promise<IEncryptedBlob>
   const path = await pathForSecretKey(secretKey)
   const promise = sodium
     .encrypt(secretKey, encodable)
-    .then(async encrypted => expoStore.write(path, encrypted))
+    .then(async encrypted => await expoStore.write(path, encrypted))
     .then(() => {
       // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
       delete CACHE[path.join('/')]
@@ -144,9 +144,9 @@ async function _toBlob (input: Uint8Array | IEncryptedBlob): Promise<IEncryptedB
 
 async function toBlob (input: string | Uint8Array | IEncryptedBlob): Promise<IEncryptedBlob> {
   if (typeof input === 'string') {
-    return _toBlob(Buffer.from(input, 'hex'))
+    return await _toBlob(Buffer.from(input, 'hex'))
   }
-  return _toBlob(input)
+  return await _toBlob(input)
 }
 
 export async function deleteBlob (input: string | Uint8Array | IEncryptedBlob): Promise<boolean> {
@@ -163,13 +163,13 @@ export async function readBlob (input: string | Uint8Array | IEncryptedBlob): Pr
   const { path, secretKey } = await toBlob(input)
   const cached = CACHE[path.join('/')]
   if (cached !== undefined) {
-    return cached
+    return await cached
   }
   const info = await expoStore.info(path)
   if (!info.exists) {
     throw new Error(`File for key ${bufferToString(secretKey, 'hex')} does not exist!`)
   }
-  return sodium.decrypt(secretKey, await expoStore.read(path))
+  return await sodium.decrypt(secretKey, await expoStore.read(path))
 }
 
 export async function readImageBlob (secretKey: Uint8Array | IEncryptedBlob): Promise<string> {

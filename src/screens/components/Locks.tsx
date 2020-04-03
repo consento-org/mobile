@@ -122,7 +122,7 @@ const LockeeList = observer((): JSX.Element => {
     ;(async () => {
       await Promise.all(
         // eslint-disable-next-line @typescript-eslint/require-await
-        relations.map(async relation => vault.addLockee(relation))
+        relations.map(async relation => await vault.addLockee(relation))
       )
       setSelectionActive(false)
       setAddingLockees(false)

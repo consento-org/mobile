@@ -251,7 +251,7 @@ export class User extends Model({
   }
 
   @modelAction _markLoaded (): void {
-    if (this.loaded === false) {
+    if (!this.loaded) {
       this.loaded = true
     }
   }

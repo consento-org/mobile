@@ -75,7 +75,7 @@ const noop = (): void => {}
 
 export function createSecureStore <LogEntry> (secretKey: Uint8Array, options: ISecureStoreOptions<LogEntry>): ISecureStore<LogEntry> {
   const { crypto, store, encoding } = options
-  const root = crypto.deriveAnnonymousKeys(secretKey).then((keys) => bufferToString(keys.read, 'hex'))
+  const root = crypto.deriveKdfKey(secretKey).then(key => bufferToString(key, 'hex'))
 
   const cleanList = async (path: string[]): Promise<number[]> => {
     const fileList = (await store.list([await root, ...path])).filter(entry => /^[0-9]*$/.test(entry))

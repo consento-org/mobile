@@ -3,7 +3,7 @@ import { getExpoSecureStore, expoSecureStore } from './expoSecureStore'
 import { ISecureStore, IIndexer } from './createSecureStore'
 import { jsonEncoding } from './jsonEncoding'
 import patcher, { deepClone } from 'fast-json-patch'
-import { sodium as cryptoCore } from '@consento/crypto/core/sodium'
+import { cryptoCore } from '../cryptoCore'
 
 type IJsonStore = ISecureStore<any>
 

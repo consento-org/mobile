@@ -1,5 +1,5 @@
 import { createSecureStore, ISecureStore, IStoreEntry } from '../createSecureStore'
-import { friends as crypto } from '@consento/crypto/core/friends'
+import { cryptoCore } from '../../cryptoCore'
 import { Buffer, bufferToString } from '@consento/crypto/util/buffer'
 
 const jsonEncoding = {
@@ -15,13 +15,13 @@ const objectMerge = (index: any, entry: any): any => {
 
 async function createStore (secretKey?: Uint8Array, dataStore?: any): Promise<{ store: ISecureStore<any>, dataStore: any, secretKey: Uint8Array }> {
   if (secretKey === undefined) {
-    secretKey = await crypto.createSecretKey()
+    secretKey = await cryptoCore.createSecretKey()
   }
   if (dataStore === undefined) {
     dataStore = {}
   }
   const store = createSecureStore(secretKey, {
-    crypto,
+    crypto: cryptoCore,
     store: {
       // eslint-disable-next-line @typescript-eslint/require-await
       async read (path: string[]): Promise<Uint8Array> {
@@ -79,7 +79,7 @@ describe('basic secure storage', () => {
 
     const firstEntry = `${await store.root}/data/1`
     expect(Object.keys(dataStore)).toEqual([firstEntry])
-    expect(bufferToString((await crypto.decrypt(secretKey, dataStore[firstEntry]) as any as Uint8Array))).toBe('{"hello":"world"}')
+    expect(bufferToString((await cryptoCore.decrypt(secretKey, dataStore[firstEntry]) as any as Uint8Array))).toBe('{"hello":"world"}')
   })
 
   it('creating an index', async () => {

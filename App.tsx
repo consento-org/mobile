@@ -5,13 +5,7 @@ import { Text } from 'react-native'
 import { Loading } from './src/screens/Loading'
 import { loadFonts } from './src/styles/Font'
 import { exists } from './src/util/exists'
-import { setGlobalConfig } from 'mobx-keystone'
-import { generateId } from './src/util/generateId'
 import { createScreenshots, ScreenshotContext } from './src/util/screenshots'
-
-setGlobalConfig({
-  modelIdGenerator: generateId
-})
 
 export const Screenshot = (address: string): (() => JSX.Element) => {
   const screenshots = createScreenshots(address)

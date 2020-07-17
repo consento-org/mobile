@@ -1,5 +1,5 @@
 import randomBytes from '@consento/sync-randombytes'
-import { bufferToString, Buffer } from '@consento/crypto/util/buffer'
+import { bufferToString } from '@consento/crypto/util/buffer'
 import { ICryptoCore } from '@consento/crypto/core/types'
 
 export interface IVaultSecretsProps {
@@ -54,7 +54,7 @@ function assertHexKey (keyHex: string): void {
 
 type ResolvePersisted = (persisted: EPersisted) => void
 
-export function createVaultSecrets ({ prefix, setItemAsync, getItemAsync, deleteItemAsync, cryptoCore }: IVaultSecretsProps): IVaultSecrets {
+export function createVaultSecrets ({ prefix, setItemAsync, getItemAsync, deleteItemAsync, cryptoCore: { createSecretKey } }: IVaultSecretsProps): IVaultSecrets {
   if (prefix === null || prefix === undefined) {
     prefix = 'vault'
   }
@@ -237,12 +237,12 @@ export function createVaultSecrets ({ prefix, setItemAsync, getItemAsync, delete
   const persistedKeys = async (): Promise<string[]> => await getEntry(indexKey).then(data => data?.split(';') ?? [])
   return {
     create: (): { keyHex: string, secretKeyBase64: Promise<string> } => {
-      const keyHex = randomBytes(Buffer.alloc(6)).toString('hex')
+      const keyHex = bufferToString(randomBytes(new Uint8Array(6)), 'hex')
       const key = `${prefix}-${keyHex}`
       return {
         keyHex,
         secretKeyBase64: setMemoryWithIndex(keyHex, async (_, updateKeyIndex) => {
-          const secretKey = await cryptoCore.createSecretKey()
+          const secretKey = await createSecretKey()
           const result = await _setInternal(undefined, key, bufferToString(secretKey, 'base64'), true)
           updateKeyIndex(true)
           return result

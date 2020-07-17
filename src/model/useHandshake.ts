@@ -151,7 +151,6 @@ export function useHandshake (onHandshake: (connection: IConnection) => any): {
   connect (initLink: string): void
 } {
   const api = useContext(ConsentoContext)
-  api.assertReady()
   const stateOps = [onHandshake, api]
   const [incoming] = useStateMachine(incomingMachine, stateOps)
   const [outgoing, outgoingManager] = useStateMachine(outgoingMachine, stateOps)

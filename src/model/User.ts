@@ -112,7 +112,7 @@ export class User extends Model({
       }),
       mobxPersist({
         item: this,
-        location: `user_${this.name}`,
+        location: `consento_user_${this.name}`,
         filter: (patch: JsonPatch) => !isVaultPatch(patch) && !isSecretPatch(patch),
         init: initUser,
         clearClone: (cloned: any) => {

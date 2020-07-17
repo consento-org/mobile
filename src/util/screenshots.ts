@@ -67,7 +67,8 @@ async function requestList (serverUrl: string): Promise<string[]> {
 
 // eslint-disable-next-line @typescript-eslint/promise-function-async
 function wait (delay: number): Promise<void> {
-  return await new Promise(resolve => setTimeout(resolve, delay))
+  // eslint-disable-next-line @typescript-eslint/return-await
+  return new Promise(resolve => setTimeout(resolve, delay))
 }
 
 async function storeScreenshot (uri: string, serverUrl: string, name: string): Promise<void> {

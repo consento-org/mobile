@@ -1,14 +1,11 @@
-import { computed, observable, autorun } from 'mobx'
-import { Model, model, tProp, types, prop, arraySet, ArraySet, modelAction, registerRootStore, unregisterRootStore } from 'mobx-keystone'
+import { computed, autorun } from 'mobx'
+import { Model, model, tProp, types, prop, arraySet, ArraySet, modelAction } from 'mobx-keystone'
 import { createContext } from 'react'
-import { AsyncStorage, AppStateStatus, AppState } from 'react-native'
-import { setup, IAPI, INotifications, IConsentoCrypto, INotification } from '@consento/api'
-import { ExpoTransport } from '@consento/notification-server'
+import { AsyncStorage } from 'react-native'
+import { setup, IAPI, INotifications, IConsentoCrypto, INotification, EErrorCode } from '@consento/api'
+import { ExpoTransport, EClientStatus } from '@consento/notification-server'
 import isURL from 'is-url-superb'
 import { User, createDefaultUser } from './User'
-import { getExpoToken } from '../util/getExpoToken'
-import { Notifications } from 'expo'
-import { Notification } from 'expo/build/Notifications/Notifications.types'
 import { cryptoCore } from '../cryptoCore'
 import { systemRimraf } from '../util/systemRimraf'
 import { first } from '../util/first'
@@ -17,27 +14,27 @@ import { vaultStore } from './VaultStore'
 import { IConsentoModel, CONSENTO, ISubscription, ISubscriptionMap } from './Consento.types'
 import { safeReaction } from '../util/safeReaction'
 import { bufferToString } from '@consento/crypto/util/buffer'
+import { subscribeEvent } from '../util/subscribeEvent'
+import { autoRegisterRootStore } from '../util/autoRegisterRootStore'
+import { ErrorStrategy } from '@consento/notification-server/client/strategies/ErrorStrategy'
 
 export const ConsentoContext = createContext<Consento>(null)
 
-const DEFAULT_ADDRESS = '//notify.consento.org'
-const CONFIG_ITEM_KEY = '@consento/config'
+const DEFAULT_ADDRESS = '//notify-2.consento.org'
+const LEGACY_CONFIG_ITEM_KEY = '@consento/config'
+const CONFIG_ITEM_KEY = '@consento/config/2'
 
-async function loadConfig (): Promise<any> {
-  return JSON.parse((await AsyncStorage.getItem(CONFIG_ITEM_KEY)) ?? '{}')
+async function loadConfig (location: string = CONFIG_ITEM_KEY): Promise<any> {
+  return JSON.parse((await AsyncStorage.getItem(location)) ?? '{}')
 }
 
-async function saveConfig (newConfig: IConfig): Promise<void> {
-  await AsyncStorage.setItem(CONFIG_ITEM_KEY, JSON.stringify(newConfig))
+async function saveConfig (newConfig: IConfig, location: string = CONFIG_ITEM_KEY): Promise<void> {
+  await AsyncStorage.setItem(location, JSON.stringify(newConfig))
 }
 
 interface IConfig {
   address?: string
   expire?: number
-}
-
-interface IHackAPI extends IAPI {
-  notificationTransport: ExpoTransport
 }
 
 interface IEventSubscription {
@@ -62,44 +59,6 @@ function assertConfig (config: any): asserts config is IConfig {
   }
   if (!isURL(config.address)) {
     throw new Error('config.address needs to be a valid URI')
-  }
-}
-
-function createTransport (address: string): {
-  notificationTransport: ExpoTransport
-  destructTransport: () => void
-} {
-  if (/^\/\//.test(address)) {
-    address = `https:${address}`
-  }
-  const notificationTransport = new ExpoTransport({
-    address,
-    getToken: getExpoToken
-  })
-  notificationTransport.on('error', (error) => {
-    console.log({ transportError: error, address })
-  })
-  let cancel: () => void
-  const stateChange = (state: AppStateStatus): void => {
-    if (state !== 'background') {
-      if (cancel === undefined) {
-        cancel = notificationTransport.connect()
-      }
-    } else {
-      if (cancel !== undefined) {
-        cancel()
-        cancel = undefined
-      }
-    }
-  }
-  AppState.addEventListener('change', stateChange)
-  stateChange(AppState.currentState)
-  return {
-    notificationTransport,
-    destructTransport: () => {
-      AppState.removeEventListener('change', stateChange)
-      stateChange('inactive')
-    }
   }
 }
 
@@ -131,44 +90,54 @@ function diffSubscriptions (stored: ISubscriptionMap, current: ISubscriptionMap)
 
 @model(CONSENTO)
 export class Consento extends Model({
-  users: prop<ArraySet<User>>(() => arraySet()),
-  appStart: prop(),
-  config: prop<Config>(() => null)
+  users: prop<ArraySet<User>>(() => arraySet([createDefaultUser()])),
+  legacyConfig: prop<ArraySet<string>>(() => arraySet()),
+  transportState: prop(EClientStatus.STARTUP),
+  config: prop<Config>(null),
+  configLoaded: prop(false)
 }) implements IConsentoModel {
-  _apiReady = observable.box(Date.now())
-  _api: IHackAPI
+  _api: IAPI
+  _notificationTransport: ExpoTransport = new ExpoTransport({})
+  _configTask: Promise<void>
 
   onInit (): void {
     this.deleteEverything = this.deleteEverything.bind(this)
     this.updateConfig = this.updateConfig.bind(this)
-    loadConfig()
-      .then(config => this._setConfig(config))
-      .catch(error => {
-        this.updateConfig({})
-        console.log({ loadConfigError: error })
-      })
+    this._api = setup({
+      cryptoCore,
+      notificationTransport: this._notificationTransport
+    })
+    this._configTask = loadConfig()
+      .then(
+        config => {
+          this._setConfig(config)
+        },
+        error => {
+          this.updateConfig({})
+          console.log({ loadConfigError: error })
+        }
+      )
+    loadConfig(LEGACY_CONFIG_ITEM_KEY)
+      .then(
+        () => this.legacyConfig.add('1'),
+        () => {}
+      )
   }
 
-  assertReady (): void {
-    if (!this.ready) {
-      throw new Error('API not ready!')
-    }
-  }
-
-  @computed get api (): IAPI {
-    this._apiReady.get()
+  get api (): IAPI {
     return this._api
   }
 
   @modelAction _setConfig (config: any): void {
     assertConfig(config)
     this.config = new Config(config)
+    this.configLoaded = true
   }
 
   updateConfig (config: IConfig): void {
-    this._setApi(undefined)
     this._setConfig(config)
-    saveConfig(config)
+    this._configTask = this._configTask
+      .then(async (): Promise<void> => await saveConfig(config))
       .then(
         () => console.log('config saved'),
         error => console.log({ saveConfigError: error })
@@ -188,35 +157,48 @@ export class Consento extends Model({
   }
 
   @computed get ready (): boolean {
-    if (this.api === undefined) {
-      return false
+    switch (this.transportState) {
+      case EClientStatus.DESTROYED:
+      case EClientStatus.NOADDRESS:
+      case EClientStatus.STARTUP:
+      case EClientStatus.ERROR:
+        return false
     }
-    if (this.user === undefined) {
-      return false
-    }
-    return this.user.loaded
-  }
-
-  @modelAction _setApi (api: IHackAPI): void {
-    this.users.clear()
-    this._api = api
-    this._apiReady.set(Date.now())
-    if (this._api !== undefined) {
-      this.users.add(createDefaultUser())
-    }
+    return this.configLoaded && this.user.loaded
   }
 
   deleteEverything (): void {
-    const api = this._api
-    this._setApi(undefined)
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    systemRimraf().finally(() => this._setApi(api))
+    systemRimraf().finally(() => {
+      this.updateConfig({})
+    })
+  }
+
+  @modelAction _updateTransportState (): void {
+    this.transportState = this._notificationTransport.state
+    if (this.transportState === EClientStatus.ERROR) {
+      const strategy = this._notificationTransport._strategy
+      if (strategy instanceof ErrorStrategy) {
+        console.log(strategy.error.stack)
+      }
+    }
   }
 
   onAttachedToRootStore (): () => void {
-    registerRootStore(vaultStore)
     return combinedDispose(
-      () => unregisterRootStore(vaultStore),
+      autoRegisterRootStore(vaultStore),
+      subscribeEvent(this._notificationTransport, 'state', () => this._updateTransportState(), true),
+      autorun(
+        () => {
+          if (!this.configLoaded) return
+          let address = this.config?.address ?? DEFAULT_ADDRESS
+          if (/^\/\//.test(address)) {
+            address = `https:${address}`
+          }
+          console.log(`Setting address: ${address}`)
+          this._notificationTransport.address = address
+        }
+      ),
       safeReaction(
         () => ({ ready: this.ready, user: this.user }),
         ({ ready, user }) => {
@@ -234,22 +216,24 @@ export class Consento extends Model({
               console.log(`Received notification: ${message.channelIdBase64}`)
               subscription.action(message, this.api)
             } else {
-              console.log({ errorNotification: message })
+              if (message.code === EErrorCode.transportError) {
+                console.error(message.error)
+              }
+              console.log({
+                state: this.transportState,
+                address: this._notificationTransport.address,
+                errorNotification: message
+              })
             }
           }
           const api = this._api
           api.notifications.processors.add(processor)
           const receivers = Object.values(subscriptions).map(subscription => new api.crypto.Receiver(subscription.receiver))
           console.log(`Resetting:\n  ${receivers.map(receiver => bufferToString(receiver.id, 'base64')).join('\n  ')}`)
-          let expoSubscription: IEventSubscription
           api.notifications
             .reset(receivers)
             .then(
-              () => {
-                expoSubscription = Notifications.addListener((notification: Notification): void => {
-                  api.notificationTransport.handleNotification(notification)
-                })
-              },
+              () => {},
               notificationResetError => {
                 console.log('Error resetting the notifications')
                 console.log({ notificationResetError })
@@ -257,7 +241,6 @@ export class Consento extends Model({
             )
           return combinedDispose(
             () => {
-              if (expoSubscription !== undefined) expoSubscription.remove()
               api.notifications.processors.delete(processor)
             },
             autorun(() => {
@@ -289,28 +272,6 @@ export class Consento extends Model({
               }
             })
           )
-        },
-        { fireImmediately: true }
-      ),
-      safeReaction(
-        () => ({ address: this.config?.address, expire: this.config?.expire }), // We need to add expire for the config to reload ~^_^~
-        ({ address }) => {
-          if (address === undefined || address === null) {
-            return
-          }
-          const { notificationTransport, destructTransport } = createTransport(address)
-          const api = setup({
-            cryptoCore,
-            notificationTransport
-          })
-          this._setApi({
-            ...api,
-            notificationTransport
-          })
-          return () => {
-            this._setApi(undefined)
-            destructTransport()
-          }
         },
         { fireImmediately: true }
       )

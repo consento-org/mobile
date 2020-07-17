@@ -1,4 +1,4 @@
-import { sodium } from '@consento/crypto/core/sodium'
+import { cryptoCore } from '../cryptoCore'
 import { Buffer, bufferToString, IEncodable, toBuffer } from '@consento/crypto/util/buffer'
 import { expoStore } from './expoStore'
 import { askAsync, CAMERA_ROLL } from 'expo-permissions'
@@ -9,7 +9,7 @@ import { Clipboard } from 'react-native'
 import { createAssetAsync, createAlbumAsync } from 'expo-media-library'
 
 export async function pathForSecretKey (secretKey: Uint8Array): Promise<string[]> {
-  const locationKey = await sodium.deriveKdfKey(secretKey)
+  const locationKey = await cryptoCore.deriveKdfKey(secretKey)
   return ['blob', ...bufferToString(locationKey, 'hex').substr(0, 16).split(/(.{4})/).filter(Boolean)]
 }
 
@@ -109,9 +109,9 @@ const noop = (): void => {}
 const CACHE: { [path: string]: Promise<IEncodable> } = {}
 
 export async function writeBlob (encodable: IEncodable): Promise<IEncryptedBlob> {
-  const secretKey = await sodium.createSecretKey()
+  const secretKey = await cryptoCore.createSecretKey()
   const path = await pathForSecretKey(secretKey)
-  const promise = sodium
+  const promise = cryptoCore
     .encrypt(secretKey, encodable)
     .then(async encrypted => await expoStore.write(path, encrypted))
     .then(() => {
@@ -169,7 +169,7 @@ export async function readBlob (input: string | Uint8Array | IEncryptedBlob): Pr
   if (!info.exists) {
     throw new Error(`File for key ${bufferToString(secretKey, 'hex')} does not exist!`)
   }
-  return await sodium.decrypt(secretKey, await expoStore.read(path))
+  return await cryptoCore.decrypt(secretKey, await expoStore.read(path))
 }
 
 export async function readImageBlob (secretKey: Uint8Array | IEncryptedBlob): Promise<string> {

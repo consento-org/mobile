@@ -6,7 +6,6 @@
     "slug": "consento",
     "owner": "consento",
     "privacy": "public",
-    "sdkVersion": "37.0.0",
     "version": "1.0.2",
     "scheme": "consento",
     "entryPoint": "./index.js",
@@ -30,7 +29,8 @@
       "package": "org.consento.mobile",
       "permissions": [
         "CAMERA"
-      ]
+      ],
+      "useNextNotificationsApi": true
     },
     "ios": {
       "bundleIdentifier": "org.consento.mobile",

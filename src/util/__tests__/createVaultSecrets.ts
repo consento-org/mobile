@@ -1,6 +1,6 @@
 import { createVaultSecrets, IVaultSecrets, IVaultSecretsProps } from '../createVaultSecrets'
 import { cryptoCore } from '../../cryptoCore'
-import { exists } from '../exists'
+import { exists } from '@consento/api/util'
 
 async function waitABit <T> (next: () => T): Promise<T> {
   return await new Promise <T>(resolve => {

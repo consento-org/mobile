@@ -4,7 +4,7 @@ import { combinedDispose } from '../util/combinedDispose'
 import { autorun, observable, IObservableValue, computed } from 'mobx'
 import { expoVaultSecrets } from '../util/expoVaultSecrets'
 import { mobxPersist } from '../util/mobxPersist'
-import { Buffer } from '@consento/crypto/util/buffer'
+import { Buffer } from '@consento/api/util'
 
 function persist (item: VaultData, secretKeyBase64: string): () => void {
   return mobxPersist({

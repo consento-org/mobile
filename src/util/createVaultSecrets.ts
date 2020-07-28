@@ -1,5 +1,5 @@
-import randomBytes from '@consento/sync-randombytes'
-import { bufferToString } from '@consento/crypto/util/buffer'
+import randomBytes from 'get-random-values-polypony'
+import { bufferToString } from '@consento/api/util'
 import { ICryptoCore } from '@consento/crypto/core/types'
 
 export interface IVaultSecretsProps {

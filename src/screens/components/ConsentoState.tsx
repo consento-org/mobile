@@ -8,7 +8,7 @@ import { elementConsentosBaseExpired } from '../../styles/component/elementConse
 import { elementConsentosBaseAccepted } from '../../styles/component/elementConsentosBaseAccepted'
 import { elementConsentosBaseConfirming } from '../../styles/component/elementConsentosBaseConfirming'
 import { TRequestState } from '../../model/RequestBase'
-import { exists } from '../../util/exists'
+import { exists } from '@consento/api/util'
 import { useHumanUntil } from '../../util/useHumanUntil'
 import { elementConsentosBaseCancelled } from '../../styles/component/elementConsentosBaseCancelled'
 

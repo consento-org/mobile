@@ -1,4 +1,4 @@
-import { exists } from './exists'
+import { exists } from '@consento/api/util'
 
 export function useDefault <T> (value: T | null | undefined, defaultValue: T): T {
   if (exists(value)) {

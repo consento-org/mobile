@@ -1,5 +1,5 @@
 import { createContext, useState, useContext } from 'react'
-import { exists } from './exists'
+import { exists } from '@consento/api/util'
 import { captureScreen, releaseCapture } from 'react-native-view-shot'
 
 enum Screens {

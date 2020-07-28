@@ -13,10 +13,9 @@ import { combinedDispose } from '../util/combinedDispose'
 import { vaultStore } from './VaultStore'
 import { IConsentoModel, CONSENTO, ISubscription, ISubscriptionMap } from './Consento.types'
 import { safeReaction } from '../util/safeReaction'
-import { bufferToString } from '@consento/crypto/util/buffer'
-import { subscribeEvent } from '../util/subscribeEvent'
+import { bufferToString, AbortController } from '@consento/api/util'
 import { autoRegisterRootStore } from '../util/autoRegisterRootStore'
-import { ErrorStrategy } from '@consento/notification-server/client/strategies/ErrorStrategy'
+import { subscribeEvent } from '../util/subscribeEvent'
 
 export const ConsentoContext = createContext<Consento>(null)
 
@@ -97,7 +96,7 @@ export class Consento extends Model({
   configLoaded: prop(false)
 }) implements IConsentoModel {
   _api: IAPI
-  _notificationTransport: ExpoTransport = new ExpoTransport({})
+  _notificationTransport: ExpoTransport
   _configTask: Promise<void>
 
   onInit (): void {
@@ -105,7 +104,11 @@ export class Consento extends Model({
     this.updateConfig = this.updateConfig.bind(this)
     this._api = setup({
       cryptoCore,
-      notificationTransport: this._notificationTransport
+      notificationTransport: control => {
+        const transport = new ExpoTransport({ control })
+        this._notificationTransport = transport
+        return transport
+      }
     })
     this._configTask = loadConfig()
       .then(
@@ -157,6 +160,7 @@ export class Consento extends Model({
   }
 
   @computed get ready (): boolean {
+    console.log({ state: this.transportState })
     switch (this.transportState) {
       case EClientStatus.DESTROYED:
       case EClientStatus.NOADDRESS:
@@ -176,18 +180,16 @@ export class Consento extends Model({
 
   @modelAction _updateTransportState (): void {
     this.transportState = this._notificationTransport.state
+    console.log({ newState: this.transportState })
     if (this.transportState === EClientStatus.ERROR) {
-      const strategy = this._notificationTransport._strategy
-      if (strategy instanceof ErrorStrategy) {
-        console.log(strategy.error.stack)
-      }
+      console.log('Error State')
     }
   }
 
   onAttachedToRootStore (): () => void {
     return combinedDispose(
       autoRegisterRootStore(vaultStore),
-      subscribeEvent(this._notificationTransport, 'state', () => this._updateTransportState(), true),
+      subscribeEvent(this._notificationTransport, 'change', () => this._updateTransportState(), true),
       autorun(
         () => {
           if (!this.configLoaded) return

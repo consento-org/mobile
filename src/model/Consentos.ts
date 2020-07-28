@@ -6,9 +6,8 @@ import { requireAPI, IConfirmLockeeMessage, MessageType, hasAPI, IUnlockMessage,
 import { IHandshakeAcceptMessage, IHandshakeAcceptJSON, IHandshakeAccept, IAPI, IConnection } from '@consento/api'
 import { Alert } from 'react-native'
 import { Receiver, Sender } from './Connection'
-import { Buffer } from 'buffer'
+import { Buffer, exists } from '@consento/api/util'
 import { humanModelId } from '../util/humanModelId'
-import { exists } from '../util/exists'
 
 function confirmLockeeMessage (lockId: string, acceptMessage: IHandshakeAcceptMessage): IConfirmLockeeMessage {
   return {

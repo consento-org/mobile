@@ -1,7 +1,6 @@
 import { useContext } from 'react'
-import { Buffer } from 'buffer'
-import { IConnection, IEncodable, IHandshakeAcceptMessage, IHandshakeConfirmation, cancelable, CancelError, ICancelable, IHandshakeInit, IHandshakeAccept } from '@consento/api'
-import { bufferToString } from '@consento/crypto/util/buffer'
+import { IConnection, IHandshakeAcceptMessage, IHandshakeConfirmation } from '@consento/api'
+import { bufferToString, Buffer, IEncodable, AbortError, AbortController } from '@consento/api/util'
 import { useStateMachine, IStateMachine, IState } from '../util/useStateMachine'
 import { ConsentoContext, Consento } from './Consento'
 
@@ -52,33 +51,31 @@ function incomingMachine (
   reset: () => void,
   [onHandshake, { crypto, notifications }]: InitData
 ): IStateMachine<IncomingState, any> {
-  const incoming = cancelable<IConnection>(function * (child) {
-    const incoming = (yield crypto.initHandshake()) as IHandshakeInit
-    const { afterSubscribe: receive } = (yield child(notifications.receive(incoming.receiver, isAcceptMessage))) as { afterSubscribe: ICancelable<IHandshakeAcceptMessage> }
+  const control = new AbortController()
+  ;(async () => {
+    const incoming = await crypto.initHandshake(control)
+    const { afterSubscribe: receive } = await notifications.receive<IHandshakeAcceptMessage>(incoming.receiver, { ...control, filter: isAcceptMessage })
     const link = `consento://connect:${bufferToString(incoming.firstMessage, 'base64')}`
     updateState(IncomingState.ready, link)
-    const acceptMessage: IHandshakeAcceptMessage = yield child(receive)
+    const acceptMessage = await receive
     updateState(IncomingState.confirming, link)
-    const confirmation: IHandshakeConfirmation = yield child(incoming.confirm(acceptMessage))
-    yield notifications.send(confirmation.connection.sender, confirmation.finalMessage)
-    return confirmation.connection
-  }).then(
-    onHandshake,
-    (error: Error) => {
-      if (error instanceof CancelError) {
-        return
-      }
-      console.log({
-        message: 'Error incoming handshake'
-      })
-      console.error(error)
-      setTimeout(reset, 1000)
+    const confirmation: IHandshakeConfirmation = await incoming.confirm(acceptMessage)
+    await notifications.send(confirmation.connection.sender, confirmation.finalMessage, control)
+    onHandshake(confirmation.connection)
+  })().catch(error => {
+    if (error instanceof AbortError) {
+      return
     }
-  )
+    console.log({
+      message: 'Error incoming handshake'
+    })
+    console.error(error)
+    setTimeout(reset, 1000)
+  })
   return {
     initialState: IncomingState.init,
     setState: (): boolean => false, // Only internally changable
-    close: incoming.cancel
+    close: () => control.abort()
   }
 }
 
@@ -88,11 +85,12 @@ function outgoingMachine (
   [onHandshake, { crypto, notifications }]: InitData
 ): IStateMachine<OutgoingState, any> {
   let formerAcceptLink
-  let outgoing: ICancelable<IConnection>
+  const control = new AbortController()
+  let outgoing: Promise<IConnection>
   const close = (): void => {
     if (outgoing !== undefined) {
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      outgoing.cancel()
+      control.abort()
       outgoing = undefined
     }
   }
@@ -113,22 +111,21 @@ function outgoingMachine (
         }
         close()
         formerAcceptLink = acceptLink
-        const thisOutgoing = cancelable<IConnection>(function * (child) {
-          const accept = (yield crypto.acceptHandshake(initMessage)) as IHandshakeAccept
-          const { afterSubscribe: receive } = (yield child(notifications.receive(accept.receiver))) as { afterSubscribe: ICancelable<IEncodable>}
-          yield notifications.send(accept.sender, accept.acceptMessage)
+        const thisOutgoing = (async () => {
+          const accept = await crypto.acceptHandshake(initMessage)
+          const { afterSubscribe } = await notifications.sendAndReceive(accept, accept.acceptMessage)
           updateState(OutgoingState.confirming)
-          const finalMessage = yield child(receive)
+          const finalMessage = await afterSubscribe
           if (!isUint8Array(finalMessage)) {
             throw new Error('finalization is supposed to be an uint8 array')
           }
-          return (yield accept.finalize(finalMessage)) as unknown as IConnection
-        })
+          return await accept.finalize(finalMessage)
+        })()
         outgoing = thisOutgoing
         thisOutgoing.then(
           onHandshake,
           error => {
-            if (error instanceof CancelError) {
+            if (error instanceof AbortError) {
               return
             }
             console.log({

@@ -4,7 +4,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { Text } from 'react-native'
 import { Loading } from './src/screens/Loading'
 import { loadFonts } from './src/styles/Font'
-import { exists } from './src/util/exists'
+import { exists } from '@consento/api/util'
 import { createScreenshots, ScreenshotContext } from './src/util/screenshots'
 
 export const Screenshot = (address: string): (() => JSX.Element) => {

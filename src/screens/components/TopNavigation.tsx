@@ -4,7 +4,7 @@ import { elementTopNavEmpty } from '../../styles/component/elementTopNavEmpty'
 import { elementTopNavItem } from '../../styles/component/elementTopNavItem'
 import { elementTopNavEdit } from '../../styles/component/elementTopNavEdit'
 import { withNavigation, TNavigation } from '../navigation'
-import { exists } from '../../util/exists'
+import { exists } from '@consento/api/util'
 import { useSafeArea } from 'react-native-safe-area-context'
 import { DarkBar } from './DarkBar'
 

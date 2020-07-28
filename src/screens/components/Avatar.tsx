@@ -5,7 +5,7 @@ import { Buffer } from 'buffer'
 import { bufferToString } from '@consento/crypto/util/buffer'
 import { Placement } from '../../styles/Component'
 import { Color } from '../../styles/Color'
-import { exists } from '../../util/exists'
+import { exists } from '@consento/api/util'
 
 function combine <T, TB> (separate: { [key: string]: T[] }): TB[] {
   const keys = Object.keys(separate)

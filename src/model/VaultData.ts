@@ -1,6 +1,6 @@
 import { model, Model, tProp, types, modelAction, prop, objectMap, getParent, arraySet } from 'mobx-keystone'
 import { computed } from 'mobx'
-import { toBuffer, bufferToString, Buffer } from '@consento/crypto/util/buffer'
+import { toBuffer, bufferToString, Buffer } from '@consento/api/util'
 import { find } from '../util/find'
 import { readBlob, writeBlob, safeFileName } from '../util/expoSecureBlobStore'
 import { IHandshakeInitJSON, IHandshakeAcceptMessage, ISenderJSON, IConnectionJSON, IAPI } from '@consento/api'

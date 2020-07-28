@@ -1,8 +1,8 @@
 import * as Permissions from 'expo-permissions'
 import { Notifications } from 'expo'
-import randomBytes from '@consento/sync-randombytes'
+import randomBytes from 'get-random-values-polypony'
 import Constants from 'expo-constants'
-import { bufferToString } from '@consento/crypto/util/buffer'
+import { bufferToString } from '@consento/api/util'
 import { createError } from './createError'
 
 function rndChar (num: number): string {

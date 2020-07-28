@@ -3,7 +3,7 @@ import { View, ScrollView } from 'react-native'
 import { ConsentoButton } from './ConsentoButton'
 import { Link } from '../../styles/Component'
 import { ElementBottomButtonClass } from '../../styles/component/elementBottomButton'
-import { exists } from '../../util/exists'
+import { exists } from '@consento/api/util'
 
 export interface IBottomButtonProto {
   backgroundColor: string

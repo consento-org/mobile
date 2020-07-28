@@ -1,7 +1,7 @@
 import React from 'react'
 import { View, Text, TextStyle, TouchableOpacity, ViewStyle } from 'react-native'
 import { Slice9Placement, Text as TextPlacement, Component } from './styles/Component'
-import { exists } from './util/exists'
+import { exists } from '@consento/api/util'
 
 interface ISlice9Component extends Component {
   bg: Slice9Placement

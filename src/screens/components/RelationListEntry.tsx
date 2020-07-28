@@ -4,7 +4,7 @@ import { Component, Text as TextComponent, ImagePlacement, Polygon } from '../..
 import { observer } from 'mobx-react'
 import { Avatar } from './Avatar'
 import { IRelationEntry } from '../../model/Consento.types'
-import { exists } from '../../util/exists'
+import { exists } from '@consento/api/util'
 
 export interface IRelationListEntryPrototype extends Component {
   relationName: TextComponent

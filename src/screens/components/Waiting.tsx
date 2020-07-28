@@ -5,7 +5,7 @@ import { createBoxOutline } from './createBoxOutline'
 import { elementVaultUnlock } from '../../styles/component/elementVaultUnlock'
 import { observer } from 'mobx-react'
 import { Vault } from '../../model/Vault'
-import { exists } from '../../util/exists'
+import { exists } from '@consento/api/util'
 
 export interface IWaitingProps {
   start?: number

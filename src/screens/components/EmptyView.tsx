@@ -2,7 +2,7 @@ import React from 'react'
 import { View, Text } from 'react-native'
 import { Text as TextPlacement, ImagePlacement } from '../../styles/Component'
 import { BottomButtonView, IBottomButtonProto } from './BottomButtonView'
-import { exists } from '../../util/exists'
+import { exists } from '@consento/api/util'
 
 interface IEmptyViewProto extends IBottomButtonProto {
   backgroundColor: string

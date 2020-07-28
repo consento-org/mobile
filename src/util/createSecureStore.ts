@@ -1,5 +1,5 @@
 import { ICryptoCore } from '@consento/crypto/core/types'
-import { bufferToString } from '@consento/crypto/util/buffer'
+import { bufferToString, Buffer } from '@consento/api/util'
 
 /**
  * TODO: This secure store belongs into consento/crypto or consento/api

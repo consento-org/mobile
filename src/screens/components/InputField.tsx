@@ -2,7 +2,7 @@ import React, { useRef } from 'react'
 import { View, Text, ViewStyle } from 'react-native'
 import { elementFormInputField, ElementFormInputFieldClass } from '../../styles/component/elementFormInputField'
 import { Link } from '../../styles/Component'
-import { exists } from '../../util/exists'
+import { exists } from '@consento/api/util'
 
 export interface IInputTexts {
   inactive?: string

@@ -37,7 +37,7 @@ interface IConfig {
 }
 
 interface IEventSubscription {
-  remove (): void
+  remove: () => void
 }
 
 @model('consento/Config')
@@ -160,7 +160,7 @@ export class Consento extends Model({
   }
 
   @computed get ready (): boolean {
-    console.log({ state: this.transportState })
+    console.log({ state: this.transportState, strategy: this._notificationTransport.error })
     switch (this.transportState) {
       case EClientStatus.DESTROYED:
       case EClientStatus.NOADDRESS:

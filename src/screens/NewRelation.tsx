@@ -54,7 +54,7 @@ const FocusedNewRelation = ({ navigation }: { navigation: TNavigation }): JSX.El
       user.relations.add(relation)
       navigation.navigate('relation', { relation: relation.$modelId })
     } catch (error) {
-      console.log({ error })
+      console.error(error)
     }
   })
   const [receivedLink, setReceivedLink] = useState<string>(null)

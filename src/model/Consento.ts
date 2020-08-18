@@ -13,7 +13,7 @@ import { combinedDispose } from '../util/combinedDispose'
 import { vaultStore } from './VaultStore'
 import { IConsentoModel, CONSENTO, ISubscription, ISubscriptionMap } from './Consento.types'
 import { safeReaction } from '../util/safeReaction'
-import { bufferToString, AbortController } from '@consento/api/util'
+import { bufferToString } from '@consento/api/util'
 import { autoRegisterRootStore } from '../util/autoRegisterRootStore'
 import { subscribeEvent } from '../util/subscribeEvent'
 

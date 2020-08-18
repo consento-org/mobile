@@ -145,7 +145,7 @@ function outgoingMachine (
 export function useHandshake (onHandshake: (connection: IConnection) => any): {
   incoming: IState<IncomingState, any>
   outgoing: IState<OutgoingState, any>
-  connect (initLink: string): void
+  connect: (initLink: string) => void
 } {
   const api = useContext(ConsentoContext)
   const stateOps = [onHandshake, api]

@@ -3,15 +3,12 @@ import { IConnection, IReceiverJSON, ISenderJSON, IConnectionJSON } from '@conse
 
 @model('consento/Receiver')
 export class Receiver extends Model({
-  receiveKey: tProp(types.string),
-  id: tProp(types.string)
+  receiveKey: tProp(types.string)
 }) implements IReceiverJSON {}
 
 @model('consento/Sender')
 export class Sender extends Model({
-  id: tProp(types.string),
-  sendKey: tProp(types.string),
-  receiveKey: tProp(types.string)
+  sendKey: tProp(types.string)
 }) implements ISenderJSON {}
 
 export function fromIConnection (connection: IConnection): Connection {

@@ -6,7 +6,7 @@ import { ConsentoContext, Consento } from './Consento'
 
 function isAcceptMessage (body: IEncodable): body is IHandshakeAcceptMessage {
   if (typeof body === 'object' && !(body instanceof Uint8Array)) {
-    // eslint-disable-next-line dot-notation
+    // eslint-disable-next-line @typescript-eslint/dot-notation
     return typeof body['token'] === 'string' && typeof body['secret'] === 'string'
   }
   return false

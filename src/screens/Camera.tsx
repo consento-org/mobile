@@ -1,15 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { CameraContainer } from './components/CameraContainer'
-import { elementCamera } from '../styles/component/elementCamera'
 import { ViewStyle, View } from 'react-native'
 import { Camera as NativeCamera } from 'expo-camera'
 import { TouchableWithoutFeedback, TouchableOpacity } from 'react-native-gesture-handler'
-import { Polygon, ImagePlacement, useVUnits } from '../styles/Component'
-import { Asset } from '../Asset'
 import { ImageFile } from '../model/VaultData'
 import { importFile } from '../util/expoSecureBlobStore'
 import { useSafeArea } from 'react-native-safe-area-context'
 import { bufferToString } from '@consento/crypto/util/buffer'
+import { ImageAsset } from '../styles/design/ImageAsset'
+import { IImageAsset } from '../styles/util/types'
+import { SketchImage } from '../styles/util/react/SketchImage'
+import { elementCamera } from '../styles/design/layer/elementCamera'
+import { ImagePlacement } from '../styles/util/ImagePlacement'
+import { Polygon } from '../styles/util/Polygon'
 
 const containerStyle: ViewStyle = {
   backgroundColor: elementCamera.backgroundColor,
@@ -22,16 +25,12 @@ const containerStyle: ViewStyle = {
 const ShutterButton = ({ onPress }: { onPress: () => any }): JSX.Element => {
   const [pressed, setPressed] = useState<boolean>(false)
 
-  return <TouchableWithoutFeedback
+  return <SketchImage
+    src={pressed ? elementCamera.layers.shutterActive : elementCamera.layers.shutter}
+    onPress={onPress}
     onPressIn={() => setPressed(true)}
     onPressOut={() => setPressed(false)}
-    onPress={onPress}
-    style={{
-      ...elementCamera.shutterActive.place.size()
-    }}
-  >
-    {(pressed ? elementCamera.shutterActive : elementCamera.shutter).img()}
-  </TouchableWithoutFeedback>
+  />
 }
 
 function FlatButton ({ item, pressed: poly, onPress }: {
@@ -60,8 +59,8 @@ function FlatButton ({ item, pressed: poly, onPress }: {
 }
 
 export interface ICameraProps {
-  onPicture (capture: ImageFile): void
-  onClose (): void
+  onPicture: (capture: ImageFile) => void
+  onClose: () => void
 }
 
 export const Camera = ({ onPicture, onClose }: ICameraProps): JSX.Element => {
@@ -128,11 +127,11 @@ export const Camera = ({ onPicture, onClose }: ICameraProps): JSX.Element => {
     return setFlashMode(NativeCamera.Constants.FlashMode.on)
   }
 
-  const flash = flashMode === NativeCamera.Constants.FlashMode.on
-    ? Asset.iconCameraFlashAuto()
+  const flash: IImageAsset = flashMode === NativeCamera.Constants.FlashMode.on
+    ? ImageAsset.iconCameraFlashAuto
     : flashMode === NativeCamera.Constants.FlashMode.torch
-      ? Asset.iconCameraFlashOn()
-      : Asset.iconCameraFlashOff()
+      ? ImageAsset.iconCameraFlashOn
+      : ImageAsset.iconCameraFlashOff
 
   const inset = useSafeArea()
 
@@ -144,7 +143,8 @@ export const Camera = ({ onPicture, onClose }: ICameraProps): JSX.Element => {
           <elementCamera.close.Render />
         </View>
       </TouchableOpacity>
-      <flash.component
+      <SketchImage
+        src={flash}
         style={{
           position: 'absolute',
           left: vw(50) - elementCamera.flash.place.width / 2

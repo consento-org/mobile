@@ -1,11 +1,13 @@
 import React from 'react'
-import Svg, { Image as TImage, Circle } from 'react-native-svg'
-import { Asset, ImageAsset } from '../../Asset'
+import Svg, { Circle, Image } from 'react-native-svg'
 import { Buffer } from 'buffer'
 import { bufferToString } from '@consento/crypto/util/buffer'
-import { Placement } from '../../styles/Component'
-import { Color } from '../../styles/Color'
 import { exists } from '@consento/api/util'
+import { ImageAsset } from '../../styles/design/ImageAsset'
+import { SketchImage } from '../../styles/util/react/SketchImage'
+import { Placement } from '../../styles/util/Placement'
+import { Color } from '../../styles/design/Color'
+import { IImageAsset } from '../../styles/util/types'
 
 function combine <T, TB> (separate: { [key: string]: T[] }): TB[] {
   const keys = Object.keys(separate)
@@ -41,16 +43,14 @@ function randomIndex (list: any[]): number {
   return index % list.length
 }
 
-type TImage = () => ImageAsset
-
-const faces = matchingProperties <TImage>(Asset, /^avatarFace/)
-const noses = matchingProperties <TImage>(Asset, /^avatarNose/)
-const mouths = matchingProperties <TImage>(Asset, /^avatarMouth/)
-const eyes = matchingProperties <TImage>(Asset, /^avatarEyes/)
+const faces = matchingProperties <IImageAsset>(ImageAsset, /^avatarFace/)
+const noses = matchingProperties <IImageAsset>(ImageAsset, /^avatarNose/)
+const mouths = matchingProperties <IImageAsset>(ImageAsset, /^avatarMouth/)
+const eyes = matchingProperties <IImageAsset>(ImageAsset, /^avatarEyes/)
 const colors = matchingProperties <string>(Color, /^avatar/)
-const hairs = combine <TImage, { below: TImage, above: TImage }>({
-  above: matchingProperties(Asset, /^avatarHairAbove/),
-  below: matchingProperties(Asset, /^avatarHairBelow/)
+const hairs = combine <IImageAsset, { below: IImageAsset, above: IImageAsset }>({
+  above: matchingProperties(ImageAsset, /^avatarHairAbove/),
+  below: matchingProperties(ImageAsset, /^avatarHairBelow/)
 })
 
 export function randomAvatarId (): string {
@@ -76,7 +76,7 @@ export interface IAvatarProps {
 
 export const Avatar = ({ avatarId, place }: IAvatarProps): JSX.Element => {
   if (!exists(avatarId)) {
-    return Asset.avatarUnknown().img({ ...place.style(), position: 'absolute' })
+    return <SketchImage src={ImageAsset.avatarUnknown} />
   }
   const buffer = Buffer.from(avatarId, 'hex')
   const hair = hairs[buffer.readUInt16LE(1)]
@@ -88,11 +88,11 @@ export const Avatar = ({ avatarId, place }: IAvatarProps): JSX.Element => {
   const { width: size } = place
   return <Svg width={size} height={size} viewBox={`0 0 ${size.toString()} ${size.toString()}`} style={{ position: 'absolute', left: place.left, top: place.top }}>
     <Circle cx={size / 2} cy={size / 2} r={size / 2} fill={color} />
-    <TImage href={hair.below().source} width={size} height={size} />
-    <TImage href={face().source} width={size} height={size} />
-    <TImage href={eye().source} width={size} height={size} />
-    <TImage href={nose().source} width={size} height={size} />
-    <TImage href={mouth().source} width={size} height={size} />
-    <TImage href={hair.above().source} width={size} height={size} />
+    <Image href={hair.below.source()} width={size} height={size} />
+    <Image href={face.source()} width={size} height={size} />
+    <Image href={eye.source()} width={size} height={size} />
+    <Image href={nose.source()} width={size} height={size} />
+    <Image href={mouth.source()} width={size} height={size} />
+    <Image href={hair.above.source()} width={size} height={size} />
   </Svg>
 }

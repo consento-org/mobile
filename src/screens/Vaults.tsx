@@ -1,49 +1,29 @@
 import React, { useContext } from 'react'
-import { View, ViewStyle } from 'react-native'
-import { VaultCard } from './components/VaultCard'
-import { TopNavigation } from './components/TopNavigation'
-import { Asset } from '../Asset'
+import { View, Text, useWindowDimensions, FlatList, VirtualizedList } from 'react-native'
 import { observer } from 'mobx-react'
-import { map } from '../util/map'
 import { Vault } from '../model/Vault'
-import { TNavigation } from './navigation'
-import { useVUnits } from '../styles/Component'
-import { elementCardVaultClose } from '../styles/component/elementCardVaultClose'
 import { ConsentoContext } from '../model/Consento'
-import { EmptyView } from './components/EmptyView'
-import { elementVaultsEmpty } from '../styles/component/elementVaultsEmpty'
 import { ScreenshotContext, useScreenshotEnabled } from '../util/screenshots'
-import { withNavigationFocus } from 'react-navigation'
+import { useIsFocused } from '@react-navigation/native'
+import { navigate } from '../util/navigate'
+import { ImageAsset } from '../styles/design/ImageAsset'
+import { SketchImage } from '../styles/util/react/SketchImage'
+import { createStackNavigator } from '@react-navigation/stack'
+import { TopNavigation } from './components/TopNavigation'
+import { EmptyView } from './components/EmptyView'
+import { elementLocksEmpty } from '../styles/design/layer/elementLocksEmpty'
+import { VaultCard, VAULT_STYLE } from './components/VaultCard'
+import { ArraySet } from 'mobx-keystone'
 
-const listStyle: ViewStyle = {
-  display: 'flex',
-  flexDirection: 'row',
-  flexWrap: 'wrap',
-  justifyContent: 'flex-start',
-  marginTop: 10,
-  marginBottom: 20
+const AddButton = ImageAsset.buttonAddHexagonal
+
+const NewVault = () => {
+  return <View />
 }
 
-const AddButton = Asset.buttonAddHexagonal().component
-const HorzPadding = 10
-
-const FocussedVaultsScreen = observer(({ navigation }: { navigation: TNavigation }) => {
+const Vaults = observer((): JSX.Element => {
   const { user: { vaults } } = useContext(ConsentoContext)
   const screenshots = useContext(ScreenshotContext)
-  const { vw } = useVUnits()
-  const entryWidth = elementCardVaultClose.width
-  let space = vw(100)
-  let count = -1
-  do {
-    if (count === 0) {
-      space -= entryWidth
-    } else {
-      space -= entryWidth + HorzPadding
-    }
-    count++
-  } while (space > 0)
-  const width = count * entryWidth + (count * 2 + 1) * HorzPadding
-
   if (vaults.size === 0) {
     screenshots.vaultsEmpty.takeSync(500)
   }
@@ -60,31 +40,58 @@ const FocussedVaultsScreen = observer(({ navigation }: { navigation: TNavigation
       break
     }
   }
-
-  return <View style={{ display: 'flex', height: '100%' }}>
+  const { width, height } = useWindowDimensions()
+  const numColumns = width / VAULT_STYLE.width | 0
+  const numVaults = vaults.size
+  const initialNumToRender = Math.ceil(height / VAULT_STYLE.height)
+  return <View style={{ flexGrow: 1 }}>
     <TopNavigation title='Vaults' />
-    <EmptyView prototype={elementVaultsEmpty} isEmpty={vaults.size === 0}>
-      <View style={{ ...listStyle, width, left: (vw(100) - width) / 2 }}>
-        {
-          map(vaults.values(), vault => <VaultCard key={vault.$modelId} vault={vault} />)
-        }
-      </View>
-    </EmptyView>
-    <AddButton
-      style={{ position: 'absolute', right: 10, bottom: 10 }}
+    <SketchImage
+      src={AddButton}
+      style={{ position: 'absolute', right: 10, bottom: 10, zIndex: 1 }}
       onPress={() => {
         const vault = new Vault({})
         vaults.add(vault)
-        navigation.navigate('vault', { vault: vault.$modelId })
+        navigate('vault', { vault: vault.$modelId })
       }}
     />
+    <EmptyView empty={elementLocksEmpty} isEmpty={vaults.size === 0}>
+      <VirtualizedList
+        data={vaults}
+        listKey={`vaults-list-${numColumns}`}
+        getItem={(vaults: ArraySet<Vault>, index: number): Vault[] => vaults.items.slice((index * numColumns), (index * numColumns) + numColumns)}
+        getItemCount={() => Math.ceil(numVaults / numColumns)}
+        centerContent
+        initialNumToRender={initialNumToRender}
+        style={{ height: 0 /* React-navigation fix - TODO check if new version fixes this or file bug */ }}
+        keyExtractor={(_, index) => index.toString()}
+        renderItem={vaultRow => {
+          return <View style={{ alignSelf: 'center', flexDirection: 'row', width: numColumns * VAULT_STYLE.width + ((numColumns) * VAULT_STYLE.marginHorizontal * 2) }}>
+            {
+              vaultRow.item.map(vault => {
+                return <VaultCard key={vault.$modelId} vault={vault} />
+              })
+            }
+          </View>
+        }}
+      />
+    </EmptyView>
   </View>
 })
 
-export const VaultsScreen = withNavigationFocus(({ navigation, isFocused }: { navigation: TNavigation, isFocused: boolean }) => {
+const Pages = createStackNavigator()
+
+export const VaultsScreen = (): JSX.Element => {
   const isScreenshotEnabled = useScreenshotEnabled()
-  if (!isScreenshotEnabled || isFocused) {
-    return <FocussedVaultsScreen navigation={navigation} />
-  }
-  return <View />
-})
+  const isFocused = useIsFocused()
+  return <Pages.Navigator screenOptions={{
+    headerShown: false,
+    cardShadowEnabled: false,
+    cardStyle: {
+      flexGrow: 1
+    }
+  }}>
+    <Pages.Screen name='vaults' component={Vaults} />
+    <Pages.Screen name='new-vault' component={NewVault} />
+  </Pages.Navigator>
+}

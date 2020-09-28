@@ -1,19 +1,19 @@
 import { FunctionComponent } from 'react'
 import { createMaterialTopTabNavigator, NavigationMaterialTabOptions, NavigationTabProp } from 'react-navigation-tabs'
-import { elementTabBarTabActive } from '../../styles/component/elementTabBarTabActive'
-import { elementTabBarTabResting } from '../../styles/component/elementTabBarTabResting'
 import { NavigationRouteConfigMap, NavigationRoute, NavigationParams, NavigationRouteConfig } from 'react-navigation'
+import { elementTabBarTabActive } from '../../styles/design/layer/elementTabBarTabActive'
+import { elementTabBarTabResting } from '../../styles/design/layer/elementTabBarTabResting'
 
 const config = {
   tabBarOptions: {
-    activeTintColor: elementTabBarTabActive.label.style.color,
+    activeTintColor: elementTabBarTabActive.layers.label.style.color,
     indicatorStyle: {
-      backgroundColor: elementTabBarTabActive.bottomLine.border.fill.color,
-      height: elementTabBarTabActive.bottomLine.border.thickness
+      backgroundColor: elementTabBarTabActive.layers.bottomLine.border.fill.color,
+      height: elementTabBarTabActive.layers.bottomLine.border.thickness
     },
-    pressColor: elementTabBarTabResting.effect.fill.color,
-    labelStyle: elementTabBarTabResting.label.style,
-    upperCaseLabel: elementTabBarTabResting.label.style.textTransform === 'uppercase',
+    pressColor: elementTabBarTabResting.layers.effect.fill.color,
+    labelStyle: elementTabBarTabResting.layers.label.style,
+    upperCaseLabel: elementTabBarTabResting.layers.label.style.textTransform === 'uppercase',
     style: {
       backgroundColor: elementTabBarTabResting.backgroundColor,
       shadowOpacity: 0,

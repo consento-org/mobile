@@ -1,8 +1,23 @@
-import React, { useContext, forwardRef, Ref } from 'react'
+import React, { forwardRef, Ref } from 'react'
 import { observer } from 'mobx-react'
-import { createAppContainer, withNavigation, withNavigationFocus } from 'react-navigation'
-import { createStackNavigator } from 'react-navigation-stack'
-import { createBottomTabBar } from './components/createBottomTabBar'
+import { Text } from 'react-native'
+import { createStackNavigator } from '@react-navigation/stack'
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
+import { elementBottomNav } from '../styles/design/layer/elementBottomNav'
+import { IImageAsset, ILayer, ViewBorders } from '../styles/util/types'
+import { SketchImage } from '../styles/util/react/SketchImage'
+import { ImageAsset } from '../styles/design/ImageAsset'
+import { elementBottomNavConsentosActive } from '../styles/design/layer/elementBottomNavConsentosActive'
+import { elementBottomNavConsentosResting } from '../styles/design/layer/elementBottomNavConsentosResting'
+import { TextBox } from '../styles/util/TextBox'
+import { elementBottomNavVaultActive } from '../styles/design/layer/elementBottomNavVaultActive'
+import { elementBottomNavVaultResting } from '../styles/design/layer/elementBottomNavVaultResting'
+import { elementBottomNavRelationsActive } from '../styles/design/layer/elementBottomNavRelationsActive'
+import { elementBottomNavRelationsResting } from '../styles/design/layer/elementBottomNavRelationsResting'
+import { SketchTextBoxView } from '../styles/util/react/SketchTextBox'
+import { VaultsScreen } from './Vaults'
+/*
+import { createAppContainer, withNavigation, withNavigationFocus } from '@react-navigation/native'
 import { VaultsScreen } from './Vaults'
 import { RelationsScreen } from './Relations'
 import { ConsentosScreen } from './Consentos'
@@ -20,9 +35,9 @@ import { Camera } from './Camera'
 import { TextEditor } from './TextEditor'
 import { ImageEditor } from './ImageEditor'
 import { ConsentoContext } from '../model/Consento'
-import { Asset } from '../Asset'
-import { TransitionConfig, HeaderTransitionConfig } from 'react-navigation-stack/lib/typescript/types'
 import { useScreenshotEnabled } from '../util/screenshots'
+import { ImageAsset } from '../styles/design/ImageAsset'
+import { IImageAsset } from '../styles/util/types'
 
 const noTransition = (): TransitionConfig & HeaderTransitionConfig => {
   return {
@@ -32,21 +47,26 @@ const noTransition = (): TransitionConfig & HeaderTransitionConfig => {
   } as any
 }
 
-const ConsentosIcon = observer(({ focused }: { focused: boolean }): JSX.Element => {
+const ConsentosIcon = observer(({ focused }: { focused: boolean }): IImageAsset => {
   const { user } = useContext(ConsentoContext)
   const hasNewNotifications = user.newConsentosCount > 0
   return focused
-    ? Asset.iconConsentoActive().img()
+    ? ImageAsset.iconConsentoActive
     : hasNewNotifications
-      ? Asset.iconConsentoNotificationNew().img()
-      : Asset.iconConsentoIdle().img()
+      ? ImageAsset.iconConsentoNotificationNew
+      : ImageAsset.iconConsentoIdle
 })
+*/
+
+const Stack = createStackNavigator()
+const Tabs = createBottomTabNavigator()
 
 export const Screens = observer(forwardRef((_, ref: Ref<any>): JSX.Element => {
+  /*
   const { user } = useContext(ConsentoContext)
   const isScreenshotEnabled = useScreenshotEnabled()
   const Container = (() => {
-    const AppNavigator = createStackNavigator({
+    {
       main: {
         path: '',
         screen: createBottomTabBar({
@@ -146,8 +166,58 @@ export const Screens = observer(forwardRef((_, ref: Ref<any>): JSX.Element => {
       headerMode: 'none',
       initialRouteKey: 'vaults',
       transitionConfig: isScreenshotEnabled ? noTransition : undefined
-    })
+    }
+    )
     return createAppContainer(AppNavigator)
   })()
-  return <Container ref={ref} />
+  */
+  return <Stack.Navigator
+    screenOptions={{
+      headerShown: false
+    }}>
+    <Stack.Screen name='main'>{() => <Tabs.Navigator
+      tabBarOptions={{
+        showLabel: true,
+        activeBackgroundColor: elementBottomNav.backgroundColor,
+        inactiveBackgroundColor: elementBottomNav.backgroundColor,
+        style: {
+          ...elementBottomNav.layers.borderTop.borderStyle(ViewBorders.top),
+          height: elementBottomNav.place.height
+        },
+        tabStyle: {
+          padding: elementBottomNav.layers.consento.place.bottom
+        },
+        labelPosition: 'below-icon'
+      }}
+    >
+      <Tabs.Screen
+        name='vaults' component={VaultsScreen} options={{
+          tabBarIcon: FocusIcon(ImageAsset.iconVaultActive, ImageAsset.iconVaultIdle),
+          tabBarLabel: FocusLabel(elementBottomNavVaultActive, elementBottomNavVaultResting)
+        }} />
+      <Tabs.Screen
+        name='consentos' component={Sample} options={{
+          tabBarIcon: FocusIcon(ImageAsset.iconConsentoActive, ImageAsset.iconConsentoIdle),
+          tabBarLabel: FocusLabel(elementBottomNavConsentosActive, elementBottomNavConsentosResting)
+        }} />
+      <Tabs.Screen
+        name='relations' component={Sample} options={{
+          tabBarIcon: FocusIcon(ImageAsset.iconRelationsActive, ImageAsset.iconRelationsIdle),
+          tabBarLabel: FocusLabel(elementBottomNavRelationsActive, elementBottomNavRelationsResting)
+        }} />
+    </Tabs.Navigator>}</Stack.Screen>
+  </Stack.Navigator>
 }))
+
+const FocusIcon = (focusedSrc: IImageAsset, regularSrc: IImageAsset) => {
+  return ({ focused }: { focused: boolean }) => <SketchImage src={focused ? focusedSrc : regularSrc} />
+}
+
+const FocusLabel = (focusedStyle: ILayer<{ title: TextBox }>, regularStyle: ILayer<{ title: TextBox }>): (focused: { focused: boolean }) => JSX.Element => {
+  return ({ focused }: { focused: boolean }): JSX.Element => {
+    const src = (focused ? focusedStyle : regularStyle).layers.title
+    return <SketchTextBoxView src={src} style={src.style} />
+  }
+}
+
+const Sample = (): JSX.Element => <Text>Hi</Text>

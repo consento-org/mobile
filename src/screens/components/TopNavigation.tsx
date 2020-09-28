@@ -1,18 +1,21 @@
 import React, { useState, useEffect } from 'react'
 import { View, ViewStyle, BackHandler } from 'react-native'
-import { elementTopNavEmpty } from '../../styles/component/elementTopNavEmpty'
-import { elementTopNavItem } from '../../styles/component/elementTopNavItem'
-import { elementTopNavEdit } from '../../styles/component/elementTopNavEdit'
-import { withNavigation, TNavigation } from '../navigation'
+import { elementTopNavEmpty } from '../../styles/design/layer/elementTopNavEmpty'
+import { elementTopNavItem } from '../../styles/design/layer/elementTopNavItem'
+import { elementTopNavEdit } from '../../styles/design/layer/elementTopNavEdit'
 import { exists } from '@consento/api/util'
-import { useSafeArea } from 'react-native-safe-area-context'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { DarkBar } from './DarkBar'
+import { ViewBorders } from '../../styles/util/types'
+import { SketchElement } from '../../styles/util/react/SketchElement'
+import { SketchTextBoxInput, SketchTextBoxView } from '../../styles/util/react/SketchTextBox'
+import { SketchImage } from '../../styles/util/react/SketchImage'
+import { SketchPolygon } from '../../styles/util/react/SketchPolygon'
+import { navigate } from '../../util/navigate'
 
 const topNav = Object.freeze<ViewStyle>({
   backfaceVisibility: 'visible',
-  backgroundColor: elementTopNavEmpty.backgroundColor,
-  borderBottomColor: elementTopNavEmpty.borderTop.border.fill.color,
-  borderBottomWidth: elementTopNavEmpty.borderTop.border.thickness
+  ...elementTopNavEmpty.layers.borderTop.borderStyle(ViewBorders.bottom)
 })
 
 export type THandler = () => any
@@ -21,7 +24,6 @@ export interface ITopNavigationProps {
   title: string
   titlePlaceholder?: string
   back?: string | THandler
-  navigation: TNavigation
   onEdit?: (text: string) => any
   onDelete?: () => any
 }
@@ -30,15 +32,15 @@ function isEmpty (value: string): boolean {
   return value === null || value === undefined || /^\s*$/.test(value)
 }
 
-export const TopNavigation = withNavigation((props: ITopNavigationProps) => {
+export const TopNavigation = (props: ITopNavigationProps): JSX.Element => {
   const [editing, setEditing] = useState(false)
-  const inset = useSafeArea()
+  const inset = useSafeAreaInsets()
   const handleBack = (): boolean => {
     if (!exists(props.back)) {
       return
     }
     if (typeof props.back === 'string') {
-      props.navigation.navigate(props.back)
+      navigate(props.back)
     } else {
       props.back()
     }
@@ -52,45 +54,30 @@ export const TopNavigation = withNavigation((props: ITopNavigationProps) => {
     }
   }, [])
 
-  return <View style={{ ...topNav, height: elementTopNavEmpty.height + inset.top }}>
+  return <View style={{ ...topNav, height: elementTopNavEmpty.place.height + inset.top, alignSelf: 'stretch' }}>
     <DarkBar />
     <View style={{ position: 'relative' }}>
       {exists(props.back)
-        ? <elementTopNavItem.back.Render
-          onPress={handleBack}
-        />
-        : <elementTopNavEmpty.logo.Render onPress={() => props.navigation.navigate('config')} style={{ zIndex: 1 }} />}
+        ? <SketchElement src={elementTopNavItem.layers.back} style={{ paddingLeft: elementTopNavItem.layers.back.place.left, paddingTop: elementTopNavItem.layers.back.place.top }} onPress={handleBack} />
+        : <SketchElement src={elementTopNavEmpty.layers.logo} onPress={() => navigate('config')} style={{ marginLeft: elementTopNavEmpty.layers.logo.place.left, marginTop: elementTopNavEmpty.layers.logo.place.top }} />}
       {editing
         ? <View>
-          <elementTopNavEdit.Render
-            place={elementTopNavEdit.background.place}
-            horz='stretch'
-            item={() =>
-            // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-              <View style={{
-                position: 'absolute',
-                width: '100%',
-                height: elementTopNavEdit.background.place.height,
-                backgroundColor: elementTopNavEdit.background.fill.color,
-                borderColor: elementTopNavEdit.underline.border.fill.color,
-                borderBottomWidth: elementTopNavEdit.underline.border.thickness
-              } as ViewStyle} />}
-          />
-          <elementTopNavEdit.title.Render
-            horz='stretch'
+          <SketchPolygon src={elementTopNavEdit.layers.background} />
+          <SketchTextBoxInput
+            src={elementTopNavEdit.layers.title}
             value={props.title}
             placeholder={props.titlePlaceholder}
-            onEdit={props.onEdit}
-            targetRef={textEdit => textEdit?.focus()}
+            onChangeText={props.onEdit}
+            ref={textEdit => textEdit?.focus()}
             onBlur={() => {
               setEditing(false)
             }} />
         </View>
         : exists(props.onEdit)
-          ? <elementTopNavItem.title.Render horz='stretch' value={isEmpty(props.title) ? props.titlePlaceholder : props.title} onPress={() => { setEditing(true) }} />
-          : <elementTopNavEmpty.title.Render horz='stretch' value={isEmpty(props.title) ? props.titlePlaceholder : props.title} />}
-      {(exists(props.onEdit) && !editing) ? <elementTopNavItem.edit.Render horz='end' onPress={() => setEditing(true)} /> : null}
-      {exists(props.onDelete) ? <elementTopNavItem.delete.Render horz='end' onPress={props.onDelete} /> : null}
+          ? <SketchTextBoxView src={elementTopNavItem.layers.title} value={isEmpty(props.title) ? props.titlePlaceholder : props.title} onPress={() => { setEditing(true) }} />
+          : <SketchTextBoxView src={elementTopNavEmpty.layers.title} value={isEmpty(props.title) ? props.titlePlaceholder : props.title} />}
+      {(exists(props.onEdit) && !editing) ? <SketchImage src={elementTopNavItem.layers.edit} onPress={() => setEditing(true)} /> : null}
+      {exists(props.onDelete) ? <SketchImage src={elementTopNavItem.layers.delete} onPress={props.onDelete} /> : null}
     </View>
   </View>
-})
+}

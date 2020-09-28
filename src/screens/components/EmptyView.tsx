@@ -1,50 +1,55 @@
-import React from 'react'
-import { View, Text } from 'react-native'
-import { Text as TextPlacement, ImagePlacement } from '../../styles/Component'
-import { BottomButtonView, IBottomButtonProto } from './BottomButtonView'
+import React, { useEffect } from 'react'
+import { StyleSheet, ViewStyle, ImageStyle, TextStyle } from 'react-native'
+import { BottomButtonView } from './BottomButtonView'
 import { exists } from '@consento/api/util'
+import { TextBox } from '../../styles/util/TextBox'
+import { ImagePlacement } from '../../styles/util/ImagePlacement'
+import { ILayer } from '../../styles/util/types'
+import { SketchElement } from '../../styles/util/react/SketchElement'
+import { elementBottomButton } from '../../styles/design/layer/elementBottomButton'
 
-interface IEmptyViewProto extends IBottomButtonProto {
-  backgroundColor: string
-  description: TextPlacement
+export type IEmptyViewProto = ILayer<{
+  description: TextBox
   illustration: ImagePlacement
-  title: TextPlacement
-}
+  title: TextBox
+  bottomButton?: typeof elementBottomButton
+}>
 
-interface IEmptyContentProps {
-  prototype: IEmptyViewProto
-}
-
-export interface IEmptyViewProps extends IEmptyContentProps {
+export interface IEmptyViewProps {
+  empty: IEmptyViewProto
   onAdd?: () => any
-  onEmpty?: () => any
+  onEmpty?: () => undefined | (() => {})
   children?: React.ReactChild | React.ReactChild[]
   isEmpty?: boolean
 }
 
-const EmptyContent = ({ prototype: proto }: IEmptyContentProps): JSX.Element => {
-  return <View style={{ padding: proto.description.place.x, display: 'flex', alignItems: 'center', alignSelf: 'center', width: '100%' }}>
-    {
-      proto.illustration.img({
-        marginBottom: proto.title.place.top - proto.illustration.place.bottom
-      })
-    }
-    <Text style={{
-      ...proto.title.style,
-      marginBottom: proto.description.place.top - proto.title.place.bottom
-    }}>{proto.title.text}</Text>
-    <Text style={proto.description.style}>{proto.description.text}</Text>
-  </View>
-}
+const stylesByProto = new WeakMap<IEmptyViewProto, { container: ViewStyle, illustration: ImageStyle, description: TextStyle, title: TextStyle }>()
 
-export function EmptyView ({ prototype: proto, onAdd, children, isEmpty, onEmpty }: IEmptyViewProps): JSX.Element {
+export function EmptyView ({ empty, onAdd, children, isEmpty, onEmpty }: IEmptyViewProps): JSX.Element {
   isEmpty = (isEmpty || !exists(children))
-  if (isEmpty && typeof onEmpty === 'function') {
-    onEmpty()
-  }
-  return <BottomButtonView prototype={proto} onPress={onAdd}>
-    {
-      isEmpty ? <EmptyContent prototype={proto} /> : children
+  useEffect(() => {
+    let cleanup: () => any
+    if (typeof onEmpty === 'function') {
+      cleanup = onEmpty()
     }
-  </BottomButtonView>
+    return cleanup ?? (() => {})
+  }, [isEmpty])
+  if (isEmpty) {
+    let styles = stylesByProto.get(empty)
+    if (styles === undefined) {
+      styles = StyleSheet.create({
+        container: { marginHorizontal: empty.layers.description.place.x, display: 'flex', alignItems: 'center' },
+        illustration: { marginTop: 60, marginBottom: empty.layers.title.place.spaceY(empty.layers.illustration.place) },
+        description: { marginBottom: 60 },
+        title: { marginBottom: empty.layers.description.place.spaceY(empty.layers.title.place) }
+      })
+      stylesByProto.set(empty, styles)
+    }
+    return <BottomButtonView src={empty} onPress={onAdd} containerStyle={styles.container}>
+      <SketchElement src={empty.layers.illustration} style={styles.illustration} />
+      <SketchElement src={empty.layers.title} style={styles.title} />
+      <SketchElement src={empty.layers.description} style={styles.description} />
+    </BottomButtonView>
+  }
+  return <>{children}</>
 }

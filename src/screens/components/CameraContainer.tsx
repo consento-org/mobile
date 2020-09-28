@@ -2,10 +2,10 @@ import React, { useState, forwardRef, useRef, useLayoutEffect, RefObject } from 
 import { ViewStyle, View, Platform } from 'react-native'
 import { Camera } from 'expo-camera'
 import { BarCodeScanningResult } from 'expo-camera/build/Camera.types'
-import { useVUnits } from '../../styles/Component'
 import { usePermission, Permissions } from '../../util/usePermission'
-import { elementCamera } from '../../styles/component/elementCamera'
 import { ConsentoButton } from './ConsentoButton'
+import { SketchTextBox, SketchTextBoxView } from '../../styles/util/react/SketchTextBox'
+import { elementCamera } from '../../styles/design/layer/elementCamera'
 
 export interface ISpace {
   width: number
@@ -51,7 +51,7 @@ async function getBestSize (camera: Camera, algo: (sizeLists: ICameraNativeSize[
       sizes: await camera.getAvailablePictureSizesAsync()
     }]
   }
-  const sizeList = sizeLists.reduce((sizeLists, entry) => {
+  const sizeList = sizeLists.reduce<ICameraNativeSize[]>((sizeLists, entry) => {
     if (entry === null) {
       return sizeLists
     }
@@ -68,7 +68,7 @@ async function getBestSize (camera: Camera, algo: (sizeLists: ICameraNativeSize[
       sizeLists.push({ size, ratio, width, height, space })
     }
     return sizeLists
-  }, [] as ICameraNativeSize[]).sort((a, b) => {
+  }, []).sort((a, b) => {
     if (a.space > b.space) return -1
     if (a.space < b.space) return 1
     return 0
@@ -149,7 +149,6 @@ export const CameraContainer = forwardRef(({ onCode, children, style, zoom, flas
   const { status, reask } = usePermission(Permissions.CAMERA, error => {
     console.log(`Error while fetching permissions: ${String(error)}`) // TODO: Create a system error log
   })
-  const { isHorz } = useVUnits()
   const [nativeSize, setNativeSize] = useState<ICameraNativeSize>(undefined)
   if (ref === null || ref === undefined) {
     ref = useRef<Camera>()
@@ -161,12 +160,13 @@ export const CameraContainer = forwardRef(({ onCode, children, style, zoom, flas
 
   if (status === 'denied') {
     children = <View style={permissionStyle}>
-      <elementCamera.permission.Render
+      <SketchTextBoxView
+        src={elementCamera.layers.permission}
         style={{
-          marginBottom: elementCamera.retry.place.top - elementCamera.permission.place.bottom
+          marginBottom: elementCamera.layers.retry.place.top - elementCamera.layers.permission.place.bottom
         }}
       />
-      <ConsentoButton proto={elementCamera.retry} style={{ left: null, top: null }} onPress={reask} />
+      <ConsentoButton proto={elementCamera.layers.retry} style={{ left: null, top: null }} onPress={reask} />
     </View>
   } else if (nativeSize !== undefined) {
     cameraStyle = {

@@ -1,15 +1,10 @@
 import React, { useContext, useEffect } from 'react'
 import { View, ViewStyle, Image } from 'react-native'
 import { TopNavigation } from './components/TopNavigation'
-import { createTabBar } from './components/createTabBar'
-import { TNavigation } from './navigation'
-import { elementSealVaultActive } from '../styles/component/elementSealVaultActive'
-import { elementSealVaultIdle } from '../styles/component/elementSealVaultIdle'
-import { elementVaultsLoading } from '../styles/component/elementVaultsLoading'
 import { ConsentoButton } from './components/ConsentoButton'
+import { createTabBar } from './components/createTabBar'
 import { Logs } from './Logs'
 import { Waiting } from './components/Waiting'
-import { withNavigation } from 'react-navigation'
 import { observer } from 'mobx-react'
 import { VaultContext } from '../model/VaultContext'
 import { PopupMenu } from './components/PopupMenu'
@@ -18,15 +13,19 @@ import { Locks } from './components/Locks'
 import { ConsentoContext } from '../model/Consento'
 import { ScreenshotContext } from '../util/screenshots'
 import { deleteWarning } from './components/deleteWarning'
+import { elementSealVaultActive } from '../styles/design/layer/elementSealVaultActive'
+import { ViewBorders } from '../styles/util/types'
+import { navigate } from '../util/navigate'
+import { elementVaultsLoading } from '../styles/design/layer/elementVaultsLoading'
+import { elementSealVaultIdle } from '../styles/design/layer/elementSealVaultIdle'
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const animation = require('../../assets/animation/consento_symbol_animation.gif')
 
 const lockStyle: ViewStyle = {
-  height: elementSealVaultActive.height,
+  height: elementSealVaultActive.place.height,
   backgroundColor: elementSealVaultActive.backgroundColor,
-  borderBottomColor: elementSealVaultActive.borderBottom.border.fill.color,
-  borderBottomWidth: elementSealVaultActive.borderBottom.border.thickness,
+  ...elementSealVaultActive.layers.borderBottom.borderStyle(ViewBorders.bottom),
   display: 'flex',
   justifyContent: 'center',
   alignItems: 'center'
@@ -49,12 +48,27 @@ const VaultNavigator = createTabBar({
 
 function LockButton (props: { onPress?: () => any }): JSX.Element {
   return <View style={lockStyle}>
-    <ConsentoButton style={elementSealVaultActive.enabled.place.size()} styleDisabled={elementSealVaultIdle.disabled.place.size()} title='lock' onPress={props.onPress} />
+    <ConsentoButton
+      style={{
+        top: elementSealVaultActive.layers.enabled.place.top,
+        left: elementSealVaultActive.layers.enabled.place.left,
+        width: elementSealVaultActive.layers.enabled.place.width,
+        height: elementSealVaultActive.layers.enabled.place.height
+      }}
+      styleDisabled={{
+        top: elementSealVaultIdle.layers.disabled.place.top,
+        left: elementSealVaultIdle.layers.disabled.place.left,
+        width: elementSealVaultIdle.layers.disabled.place.width,
+        height: elementSealVaultIdle.layers.disabled.place.height
+      }}
+      title='lock'
+      onPress={props.onPress}
+    />
   </View>
 }
 
 export const VaultRouter = VaultNavigator.router
-export const Vault = withNavigation(observer(({ navigation }: { navigation: TNavigation }): JSX.Element => {
+export const Vault = observer((): JSX.Element => {
   const { user, config } = useContext(ConsentoContext)
   const { vault } = useContext(VaultContext)
   const screenshots = useContext(ScreenshotContext)
@@ -65,7 +79,7 @@ export const Vault = withNavigation(observer(({ navigation }: { navigation: TNav
   }, [vault.isLoading])
   useEffect(() => {
     if (!vault.isOpen && !vault.isPending && !vault.isLoading) {
-      navigation.navigate('vaults')
+      navigate('vaults')
     }
   }, [vault.isPending, vault.isLoading])
   const handleNameEdit = vault.isOpen ? newName => vault.setName(newName) : undefined
@@ -73,13 +87,13 @@ export const Vault = withNavigation(observer(({ navigation }: { navigation: TNav
     deleteWarning({
       onPress (): void {
         user.vaults.delete(vault)
-        navigation.navigate('vaults')
+        navigate('vaults')
       },
       itemName: 'Vault'
     })
   }
   const handleLock = vault.isClosable ? () => {
-    navigation.navigate('vaults')
+    navigate('vaults')
     vault.lock()
       .catch(lockError => console.error(lockError))
   } : undefined
@@ -87,13 +101,14 @@ export const Vault = withNavigation(observer(({ navigation }: { navigation: TNav
     screenshots.vaultPending.takeSync(1000)
   }
   return <PopupMenu>
+    <Text>hi</Text>
     <View style={{ position: 'absolute', width: '100%', height: '100%' }}>
       <TopNavigation title={vault.name} titlePlaceholder={vault.humanId} back='vaults' onEdit={handleNameEdit} onDelete={handleDelete} />
       {
         vault.isOpen
           ? [
             <LockButton key='lock' onPress={handleLock} />,
-            <VaultNavigator key='vault' navigation={navigation} />
+            <VaultNavigator key='vault' />
           ]
           : vault.isLoading
             ? <View style={{ flexGrow: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -104,4 +119,4 @@ export const Vault = withNavigation(observer(({ navigation }: { navigation: TNav
       }
     </View>
   </PopupMenu>
-}))
+})

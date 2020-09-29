@@ -17,7 +17,7 @@ export const elementTopNavItem = {
       thickness: 1,
       strokeLinecap: 'butt'
     }, []),
-    title: new TextBox('title', 'Vault Name', TextStyles.H5RobotoRegular24BlackCenter, { x: 50.5, y: 18, w: 259, h: 36, r: 50.5, b: 6 }),
+    title: new TextBox('title', 'Vault Name', TextStyles.H5RobotoRegular24BlackCenter, { x: 52, y: 17, w: 259, h: 31, r: 49, b: 12 }),
     edit: new ImagePlacement('edit', ImageAsset.iconEditGrey, { x: 276, y: 18, w: 24, h: 24, r: 60, b: 18 }),
     delete: new ImagePlacement('delete', ImageAsset.iconDeleteGrey, { x: 304, y: 6, w: 48, h: 48, r: 8, b: 6 }),
     back: new ImagePlacement('back', ImageAsset.iconBackGrey, { w: 60, h: 60, r: 300 })

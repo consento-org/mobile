@@ -1,5 +1,5 @@
 import React from 'react'
-import { ViewStyle, TouchableOpacity, Text, TextStyle, StyleSheet, StyleProp, View } from 'react-native'
+import { ViewStyle, TouchableOpacity, Text, TextStyle, StyleSheet, StyleProp, View, GestureResponderEvent } from 'react-native'
 import { shadow } from '../../styles'
 import { buttonContainerDisabled } from '../../styles/design/layer/buttonContainerDisabled'
 import { buttonContainerEnabled } from '../../styles/design/layer/buttonContainerEnabled'
@@ -23,7 +23,7 @@ export interface IButtonProps {
   labelStyle?: TextStyle
   styleDisabled?: ViewStyle
   labelStyleDisabled?: TextStyle
-  onPress?: () => void
+  onPress?: (event: GestureResponderEvent) => any
 }
 
 function getProto (props: IButtonProps, isDisabled: boolean): IButtonProto {
@@ -36,10 +36,10 @@ function getProto (props: IButtonProps, isDisabled: boolean): IButtonProto {
   if (isDisabled) {
     return buttonContainerDisabled
   }
-  if (props.light) {
+  if (props.light ?? false) {
     return buttonContainerLight
   }
-  if (props.thin) {
+  if (props.thin ?? false) {
     return buttonContainerDisabled
   }
   return buttonContainerEnabled
@@ -88,7 +88,7 @@ function getLabelStyle (proto: IButtonProto): StyleProp<TextStyle> {
 
 export function ConsentoButton (props: IButtonProps): JSX.Element {
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-boolean-literal-compare
-  const isDisabled = props.onPress === undefined || props.enabled === false || props.disabled === true
+  const isDisabled = props.onPress === undefined || props.onPress === null || props.enabled === false || props.disabled === true
   const proto = getProto(props, isDisabled)
   const title = props.title ?? props.src?.layers.label.text ?? '-missing-label-'
   let shapeStyle: StyleProp<ViewStyle> = getShapeStyle(proto)

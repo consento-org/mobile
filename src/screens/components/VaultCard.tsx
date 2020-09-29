@@ -11,6 +11,7 @@ import { TextBox } from '../../styles/util/TextBox'
 import { ILayer } from '../../styles/util/types'
 import { SketchElement } from '../../styles/util/react/SketchElement'
 import { navigate } from '../../util/navigate'
+import { PropType } from '../../util/PropType'
 
 export const VAULT_STYLE = StyleSheet.create({
   card: {
@@ -40,8 +41,6 @@ function getPrototype (state: TVaultState): IVaultPrototype {
   }
   return elementCardVaultClose
 }
-
-type PropType<TObj, TProp extends keyof TObj> = TObj[TProp]
 
 interface IStyles {
   title: TextStyle

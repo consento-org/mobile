@@ -13,6 +13,7 @@ export interface IFile {
   readonly secretKey: Uint8Array
   readonly type: FileType
   readonly fileName: string
+  readonly name: string
 }
 
 export type File = ImageFile | TextFile
@@ -27,7 +28,7 @@ export const isTextFile = (file: File): file is TextFile => file.type === FileTy
 
 @model('consento/VaultData/Image')
 export class ImageFile extends Model({
-  name: tProp(types.maybeNull(types.string), () => null),
+  name: tProp(types.string),
   secretKeyBase64: tProp(types.string),
   width: tProp(types.number),
   height: tProp(types.number),
@@ -49,8 +50,8 @@ export class ImageFile extends Model({
 
 @model('consento/VaultData/Text')
 export class TextFile extends Model({
-  name: tProp(types.maybeNull(types.string), () => null),
-  secretKeyBase64: tProp(types.maybeNull(types.string), () => null),
+  name: tProp(types.string),
+  secretKeyBase64: tProp(types.string),
   size: tProp(types.number, () => -1)
 }) implements IFile {
   get type (): FileType {
@@ -66,9 +67,9 @@ export class TextFile extends Model({
     this._saveText(bufferToString(secretKey, 'base64'), size)
   }
 
-  @modelAction _saveText (secretKeyBase64: string, size: number): void {
+  @modelAction _saveText (secretKeyBase64: string, size?: number): void {
     this.secretKeyBase64 = secretKeyBase64
-    this.size = size
+    this.size = size ?? -1
   }
 
   async loadText (): Promise<string> {
@@ -132,12 +133,12 @@ export class RevokeLockeeEntry extends Model({
 @model('consento/VaultData/Lockee')
 export class VaultLockee extends Model({
   relationId: tProp(types.string),
-  shareHex: tProp(types.maybeNull(types.string), () => null),
   lockId: tProp(types.string),
-  initJSON: prop<IHandshakeInitJSON>(() => null),
-  sender: prop<Sender>(() => null)
+  sender: prop<Sender | null>(() => null),
+  shareHex: tProp(types.maybeNull(types.string), () => null),
+  initJSON: prop<IHandshakeInitJSON | null>(() => null)
 }) {
-  _lock: boolean
+  _lock: boolean | undefined
 
   get isConfirmed (): boolean {
     return this.sender !== null
@@ -151,16 +152,20 @@ export class VaultLockee extends Model({
     return humanModelId(this.relationId)
   }
 
-  async confirm (acceptMessage: IHandshakeAcceptMessage, api: IAPI): Promise<IVaultLockeeConfirmation> {
+  async confirm (acceptMessage: IHandshakeAcceptMessage, api: IAPI): Promise<IVaultLockeeConfirmation | undefined> {
     if (!this.initPending) {
       return
     }
-    if (this._lock) {
+    if (this._lock ?? false) {
       throw new Error('Operation locked! Can not confirm lockee')
     }
     this._lock = true
     const { crypto } = api
-    const init = new crypto.HandshakeInit(this.initJSON)
+    const { initJSON } = this
+    if (initJSON === null) {
+      throw new Error('Lockee has already been confirmed. (no initJSON)')
+    }
+    const init = new crypto.HandshakeInit(initJSON)
     const { finalMessage, connection } = await init.confirm(acceptMessage)
     const shareHex = this._confirm(connection.sender.toJSON())
     return {
@@ -173,7 +178,11 @@ export class VaultLockee extends Model({
   @modelAction _confirm (senderJSON: ISenderJSON): string {
     this.sender = new Sender(senderJSON)
     const { shareHex } = this
-    delete this.shareHex
+    if (shareHex === null) {
+      throw new Error('Lockee has already been confirmed. (no shareHex)')
+    }
+    this.shareHex = null
+    this.initJSON = null
     return shareHex
   }
 }
@@ -192,7 +201,7 @@ export class VaultData extends Model({
   lockees: prop(() => arraySet<VaultLockee>()),
   log: prop((): ILogEntry[] => [])
 }) {
-  findFile (modelId: string): File {
+  findFile (modelId: string): File | undefined {
     return find(this.files, (file: File): file is File => file.$modelId === modelId)
   }
 

@@ -1,5 +1,5 @@
 import { cryptoCore } from '../cryptoCore'
-import { Buffer, bufferToString, IEncodable, toBuffer } from '@consento/crypto/util/buffer'
+import { bufferToString, toBuffer } from '@consento/crypto/util/buffer'
 import { expoStore } from './expoStore'
 import { askAsync, CAMERA_ROLL } from 'expo-permissions'
 import * as Sharing from 'expo-sharing'
@@ -7,6 +7,7 @@ import { cache } from './expoFsUtils'
 import { readAsStringAsync, deleteAsync } from 'expo-file-system/build/FileSystem'
 import { Clipboard } from 'react-native'
 import { createAssetAsync, createAlbumAsync } from 'expo-media-library'
+import { IEncodable } from '@consento/api/util'
 
 export async function pathForSecretKey (secretKey: Uint8Array): Promise<string[]> {
   const locationKey = await cryptoCore.deriveKdfKey(secretKey)
@@ -40,7 +41,7 @@ export function isEncryptedBlob (input: any): input is IEncryptedBlob {
 
 export async function importFile (fileUri: string, doDelete?: boolean): Promise<IEncryptedBlob> {
   const dataAsString = await readAsStringAsync(fileUri, { encoding: 'base64' })
-  if (doDelete) {
+  if (doDelete ?? false) {
     deleteAsync(fileUri)
       .catch(err => {
         console.log(`Warning: Import of ${fileUri} worked, but the original file was not deleted: ${String(err)}`)
@@ -52,7 +53,7 @@ export async function importFile (fileUri: string, doDelete?: boolean): Promise<
 export async function share (data: string | Uint8Array, filename: string): Promise<void> {
   const permission = await askAsync(CAMERA_ROLL)
   if (!permission.granted) {
-    return null
+    return
   }
   const path = [...await cache.mkdirTmpAsync(), filename]
   await cache.write(path, data)
@@ -86,7 +87,7 @@ export function safeFileName (fileName: string): string {
 export async function exportData (data: string | Uint8Array, albumName: string, fileName: string): Promise<void> {
   const permission = await askAsync(CAMERA_ROLL)
   if (!permission.granted) {
-    return null
+    return
   }
   const cacheDir = await cache.mkdirTmpAsync()
   const cacheFile = [...cacheDir, fileName]
@@ -172,18 +173,20 @@ export async function readBlob (input: string | Uint8Array | IEncryptedBlob): Pr
   return await cryptoCore.decrypt(secretKey, await expoStore.read(path))
 }
 
-export async function readImageBlob (secretKey: Uint8Array | IEncryptedBlob): Promise<string> {
-  const data = await readBlob(secretKey)
-  let dataBase64: string
+function getDataAsBase64 (data: string | Uint8Array | IEncodable): string {
   if (typeof data === 'string') {
     if (/^data:/.test(data)) {
       return data
     }
-    dataBase64 = data
-  } else if (data instanceof Uint8Array) {
-    dataBase64 = bufferToString(data, 'base64')
-  } else if (typeof data === 'object') {
-    throw new Error(`Don't know how to read a JSON image as uri: ${JSON.stringify(data)}`)
+    return data
   }
-  return `data:;base64,${dataBase64}`
+  if (data instanceof Uint8Array) {
+    return bufferToString(data, 'base64')
+  }
+  throw new Error(`Don't know how to read a JSON image as uri: ${JSON.stringify(data)}`)
+}
+
+export async function readImageBlob (secretKey: Uint8Array | IEncryptedBlob): Promise<string> {
+  const data = await readBlob(secretKey)
+  return `data:;base64,${getDataAsBase64(data)}`
 }

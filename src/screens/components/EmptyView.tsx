@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { StyleSheet, ViewStyle, ImageStyle, TextStyle } from 'react-native'
+import { StyleSheet, ViewStyle, ImageStyle, TextStyle, GestureResponderEvent } from 'react-native'
 import { BottomButtonView } from './BottomButtonView'
 import { exists } from '@consento/api/util'
 import { TextBox } from '../../styles/util/TextBox'
@@ -17,7 +17,7 @@ export type IEmptyViewProto = ILayer<{
 
 export interface IEmptyViewProps {
   empty: IEmptyViewProto
-  onAdd?: () => any
+  onAdd?: (event: GestureResponderEvent) => any
   onEmpty?: () => undefined | (() => {})
   children?: React.ReactChild | React.ReactChild[]
   isEmpty?: boolean
@@ -26,9 +26,9 @@ export interface IEmptyViewProps {
 const stylesByProto = new WeakMap<IEmptyViewProto, { container: ViewStyle, illustration: ImageStyle, description: TextStyle, title: TextStyle }>()
 
 export function EmptyView ({ empty, onAdd, children, isEmpty, onEmpty }: IEmptyViewProps): JSX.Element {
-  isEmpty = (isEmpty || !exists(children))
+  isEmpty = isEmpty ?? !exists(children)
   useEffect(() => {
-    let cleanup: () => any
+    let cleanup: undefined | (() => any)
     if (typeof onEmpty === 'function') {
       cleanup = onEmpty()
     }

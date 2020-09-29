@@ -1,5 +1,5 @@
 import React from 'react'
-import { View, ScrollView, StyleSheet, ViewStyle } from 'react-native'
+import { View, ScrollView, StyleSheet, ViewStyle, GestureResponderEvent } from 'react-native'
 import { ConsentoButton, IButtonProto } from './ConsentoButton'
 import { ILayer } from '../../styles/util/types'
 import { SketchPolygon } from '../../styles/util/react/SketchPolygon'
@@ -21,7 +21,7 @@ export interface IBottomButtonProps {
   src: IBottomButtonSrc
   children?: React.ReactChild | React.ReactChild[]
   containerStyle?: ViewStyle
-  onPress?: () => any
+  onPress?: (event: GestureResponderEvent) => any
 }
 
 const styles = StyleSheet.create({
@@ -33,7 +33,7 @@ const styles = StyleSheet.create({
 
 const stylesBySrc = new WeakMap<IBottomButtonSrc, { bottomArea: ViewStyle, scrollContainer: ViewStyle }>()
 
-function hasBottomButton (bottomButton?: IBottomButtonProto, onPress?: () => any): bottomButton is IBottomButtonProto {
+function hasBottomButton (bottomButton?: IBottomButtonProto, onPress?: Function): bottomButton is IBottomButtonProto {
   return exists(bottomButton) && exists(onPress)
 }
 

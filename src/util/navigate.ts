@@ -1,5 +1,7 @@
-import * as React from 'react'
+import React, { DependencyList, useEffect } from 'react'
 import { NavigationContainerRef } from '@react-navigation/native'
+import { BackHandler } from 'react-native'
+import { exists } from '../styles/util/lang'
 
 export { NavigationContainer } from '@react-navigation/native'
 
@@ -12,6 +14,36 @@ export const navigationRef = createNavRef()
 export interface IRoute <TParams = any> {
   screen: string
   params?: IRoute<TParams> | TParams
+}
+
+export type TBackHandler <TArgs> = (string | undefined | ((args: TArgs) => any))
+
+export function useBackHandler <TDeps extends DependencyList = []> (back: TBackHandler<TDeps>, { deps, active }: { deps?: TDeps, active?: boolean } = {}): () => boolean {
+  const finalDeps = deps ?? ([] as unknown as TDeps)
+  const handleBack = (): boolean => {
+    if (!exists(back)) {
+      return false
+    }
+    if (typeof back === 'string') {
+      navigate(back)
+    } else {
+      const result = back(finalDeps)
+      if (result === true || result === false) {
+        return result
+      }
+    }
+    return true
+  }
+  useEffect(() => {
+    if (active !== undefined && !active) {
+      return
+    }
+    BackHandler.addEventListener('hardwareBackPress', handleBack)
+    return () => {
+      BackHandler.removeEventListener('hardwareBackPress', handleBack)
+    }
+  }, finalDeps)
+  return handleBack
 }
 
 function routeFromArray <TParams = any> (route: string[], params: TParams): IRoute<TParams> {

@@ -19,7 +19,8 @@
     "githubUrl": "https://github.com/consento-org/mobile",
     "androidStatusBar": {
       "barStyle": "light-content",
-      "backgroundColor": "#484848"
+      "backgroundColor": "#484848",
+      "translucent": true
     },
     "splash": {
       "backgroundColor": "#FCFCFC",

@@ -54,6 +54,7 @@ export default function App (): JSX.Element {
     setError(error)
   }
   if (error === undefined && !loaded) {
+    console.log('loading fonts etc.')
     return <AppLoading
       startAsync={loadApp}
       onFinish={() => setLoaded(true)}
@@ -61,6 +62,7 @@ export default function App (): JSX.Element {
     />
   }
   if (consento === undefined) {
+    console.log('waiting for consento')
     return <AppLoading />
   }
   return <SafeAreaProvider>

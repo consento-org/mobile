@@ -23,7 +23,7 @@ export const elementTopNavEdit = {
       thickness: 1,
       strokeLinecap: 'butt'
     }, []),
-    title: new TextBox('title', 'Vault Name', TextStyles.H5RobotoRegular24BlackCenter, { x: 52, y: 12, w: 259, h: 36, r: 49, b: 12 }),
+    title: new TextBox('title', 'Vault Name', TextStyles.H5RobotoRegular24BlackCenter, { x: 52, y: 17, w: 259, h: 31, r: 49, b: 12 }),
     backCopy: new ImagePlacement('backCopy', ImageAsset.iconBackGrey, { y: -0.5, w: 60, h: 60, r: 300, b: 0.5 }),
     delete: new ImagePlacement('delete', ImageAsset.iconDeleteGrey, { x: 304, y: 6, w: 48, h: 48, r: 8, b: 6 })
   }

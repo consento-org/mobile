@@ -10,6 +10,7 @@
     "moduleResolution": "node",
     "noEmit": true,
     "skipLibCheck": true,
+    "strictNullChecks": true,
     "strict": true,
     "types": ["jest"],
     "declaration": true

@@ -277,10 +277,10 @@ export const TITLERobotoSmallCapRegular12BlackLeft: TextStyle = {
   color: Color.black,
   fontFamily: Font.RobotoRegular,
   fontSize: 12,
-  lineHeight: 66,
+  lineHeight: 14,
   textAlign: 'center',
   textTransform: 'uppercase',
-  textAlignVertical: 'center'
+  textAlignVertical: 'top'
 }
 
 export const TITLERobotoSmallCapRegular12BlueCenter: TextStyle = {

@@ -17,8 +17,7 @@ export const elementFileList = {
       color: '#7c8792ff',
       fontSize: 13,
       lineHeight: 15,
-      textAlign: 'left',
-      textAlignVertical: 'center'
+      textAlign: 'left'
     }, { x: 15, y: 612, w: 160, h: 24, r: 200, b: 142 }),
     sectionText: new LayerPlacement('sectionText', elementLineSection, elementLineSection.layers, { w: 375, h: 56, b: 722 }, ({ label }) => ({
       label: new TextBox('label', 'Text files', label.style, label.place)

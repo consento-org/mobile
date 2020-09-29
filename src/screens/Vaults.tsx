@@ -1,7 +1,6 @@
 import React, { useContext } from 'react'
-import { View, Text, useWindowDimensions, FlatList, VirtualizedList } from 'react-native'
+import { View, useWindowDimensions, VirtualizedList } from 'react-native'
 import { observer } from 'mobx-react'
-import { Vault } from '../model/Vault'
 import { ConsentoContext } from '../model/Consento'
 import { ScreenshotContext, useScreenshotEnabled } from '../util/screenshots'
 import { useIsFocused } from '@react-navigation/native'
@@ -14,12 +13,10 @@ import { EmptyView } from './components/EmptyView'
 import { elementLocksEmpty } from '../styles/design/layer/elementLocksEmpty'
 import { VaultCard, VAULT_STYLE } from './components/VaultCard'
 import { ArraySet } from 'mobx-keystone'
+import { Vault } from '../model/Vault'
+import { MobxGrid } from './components/MobxGrid'
 
 const AddButton = ImageAsset.buttonAddHexagonal
-
-const NewVault = () => {
-  return <View />
-}
 
 const Vaults = observer((): JSX.Element => {
   const { user: { vaults } } = useContext(ConsentoContext)
@@ -40,10 +37,6 @@ const Vaults = observer((): JSX.Element => {
       break
     }
   }
-  const { width, height } = useWindowDimensions()
-  const numColumns = width / VAULT_STYLE.width | 0
-  const numVaults = vaults.size
-  const initialNumToRender = Math.ceil(height / VAULT_STYLE.height)
   return <View style={{ flexGrow: 1 }}>
     <TopNavigation title='Vaults' />
     <SketchImage
@@ -56,25 +49,7 @@ const Vaults = observer((): JSX.Element => {
       }}
     />
     <EmptyView empty={elementLocksEmpty} isEmpty={vaults.size === 0}>
-      <VirtualizedList
-        data={vaults}
-        listKey={`vaults-list-${numColumns}`}
-        getItem={(vaults: ArraySet<Vault>, index: number): Vault[] => vaults.items.slice((index * numColumns), (index * numColumns) + numColumns)}
-        getItemCount={() => Math.ceil(numVaults / numColumns)}
-        centerContent
-        initialNumToRender={initialNumToRender}
-        style={{ height: 0 /* React-navigation fix - TODO check if new version fixes this or file bug */ }}
-        keyExtractor={(_, index) => index.toString()}
-        renderItem={vaultRow => {
-          return <View style={{ alignSelf: 'center', flexDirection: 'row', width: numColumns * VAULT_STYLE.width + ((numColumns) * VAULT_STYLE.marginHorizontal * 2) }}>
-            {
-              vaultRow.item.map(vault => {
-                return <VaultCard key={vault.$modelId} vault={vault} />
-              })
-            }
-          </View>
-        }}
-      />
+      <MobxGrid arraySet={vaults} itemStyle={VAULT_STYLE} renderItem={vault => <VaultCard key={`vault-card-${vault.$modelId}`} vault={vault} />} />
     </EmptyView>
   </View>
 })
@@ -82,6 +57,8 @@ const Vaults = observer((): JSX.Element => {
 const Pages = createStackNavigator()
 
 export const VaultsScreen = (): JSX.Element => {
+  return <Vaults />
+  /*
   const isScreenshotEnabled = useScreenshotEnabled()
   const isFocused = useIsFocused()
   return <Pages.Navigator screenOptions={{
@@ -91,7 +68,8 @@ export const VaultsScreen = (): JSX.Element => {
       flexGrow: 1
     }
   }}>
+    <Pages.Screen name='vault' component={VaultDisplay} />
     <Pages.Screen name='vaults' component={Vaults} />
-    <Pages.Screen name='new-vault' component={NewVault} />
   </Pages.Navigator>
+  */
 }

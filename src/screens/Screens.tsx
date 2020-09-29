@@ -1,6 +1,6 @@
-import React, { forwardRef, Ref } from 'react'
+import React, { forwardRef, Ref, useContext } from 'react'
 import { observer } from 'mobx-react'
-import { Text } from 'react-native'
+import { Text, View } from 'react-native'
 import { createStackNavigator } from '@react-navigation/stack'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { elementBottomNav } from '../styles/design/layer/elementBottomNav'
@@ -16,6 +16,18 @@ import { elementBottomNavRelationsActive } from '../styles/design/layer/elementB
 import { elementBottomNavRelationsResting } from '../styles/design/layer/elementBottomNavRelationsResting'
 import { SketchTextBoxView } from '../styles/util/react/SketchTextBox'
 import { VaultsScreen } from './Vaults'
+import { PopupMenu } from './components/PopupMenu'
+import { TopNavigation } from './components/TopNavigation'
+import { LockButton } from './components/LockButton'
+import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs'
+import { ConsentoContext } from '../model/Consento'
+import { Loading } from './components/Loading'
+import { elementTabBarTabActive } from '../styles/design/layer/elementTabBarTabActive'
+import { elementTabBarTabResting } from '../styles/design/layer/elementTabBarTabResting'
+import { Color } from '../styles/design/Color'
+import { SketchElement } from '../styles/util/react/SketchElement'
+import { FileList } from './components/FileList'
+import { VaultContext } from '../model/VaultContext'
 /*
 import { createAppContainer, withNavigation, withNavigationFocus } from '@react-navigation/native'
 import { VaultsScreen } from './Vaults'
@@ -60,6 +72,49 @@ const ConsentosIcon = observer(({ focused }: { focused: boolean }): IImageAsset 
 
 const Stack = createStackNavigator()
 const Tabs = createBottomTabNavigator()
+
+const Tab = createMaterialTopTabNavigator()
+
+function labelOptions (label: string): any {
+  return {
+    tabBarLabel: ({ focused }: { focused: boolean }) =>
+      <SketchElement src={focused ? elementTabBarTabActive.layers.label : elementTabBarTabResting.layers.label} style={{ width: 120 }}>{label}</SketchElement>
+  }
+}
+
+const VaultDisplay = (): JSX.Element => {
+  const { user: { vaults } } = useContext(ConsentoContext)
+  const [vault] = vaults
+  const handleNameEdit = (): any => {}
+  const handleDelete = (): any => {}
+  const handleLock = (): any => {}
+  return <PopupMenu>
+    <VaultContext.Provider value={{ vault }}>
+      <View style={{ flexGrow: 1, display: 'flex' }}>
+        <TopNavigation title={vault.name ?? 'hi'} titlePlaceholder={vault.humanId} back='vaults' onEdit={handleNameEdit} onDelete={handleDelete} />
+        <LockButton onPress={handleLock} />
+        <Tab.Navigator
+          tabBarOptions={{
+            indicatorStyle: {
+              backgroundColor: elementTabBarTabActive.layers.bottomLine.svg?.stroke,
+              height: elementTabBarTabActive.layers.bottomLine.svg?.strokeWidth ?? 1
+            },
+            pressColor: elementTabBarTabResting.layers.effect.fill.color,
+            style: {
+              backgroundColor: elementTabBarTabResting.backgroundColor,
+              height: elementTabBarTabResting.place.height,
+              shadowOpacity: 0,
+              elevation: 0
+            }
+          }}>
+          <Tab.Screen name='files' component={FileList} options={labelOptions('Files')} />
+          <Tab.Screen name='locks' component={Loading} options={labelOptions('Locks')} />
+          <Tab.Screen name='logs' component={Loading} options={labelOptions('Logs')} />
+        </Tab.Navigator>
+      </View>
+    </VaultContext.Provider>
+  </PopupMenu>
+}
 
 export const Screens = observer(forwardRef((_, ref: Ref<any>): JSX.Element => {
   /*
@@ -172,10 +227,13 @@ export const Screens = observer(forwardRef((_, ref: Ref<any>): JSX.Element => {
   })()
   */
   return <Stack.Navigator
+    initialRouteName='vault'
     screenOptions={{
       headerShown: false
     }}>
+    <Stack.Screen name='vault' component={VaultDisplay} />
     <Stack.Screen name='main'>{() => <Tabs.Navigator
+      initialRouteName='vaults'
       tabBarOptions={{
         showLabel: true,
         activeBackgroundColor: elementBottomNav.backgroundColor,

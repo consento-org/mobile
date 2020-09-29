@@ -3,7 +3,7 @@ import { isImageAsset, ISketchElementProps, isImagePlacement, isTextBox, isSlice
 import { ISketchImageProps, SketchImage } from './SketchImage'
 import { ISketchTextBoxProps, SketchTextBox } from './SketchTextBox'
 import { ISketchSlice9Props, SketchSlice9 } from './SketchSlice9'
-import { SketchPolygon } from './SketchPolygon'
+import { ISketchPolygonProps, SketchPolygon } from './SketchPolygon'
 
 function isImageProps (props: ISketchElementProps<any>): props is ISketchImageProps {
   return isImageAsset(props.src) || isImagePlacement(props.src)
@@ -17,10 +17,7 @@ function isSlice9Props (props: ISketchElementProps<any>): props is ISketchSlice9
   return isSlice9(props.src) || isSlice9Placement(props.src)
 }
 
-export function SketchElement (props: ISketchImageProps): JSX.Element
-export function SketchElement (props: ISketchTextBoxProps): JSX.Element
-export function SketchElement (props: ISketchSlice9Props): JSX.Element
-export function SketchElement (props: ISketchImageProps | ISketchTextBoxProps | ISketchSlice9Props): JSX.Element {
+export function SketchElement (props: ISketchImageProps | ISketchTextBoxProps | ISketchSlice9Props | ISketchPolygonProps): JSX.Element {
   if (isImageProps(props)) {
     return SketchImage(props)
   }

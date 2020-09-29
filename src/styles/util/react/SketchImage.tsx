@@ -1,6 +1,6 @@
 // This file has been generated with expo-export@5.0.0, a Sketch plugin.
 import React from 'react'
-import { Image, ImageStyle, ImageProps, TouchableWithoutFeedback, TouchableWithoutFeedbackProps, StyleSheet } from 'react-native'
+import { Image, ImageStyle, ImageProps, TouchableWithoutFeedback, TouchableWithoutFeedbackProps, StyleSheet, GestureResponderEvent } from 'react-native'
 import { IImageAsset, ISketchElementProps } from '../types'
 import { extract } from '../lang'
 
@@ -9,7 +9,7 @@ export interface ISketchImageProps extends
   Omit<ImageProps, 'source'>,
   Omit<TouchableWithoutFeedbackProps, 'style'> {
   ref?: React.Ref<Image>
-  onPress?: () => void
+  onPress?: (event: GestureResponderEvent) => void
 }
 
 export const SketchImage = (props: ISketchImageProps): JSX.Element => {

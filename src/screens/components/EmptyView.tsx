@@ -18,7 +18,7 @@ export type IEmptyViewProto = ILayer<{
 export interface IEmptyViewProps {
   empty: IEmptyViewProto
   onAdd?: (event: GestureResponderEvent) => any
-  onEmpty?: () => undefined | (() => {})
+  onEmpty?: (() => void) | (() => () => {})
   children?: React.ReactChild | React.ReactChild[]
   isEmpty?: boolean
 }
@@ -30,7 +30,7 @@ export function EmptyView ({ empty, onAdd, children, isEmpty, onEmpty }: IEmptyV
   useEffect(() => {
     let cleanup: undefined | (() => any)
     if (typeof onEmpty === 'function') {
-      cleanup = onEmpty()
+      cleanup = onEmpty() as any
     }
     return cleanup ?? (() => {})
   }, [isEmpty])

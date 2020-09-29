@@ -6,6 +6,7 @@ import { TextStyles } from '../TextStyles'
 import { LayerPlacement } from '../../util/LayerPlacement'
 import { elementLineSection } from './elementLineSection'
 import { elementLineData } from './elementLineData'
+import { elementBottomButton } from './elementBottomButton'
 
 export const elementFileList = {
   name: 'elementFileList',
@@ -27,6 +28,11 @@ export const elementFileList = {
     })),
     entry: new LayerPlacement('entry', elementLineData, elementLineData.layers, { y: 56, w: 375, h: 60, b: 662 }, ({ label }) => ({
       label: new TextBox('label', 'Bank accounts details', label.style, label.place)
+    })),
+    bottomButton: new LayerPlacement('bottomButton', elementBottomButton, elementBottomButton.layers, { y: 678, w: 375, h: 100 }, ({ button }) => ({
+      button: new LayerPlacement('button', button.layer, button.layer.layers, button.place, ({ label }) => ({
+        label: new TextBox('label', 'ADD', label.style, label.place)
+      }))
     }))
   }
 }

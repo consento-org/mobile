@@ -68,7 +68,6 @@ const Divider = (): JSX.Element => {
   return <View style={{ height: elementContextMenu.layers.divider.place.height }}>
     <View
       style={{
-        width: '100%',
         height: elementContextMenu.layers.divider.layers.line.place.top,
         borderBottomWidth: elementContextMenu.layers.divider.layers.line.place.height,
         borderColor: elementContextMenu.layers.divider.layers.line.fill.color
@@ -78,7 +77,12 @@ const Divider = (): JSX.Element => {
 
 const Item = ({ item, context, close }: { item: IPopupMenuItem, context: any, close: () => any }): JSX.Element => {
   return <TouchableOpacity
-    style={{ height: elementContextMenu.layers.copy.place.height }} onPress={(event) => {
+    style={{
+      height: elementContextMenu.layers.copy.place.height,
+      justifyContent: 'center',
+      paddingLeft: elementContextMenu.layers.copy.layers.label.place.left
+    }}
+    onPress={(event) => {
       item.action(context, event)
       close()
     }}>

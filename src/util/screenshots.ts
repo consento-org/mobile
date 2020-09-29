@@ -42,10 +42,10 @@ enum Screens {
 }
 
 export interface IScreenshot {
-  use (): { done: boolean, take: (delay?: number) => void }
-  take (delay?: number): Promise<void>
-  handle (delay?: number): () => void
-  takeSync (delay?: number): void
+  use: () => { done: boolean, take: (delay?: number) => void }
+  take: (delay?: number) => Promise<void>
+  handle: (delay?: number) => () => void
+  takeSync: (delay?: number) => void
 }
 
 export type IScreenshots = Record<Screens, IScreenshot>
@@ -53,7 +53,7 @@ export type IScreenshots = Record<Screens, IScreenshot>
 async function requestDeviceId (serverUrl: string): Promise<string> {
   const res = await fetch(`${serverUrl}/device`, {
     headers: {
-      // @ts-ignore
+      // @ts-expect-error
       'installation-id': Expo.Constants.installationId as string
     }
   })
@@ -92,8 +92,8 @@ async function initServer (serverUrl: string): Promise<{ deviceId: string, files
 }
 
 interface IScreenshotSystem {
-  take (name: string, delay: number): Promise<void>
-  isDone (name: string): boolean
+  take: (name: string, delay: number) => Promise<void>
+  isDone: (name: string) => boolean
 }
 
 function createSystem (serverUrl?: string): IScreenshotSystem {

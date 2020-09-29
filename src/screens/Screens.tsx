@@ -28,6 +28,8 @@ import { Color } from '../styles/design/Color'
 import { SketchElement } from '../styles/util/react/SketchElement'
 import { FileList } from './components/FileList'
 import { VaultContext } from '../model/VaultContext'
+import { ContextMenu } from './components/ContextMenu'
+import { Logs } from './Logs'
 /*
 import { createAppContainer, withNavigation, withNavigationFocus } from '@react-navigation/native'
 import { VaultsScreen } from './Vaults'
@@ -88,10 +90,10 @@ const VaultDisplay = (): JSX.Element => {
   const handleNameEdit = (): any => {}
   const handleDelete = (): any => {}
   const handleLock = (): any => {}
-  return <PopupMenu>
+  return <PopupMenu><ContextMenu>
     <VaultContext.Provider value={{ vault }}>
       <View style={{ flexGrow: 1, display: 'flex' }}>
-        <TopNavigation title={vault.name ?? 'hi'} titlePlaceholder={vault.humanId} back='vaults' onEdit={handleNameEdit} onDelete={handleDelete} />
+        <TopNavigation title={vault.name ?? '-vault-name-missing-'} titlePlaceholder={vault.humanId} back='vaults' onEdit={handleNameEdit} onDelete={handleDelete} />
         <LockButton onPress={handleLock} />
         <Tab.Navigator
           tabBarOptions={{
@@ -109,11 +111,11 @@ const VaultDisplay = (): JSX.Element => {
           }}>
           <Tab.Screen name='files' component={FileList} options={labelOptions('Files')} />
           <Tab.Screen name='locks' component={Loading} options={labelOptions('Locks')} />
-          <Tab.Screen name='logs' component={Loading} options={labelOptions('Logs')} />
+          <Tab.Screen name='logs' component={Logs} options={labelOptions('Logs')} />
         </Tab.Navigator>
       </View>
     </VaultContext.Provider>
-  </PopupMenu>
+  </ContextMenu></PopupMenu>
 }
 
 export const Screens = observer(forwardRef((_, ref: Ref<any>): JSX.Element => {

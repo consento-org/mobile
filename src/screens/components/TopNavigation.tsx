@@ -75,11 +75,11 @@ const styles = StyleSheet.create({
   }
 })
 
-export interface ITopNavigationProps {
+export interface ITopNavigationProps <TBackArgs = any> {
   title: string
   titlePlaceholder?: PropType<TextInputProps, 'placeholder'>
   titleTextContentType?: PropType<TextInputProps, 'textContentType'>
-  back?: IBackHandler
+  back?: IBackHandler<TBackArgs>
   onEdit?: (text: string) => any
   onDelete?: () => any
 }

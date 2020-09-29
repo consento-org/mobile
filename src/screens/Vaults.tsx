@@ -1,24 +1,21 @@
 import React, { useContext } from 'react'
-import { View, useWindowDimensions, VirtualizedList } from 'react-native'
+import { View } from 'react-native'
 import { observer } from 'mobx-react'
 import { ConsentoContext } from '../model/Consento'
-import { ScreenshotContext, useScreenshotEnabled } from '../util/screenshots'
-import { useIsFocused } from '@react-navigation/native'
+import { ScreenshotContext } from '../util/screenshots'
 import { navigate } from '../util/navigate'
 import { ImageAsset } from '../styles/design/ImageAsset'
 import { SketchImage } from '../styles/util/react/SketchImage'
-import { createStackNavigator } from '@react-navigation/stack'
 import { TopNavigation } from './components/TopNavigation'
 import { EmptyView } from './components/EmptyView'
 import { elementLocksEmpty } from '../styles/design/layer/elementLocksEmpty'
 import { VaultCard, VAULT_STYLE } from './components/VaultCard'
-import { ArraySet } from 'mobx-keystone'
 import { Vault } from '../model/Vault'
 import { MobxGrid } from './components/MobxGrid'
 
 const AddButton = ImageAsset.buttonAddHexagonal
 
-const Vaults = observer((): JSX.Element => {
+export const VaultsScreen = observer((): JSX.Element => {
   const { user: { vaults } } = useContext(ConsentoContext)
   const screenshots = useContext(ScreenshotContext)
   if (vaults.size === 0) {
@@ -53,23 +50,3 @@ const Vaults = observer((): JSX.Element => {
     </EmptyView>
   </View>
 })
-
-const Pages = createStackNavigator()
-
-export const VaultsScreen = (): JSX.Element => {
-  return <Vaults />
-  /*
-  const isScreenshotEnabled = useScreenshotEnabled()
-  const isFocused = useIsFocused()
-  return <Pages.Navigator screenOptions={{
-    headerShown: false,
-    cardShadowEnabled: false,
-    cardStyle: {
-      flexGrow: 1
-    }
-  }}>
-    <Pages.Screen name='vault' component={VaultDisplay} />
-    <Pages.Screen name='vaults' component={Vaults} />
-  </Pages.Navigator>
-  */
-}

@@ -1,6 +1,6 @@
 import React, { forwardRef, Ref, useContext } from 'react'
 import { observer } from 'mobx-react'
-import { Text, View } from 'react-native'
+import { Text } from 'react-native'
 import { createStackNavigator } from '@react-navigation/stack'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { elementBottomNav } from '../styles/design/layer/elementBottomNav'
@@ -10,26 +10,16 @@ import { ImageAsset } from '../styles/design/ImageAsset'
 import { TextBox } from '../styles/util/TextBox'
 import { SketchTextBoxView } from '../styles/util/react/SketchTextBox'
 import { VaultsScreen } from './Vaults'
-import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs'
 import { ConsentoContext } from '../model/Consento'
-import { Loading } from './components/Loading'
-import { FileList } from './components/FileList'
-import { PopupMenu } from './components/PopupMenu'
-import { LockButton } from './components/LockButton'
-import { ContextMenu } from './components/ContextMenu'
-import { TopNavigation } from './components/TopNavigation'
-import { SketchElement } from '../styles/util/react/SketchElement'
 import { VaultContext } from '../model/VaultContext'
-import { Logs } from './Logs'
-import { elementTabBarTabActive } from '../styles/design/layer/elementTabBarTabActive'
-import { elementTabBarTabResting } from '../styles/design/layer/elementTabBarTabResting'
 import { elementBottomNavVaultActive } from '../styles/design/layer/elementBottomNavVaultActive'
 import { elementBottomNavVaultResting } from '../styles/design/layer/elementBottomNavVaultResting'
 import { elementBottomNavRelationsActive } from '../styles/design/layer/elementBottomNavRelationsActive'
 import { elementBottomNavRelationsResting } from '../styles/design/layer/elementBottomNavRelationsResting'
 import { elementBottomNavConsentosActive } from '../styles/design/layer/elementBottomNavConsentosActive'
 import { elementBottomNavConsentosResting } from '../styles/design/layer/elementBottomNavConsentosResting'
-import { Locks } from './components/Locks'
+import { Vault } from './Vault'
+import { Vault as VaultModel } from '../model/Vault'
 /*
 import { createAppContainer, withNavigation, withNavigationFocus } from '@react-navigation/native'
 import { VaultsScreen } from './Vaults'
@@ -75,52 +65,9 @@ const ConsentosIcon = observer(({ focused }: { focused: boolean }): IImageAsset 
 const Stack = createStackNavigator()
 const Tabs = createBottomTabNavigator()
 
-const Tab = createMaterialTopTabNavigator()
-
-function labelOptions (label: string): any {
-  return {
-    tabBarLabel: ({ focused }: { focused: boolean }) =>
-      <SketchElement src={focused ? elementTabBarTabActive.layers.label : elementTabBarTabResting.layers.label} style={{ width: 120 }}>{label}</SketchElement>
-  }
-}
-
-const VaultDisplay = (): JSX.Element => {
-  const { user: { vaults } } = useContext(ConsentoContext)
-  const [vault] = vaults
-  const handleNameEdit = (): any => {}
-  const handleDelete = (): any => {}
-  const handleLock = (): any => {}
-  return <PopupMenu><ContextMenu>
-    <VaultContext.Provider value={{ vault }}>
-      <View style={{ flexGrow: 1, display: 'flex' }}>
-        <TopNavigation title={vault.name ?? '-vault-name-missing-'} titlePlaceholder={vault.humanId} back='vaults' onEdit={handleNameEdit} onDelete={handleDelete} />
-        <LockButton onPress={handleLock} />
-        <Tab.Navigator
-          tabBarOptions={{
-            indicatorStyle: {
-              backgroundColor: elementTabBarTabActive.layers.bottomLine.svg?.stroke,
-              height: elementTabBarTabActive.layers.bottomLine.svg?.strokeWidth ?? 1
-            },
-            pressColor: elementTabBarTabResting.layers.effect.fill.color,
-            style: {
-              backgroundColor: elementTabBarTabResting.backgroundColor,
-              height: elementTabBarTabResting.place.height,
-              shadowOpacity: 0,
-              elevation: 0
-            }
-          }}>
-          <Tab.Screen name='files' component={FileList} options={labelOptions('Files')} />
-          <Tab.Screen name='locks' component={Locks} options={labelOptions('Locks')} />
-          <Tab.Screen name='logs' component={Logs} options={labelOptions('Logs')} />
-        </Tab.Navigator>
-      </View>
-    </VaultContext.Provider>
-  </ContextMenu></PopupMenu>
-}
-
 export const Screens = observer(forwardRef((_, ref: Ref<any>): JSX.Element => {
-  /*
   const { user } = useContext(ConsentoContext)
+  /*
   const isScreenshotEnabled = useScreenshotEnabled()
   const Container = (() => {
     {
@@ -233,7 +180,17 @@ export const Screens = observer(forwardRef((_, ref: Ref<any>): JSX.Element => {
     screenOptions={{
       headerShown: false
     }}>
-    <Stack.Screen name='vault' component={VaultDisplay} />
+    <Stack.Screen name='vault'>{({ navigation, route }) => {
+      const vaultKey = (route.params as any)?.vault
+      const vault = user.findVault(vaultKey)
+      if (!(vault instanceof VaultModel)) {
+        navigation.navigate('') // TODO: Return 404 alert message?
+        return <></>
+      }
+      return <VaultContext.Provider value={{ vault }}>
+        <Vault />
+      </VaultContext.Provider>
+    }}</Stack.Screen>
     <Stack.Screen name='main'>{() => <Tabs.Navigator
       initialRouteName='vaults'
       tabBarOptions={{

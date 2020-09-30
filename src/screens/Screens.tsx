@@ -20,6 +20,7 @@ import { elementBottomNavConsentosActive } from '../styles/design/layer/elementB
 import { elementBottomNavConsentosResting } from '../styles/design/layer/elementBottomNavConsentosResting'
 import { Vault } from './Vault'
 import { Vault as VaultModel } from '../model/Vault'
+import { RelationsScreen } from './Relations'
 /*
 import { createAppContainer, withNavigation, withNavigationFocus } from '@react-navigation/native'
 import { VaultsScreen } from './Vaults'
@@ -218,7 +219,7 @@ export const Screens = observer(forwardRef((_, ref: Ref<any>): JSX.Element => {
           tabBarLabel: FocusLabel(elementBottomNavConsentosActive, elementBottomNavConsentosResting)
         }} />
       <Tabs.Screen
-        name='relations' component={Sample} options={{
+        name='relations' component={RelationsScreen} options={{
           tabBarIcon: FocusIcon(ImageAsset.iconRelationsActive, ImageAsset.iconRelationsIdle),
           tabBarLabel: FocusLabel(elementBottomNavRelationsActive, elementBottomNavRelationsResting)
         }} />

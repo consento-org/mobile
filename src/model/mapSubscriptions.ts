@@ -4,7 +4,7 @@ import { ISubscriptionMap } from './Consento.types'
 
 export function mapSubscriptions<T> (
   items: Iterable<T>,
-  getReceiver: (item: T) => Receiver,
+  getReceiver: (item: T) => Receiver | undefined | null,
   action: (item: T, notification: ISuccessNotification, api: IAPI) => void
 ): ISubscriptionMap {
   const subscriptions: ISubscriptionMap = {}

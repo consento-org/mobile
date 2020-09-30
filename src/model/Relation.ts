@@ -43,7 +43,7 @@ export class Relation extends Model({
     this.name = name
   }
 
-  @modelAction setAvatarId (avatarId: string): void {
+  @modelAction setAvatarId (avatarId: string | null): void {
     this.avatarId = avatarId
   }
 }

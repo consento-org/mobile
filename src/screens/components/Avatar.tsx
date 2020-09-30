@@ -1,37 +1,35 @@
 import React from 'react'
 import Svg, { Circle, Image } from 'react-native-svg'
-import { Buffer } from 'buffer'
-import { bufferToString } from '@consento/crypto/util/buffer'
-import { exists } from '@consento/api/util'
+import { Buffer, bufferToString } from '@consento/api/util'
 import { ImageAsset } from '../../styles/design/ImageAsset'
 import { SketchImage } from '../../styles/util/react/SketchImage'
 import { Placement } from '../../styles/util/Placement'
 import { Color } from '../../styles/design/Color'
 import { IImageAsset } from '../../styles/util/types'
+import { exists } from '../../styles/util/lang'
 
-function combine <T, TB> (separate: { [key: string]: T[] }): TB[] {
-  const keys = Object.keys(separate)
-  let result
-  let first: string
-  for (const key of keys) {
-    const list = separate[key]
-    if (result === undefined) {
+function combine <T, TKeys extends string> (separate: Record<TKeys, T[]>): Array<Record<TKeys, T>> {
+  type TResult = Array<Record<TKeys, T>> | null
+  let result: TResult = null
+  let first: string = ''
+  for (const [key, list] of Object.entries<T[]>(separate)) {
+    if (result === null) {
       first = key
       result = list.map(entry => {
         return {
           [key]: entry
         }
-      })
+      }) as TResult
     } else {
       if (list.length !== result.length) {
         throw new Error(`We got more "${first}" entries than "${key}" entries.`)
       }
       for (let i = 0; i < result.length; i++) {
-        result[i][key] = list[i]
+        (result[i] as any)[key] = list[i]
       }
     }
   }
-  return result
+  return result ?? []
 }
 
 function matchingProperties <T> (item: any, reg: RegExp): T[] {
@@ -48,7 +46,7 @@ const noses = matchingProperties <IImageAsset>(ImageAsset, /^avatarNose/)
 const mouths = matchingProperties <IImageAsset>(ImageAsset, /^avatarMouth/)
 const eyes = matchingProperties <IImageAsset>(ImageAsset, /^avatarEyes/)
 const colors = matchingProperties <string>(Color, /^avatar/)
-const hairs = combine <IImageAsset, { below: IImageAsset, above: IImageAsset }>({
+const hairs = combine <IImageAsset, 'below' | 'above'>({
   above: matchingProperties(ImageAsset, /^avatarHairAbove/),
   below: matchingProperties(ImageAsset, /^avatarHairBelow/)
 })
@@ -70,13 +68,13 @@ const combinations = hairs.length * faces.length * noses.length * mouths.length 
 console.log(`${combinations.toString()} possible Avatar combinations`)
 
 export interface IAvatarProps {
-  avatarId: string
-  place: Placement
+  avatarId: string | null | undefined
+  size: number
 }
 
-export const Avatar = ({ avatarId, place }: IAvatarProps): JSX.Element => {
+export const Avatar = ({ avatarId, size }: IAvatarProps): JSX.Element => {
   if (!exists(avatarId)) {
-    return <SketchImage src={ImageAsset.avatarUnknown} />
+    return <SketchImage src={ImageAsset.avatarUnknown} style={{ width: size, height: size }} />
   }
   const buffer = Buffer.from(avatarId, 'hex')
   const hair = hairs[buffer.readUInt16LE(1)]
@@ -85,8 +83,7 @@ export const Avatar = ({ avatarId, place }: IAvatarProps): JSX.Element => {
   const mouth = mouths[buffer.readUInt16LE(7)]
   const eye = eyes[buffer.readUInt16LE(9)]
   const color = colors[buffer.readUInt16LE(11)]
-  const { width: size } = place
-  return <Svg width={size} height={size} viewBox={`0 0 ${size.toString()} ${size.toString()}`} style={{ position: 'absolute', left: place.left, top: place.top }}>
+  return <Svg width={size} height={size} viewBox={`0 0 ${size.toString()} ${size.toString()}`}>
     <Circle cx={size / 2} cy={size / 2} r={size / 2} fill={color} />
     <Image href={hair.below.source()} width={size} height={size} />
     <Image href={face.source()} width={size} height={size} />

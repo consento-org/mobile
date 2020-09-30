@@ -7,29 +7,29 @@ import { elementBottomNav } from '../styles/design/layer/elementBottomNav'
 import { IImageAsset, ILayer, ViewBorders } from '../styles/util/types'
 import { SketchImage } from '../styles/util/react/SketchImage'
 import { ImageAsset } from '../styles/design/ImageAsset'
-import { elementBottomNavConsentosActive } from '../styles/design/layer/elementBottomNavConsentosActive'
-import { elementBottomNavConsentosResting } from '../styles/design/layer/elementBottomNavConsentosResting'
 import { TextBox } from '../styles/util/TextBox'
+import { SketchTextBoxView } from '../styles/util/react/SketchTextBox'
+import { VaultsScreen } from './Vaults'
+import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs'
+import { ConsentoContext } from '../model/Consento'
+import { Loading } from './components/Loading'
+import { FileList } from './components/FileList'
+import { PopupMenu } from './components/PopupMenu'
+import { LockButton } from './components/LockButton'
+import { ContextMenu } from './components/ContextMenu'
+import { TopNavigation } from './components/TopNavigation'
+import { SketchElement } from '../styles/util/react/SketchElement'
+import { VaultContext } from '../model/VaultContext'
+import { Logs } from './Logs'
+import { elementTabBarTabActive } from '../styles/design/layer/elementTabBarTabActive'
+import { elementTabBarTabResting } from '../styles/design/layer/elementTabBarTabResting'
 import { elementBottomNavVaultActive } from '../styles/design/layer/elementBottomNavVaultActive'
 import { elementBottomNavVaultResting } from '../styles/design/layer/elementBottomNavVaultResting'
 import { elementBottomNavRelationsActive } from '../styles/design/layer/elementBottomNavRelationsActive'
 import { elementBottomNavRelationsResting } from '../styles/design/layer/elementBottomNavRelationsResting'
-import { SketchTextBoxView } from '../styles/util/react/SketchTextBox'
-import { VaultsScreen } from './Vaults'
-import { PopupMenu } from './components/PopupMenu'
-import { TopNavigation } from './components/TopNavigation'
-import { LockButton } from './components/LockButton'
-import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs'
-import { ConsentoContext } from '../model/Consento'
-import { Loading } from './components/Loading'
-import { elementTabBarTabActive } from '../styles/design/layer/elementTabBarTabActive'
-import { elementTabBarTabResting } from '../styles/design/layer/elementTabBarTabResting'
-import { Color } from '../styles/design/Color'
-import { SketchElement } from '../styles/util/react/SketchElement'
-import { FileList } from './components/FileList'
-import { VaultContext } from '../model/VaultContext'
-import { ContextMenu } from './components/ContextMenu'
-import { Logs } from './Logs'
+import { elementBottomNavConsentosActive } from '../styles/design/layer/elementBottomNavConsentosActive'
+import { elementBottomNavConsentosResting } from '../styles/design/layer/elementBottomNavConsentosResting'
+import { Locks } from './components/Locks'
 /*
 import { createAppContainer, withNavigation, withNavigationFocus } from '@react-navigation/native'
 import { VaultsScreen } from './Vaults'
@@ -110,7 +110,7 @@ const VaultDisplay = (): JSX.Element => {
             }
           }}>
           <Tab.Screen name='files' component={FileList} options={labelOptions('Files')} />
-          <Tab.Screen name='locks' component={Loading} options={labelOptions('Locks')} />
+          <Tab.Screen name='locks' component={Locks} options={labelOptions('Locks')} />
           <Tab.Screen name='logs' component={Logs} options={labelOptions('Logs')} />
         </Tab.Navigator>
       </View>
@@ -229,7 +229,7 @@ export const Screens = observer(forwardRef((_, ref: Ref<any>): JSX.Element => {
   })()
   */
   return <Stack.Navigator
-    initialRouteName='vault'
+    initialRouteName='main'
     screenOptions={{
       headerShown: false
     }}>

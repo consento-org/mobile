@@ -18,6 +18,7 @@ import { map } from '../util/map'
 import randomBytes from 'get-random-values-polypony'
 import { humanModelId } from '../util/humanModelId'
 import { generateId } from '../util/generateId'
+import { reduce } from '../util/reduce'
 
 export enum TVaultState {
   open = 'open',
@@ -197,6 +198,16 @@ export class Vault extends Model({
             .catch(unlockError => unlockError)
         }
       }
+    )
+  }
+
+  @computed get usedRelationIds (): Set<string> {
+    return reduce(
+      this.data?.lockees.values(), (result, vaultLockee) => {
+        result.add(vaultLockee.relationId)
+        return result
+      },
+      new Set()
     )
   }
 

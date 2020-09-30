@@ -1,5 +1,5 @@
 import React from 'react'
-import { View, ScrollView, StyleSheet, ViewStyle, GestureResponderEvent } from 'react-native'
+import { View, ScrollView, StyleSheet, ViewStyle, GestureResponderEvent, StyleProp } from 'react-native'
 import { ConsentoButton, IButtonProto } from './ConsentoButton'
 import { ILayer } from '../../styles/util/types'
 import { SketchPolygon } from '../../styles/util/react/SketchPolygon'
@@ -19,7 +19,7 @@ export type IBottomButtonSrc = ILayer<{
 
 export interface IBottomButtonProps {
   src: IBottomButtonSrc
-  children?: React.ReactChild | React.ReactChild[]
+  children?: React.ReactChild | React.ReactChild[] | ((opts: { style: StyleProp<ViewStyle> }) => JSX.Element)
   containerStyle?: ViewStyle
   onPress?: (event: GestureResponderEvent) => any
 }
@@ -48,12 +48,19 @@ export function BottomButtonView ({ src, children, onPress, containerStyle }: IB
     })
     stylesBySrc.set(src, srcStyles)
   }
+  const styleSheet = StyleSheet.compose(StyleSheet.compose(srcStyles.scrollContainer, styles.scrollContainer), containerStyle)
   return <View style={styles.scrollView}>
-    <ScrollView
-      centerContent
-      style={{ backgroundColor }}
-      contentContainerStyle={StyleSheet.compose(StyleSheet.compose(srcStyles.scrollContainer, styles.scrollContainer), containerStyle)}>{children}
-    </ScrollView>
+    {
+      typeof children === 'function'
+        ? React.createElement(children, {
+          style: StyleSheet.compose({ backgroundColor }, styleSheet)
+        })
+        : <ScrollView
+          centerContent
+          style={{ backgroundColor }}
+          contentContainerStyle={styleSheet}>{children}
+        </ScrollView>
+    }
     {hasBottomButton(bottomButton, onPress)
       ? <View style={StyleSheet.compose(srcStyles.bottomArea, styles.bottomArea)}>
         <SketchPolygon src={bottomButton.layers.bottomArea.layers.shape} style={styles.bottomRect} />

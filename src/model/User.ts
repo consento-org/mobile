@@ -6,16 +6,14 @@ import { computed, autorun } from 'mobx'
 import { find } from '../util/find'
 import { contains } from '../util/contains'
 import { mobxPersist } from '../util/mobxPersist'
-import { compareNames, ISortable } from '../util/compareNames'
 import { VaultLockee } from './VaultData'
 import { ISuccessNotification, IAPI } from '@consento/api'
 import { ISubscriptionMap, Message, MessageType, IRelationEntry } from './Consento.types'
-import { Buffer } from '@consento/api/util'
+import { Buffer, exists } from '@consento/api/util'
 import { mapSubscriptions } from './mapSubscriptions'
-import { exists } from '@consento/api/util'
+
 import { combinedDispose } from '../util/combinedDispose'
-import { map } from '../util/map'
-import { reduce } from '../util/reduce'
+import { createView, IArrayView } from '../util/ArraySetView'
 
 const ASSUMED_SAFETY_DELAY: number = 1000 // Lets count off a second for network overhead
 
@@ -25,22 +23,22 @@ function initUser (user: User): void {
   })
 }
 
-export const findParentUser = (ref: Ref<any>): User => findParent(ref, n => n instanceof User)
+export const findParentUser = (ref: Ref<any>): User | undefined => findParent(ref, n => n instanceof User)
 
-export const relationRefInUser = customRef<Relation>(`${Relation.$modelType}#inUser`, {
-  resolve (ref: Ref<Relation>): Relation {
+export const relationRefInUser = customRef<Relation>(`${Relation.$modelType as string}#inUser`, {
+  resolve (ref: Ref<Relation>) {
     return findParentUser(ref)?.findRelation(ref.id)
   }
 })
 
-export const vaultRefInUser = customRef<Vault>(`${Vault.$modelType}#inUser`, {
-  resolve (ref: Ref<Vault>): Vault {
+export const vaultRefInUser = customRef<Vault>(`${Vault.$modelType as string}#inUser`, {
+  resolve (ref: Ref<Vault>) {
     return findParentUser(ref)?.findVault(ref.id)
   }
 })
 
-export const becomeUnlockeeRefInUser = customRef<ConsentoBecomeLockee>(`${ConsentoBecomeLockee.$modelType}#inUser`, {
-  resolve (ref: Ref<ConsentoBecomeLockee>): ConsentoBecomeLockee {
+export const becomeUnlockeeRefInUser = customRef<ConsentoBecomeLockee>(`${ConsentoBecomeLockee.$modelType as string}#inUser`, {
+  resolve (ref: Ref<ConsentoBecomeLockee>) {
     return findParentUser(ref)?.findBecomeLockee(ref.id)
   }
 })
@@ -66,7 +64,7 @@ export class Lockee implements IRelationEntry, ISortable {
     return this.vaultLockee.relationId
   }
 
-  get avatarId (): string {
+  get avatarId (): string | undefined | null {
     return this.relation?.avatarId
   }
 
@@ -90,7 +88,7 @@ export class User extends Model({
   vaults: prop(() => arraySet<Vault>()),
   relations: prop(() => arraySet<Relation>()),
   consentos: prop(() => arraySet<IAnyConsento>()),
-  lastConsentosView: prop(() => null)
+  lastConsentosView: prop<number | null>(() => null)
 }) {
   onAttachedToRootStore (): () => any {
     return combinedDispose(
@@ -111,7 +109,7 @@ export class User extends Model({
         }
       }),
       mobxPersist({
-        item: this,
+        item: this as User,
         location: `consento_user_${this.name}`,
         filter: (patch: JsonPatch) => !isVaultPatch(patch) && !isSecretPatch(patch),
         init: initUser,
@@ -171,7 +169,7 @@ export class User extends Model({
     )
   }
 
-  getConsentoByLockId (lockId: string): ConsentoBecomeLockee {
+  getConsentoByLockId (lockId: string): ConsentoBecomeLockee | undefined {
     return find(
       this.consentos,
       (consento: IAnyConsento): consento is ConsentoBecomeLockee =>
@@ -256,38 +254,29 @@ export class User extends Model({
     }
   }
 
-  getLockeesSorted (vault: Vault): Lockee[] {
+  getLockees (vault: Vault): IArrayView<Lockee> | undefined {
     const lockees = vault.data?.lockees
-    if (lockees === undefined) {
+    if (lockees === undefined || lockees.size === 0) {
       return
     }
-    if (lockees.size === 0) {
-      return
-    }
-    return map(lockees.values(), vaultLockee => new Lockee(vaultLockee, this.findRelation(vaultLockee.relationId))).sort(compareNames)
+    return createView(lockees, { map: vaultLockee => new Lockee(vaultLockee, this.findRelation(vaultLockee.relationId)) })
   }
 
-  @computed get relationsSorted (): Relation[] {
-    return Array.from(this.relations.values()).sort(compareNames)
+  availableRelations (vault: Vault): IArrayView<Relation> {
+    return createView(this.relations, {
+      filter: relation => !vault.usedRelationIds.has(relation.$modelId)
+    })
   }
 
-  availableRelations (vault: Vault): Relation[] {
-    const usedRelations = reduce(vault.data?.lockees.values(), (map: { [key: string]: true }, vaultLockee) => {
-      map[vaultLockee.relationId] = true
-      return map
-    }, {})
-    return this.relationsSorted.filter(relation => usedRelations[relation.$modelId] === undefined)
-  }
-
-  findRelation (relationId: string): Relation {
+  findRelation (relationId: string): Relation | undefined {
     return find(this.relations, (relation): relation is Relation => relation.$modelId === relationId)
   }
 
-  findVault (vaultId: string): Vault {
+  findVault (vaultId: string): Vault | undefined {
     return find(this.vaults, (vault): vault is Vault => vault.$modelId === vaultId)
   }
 
-  findBecomeLockee (becomeUnlockeeId: string): ConsentoBecomeLockee {
+  findBecomeLockee (becomeUnlockeeId: string): ConsentoBecomeLockee | undefined {
     return find(this.consentos, (consento): consento is ConsentoBecomeLockee => consento.$modelId === becomeUnlockeeId)
   }
 }

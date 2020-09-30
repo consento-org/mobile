@@ -1,85 +1,86 @@
 import React, { useContext, useState } from 'react'
-import { Text, Alert, View } from 'react-native'
+import { Text, Alert, GestureResponderEvent } from 'react-native'
 import { observer } from 'mobx-react'
 import { EmptyView } from './EmptyView'
-import { elementLocksEmpty } from '../../styles/component/elementLocksEmpty'
-import { elementLocksNoLockee } from '../../styles/component/elementLocksNoLockee'
-import { elementRelationSelectListAdd } from '../../styles/component/elementRelationSelectListAdd'
-import { elementRelationSelectListDisplay } from '../../styles/component/elementRelationSelectListDisplay'
 import { VaultContext } from '../../model/VaultContext'
-import { TNavigation } from '../navigation'
 import { BottomButtonView } from './BottomButtonView'
-import { RelationListEntry, IRelationListEntryProps } from './RelationListEntry'
+import { RelationListEntry, IRelationListEntryProps, LIST_ENTRY_HEIGHT } from './RelationListEntry'
 import { Relation } from '../../model/Relation'
 import { ConsentoContext } from '../../model/Consento'
 import { Lockee } from '../../model/User'
 import { IRelationEntry } from '../../model/Consento.types'
-import { elementRelationSelectListCancel } from '../../styles/component/elementRelationSelectListCancel'
-import { ScreenshotContext } from '../../util/screenshots'
-import { withNavigationFocus } from 'react-navigation'
+import { navigate } from '../../util/navigate'
+import { ScreenshotContext, useScreenshotEnabled } from '../../util/screenshots'
+import { elementLocksNoLockee } from '../../styles/design/layer/elementLocksNoLockee'
+import { elementLocksEmpty } from '../../styles/design/layer/elementLocksEmpty'
+import { elementRelationSelectListAdd } from '../../styles/design/layer/elementRelationSelectListAdd'
+import { elementRelationSelectListDisplay } from '../../styles/design/layer/elementRelationSelectListDisplay'
+import { MobxList } from './MobxList'
+import { compareNames } from '../../util/compareNames'
+import { find } from '../../util/find'
 
-export interface ILocksProps {
-  navigation: TNavigation
+interface ISelectEntryProps extends Omit<IRelationListEntryProps<Relation>, 'type' | 'onPress'> {
+  onSelect: (entry: Relation, selected: boolean) => any
 }
 
-interface ISelectEntryProps extends Omit<Omit<IRelationListEntryProps, 'prototype'>, 'onPress'> {
-  onSelect: (entry: IRelationEntry, selected: boolean) => any
-}
-
-const SelectEntry = ({ entry, onSelect }: ISelectEntryProps): JSX.Element => {
-  const [isSelected, setSelected] = useState<boolean>(false)
-
-  return <RelationListEntry
-    entry={entry}
-    prototype={isSelected ? elementRelationSelectListAdd.selected.component : elementRelationSelectListAdd.unselected.component}
-    onPress={() => {
-      setSelected(!isSelected)
-      onSelect(entry, !isSelected)
-    }}
-  />
-}
-
-const SelectedLockees = observer(({ onAdd: handleAdd }: { onAdd: () => void }): JSX.Element => {
+const SelectedLockeeList = observer(({ onAdd }: { onAdd?: (event: GestureResponderEvent) => void }): JSX.Element => {
   const { user } = useContext(ConsentoContext)
   const { vault } = useContext(VaultContext)
-  const screenshots = useContext(ScreenshotContext)
-  const handleRelationPress = (lockee: Lockee): void => {
+  assertExists(vault, 'not in vault context')
+  const handleRelationPress = (entry: IRelationEntry): void => {
+    const lockee = entry as Lockee
     vault.revokeLockee(lockee.vaultLockee, lockee.relation)
-      .catch(error => {
-        console.log({ error })
-      })
+      .catch(error => console.log({ error }))
   }
-  const lockees = user.getLockeesSorted(vault)
-  if ((lockees?.length ?? 0) > 0) {
-    let oneConfirmed = false
-    for (const lockee of (lockees ?? [])) {
-      if (lockee.vaultLockee.isConfirmed) {
-        screenshots.vaultLocksConfirmed.takeSync(500)
-        oneConfirmed = true
-      }
-    }
-    if (!oneConfirmed) {
-      screenshots.vaultLocksPending.takeSync(500)
-    }
+  const lockees = user.getLockees(vault)
+  if (useScreenshotEnabled()) {
+    const screenshots = useContext(ScreenshotContext)
+    const isEmpty = (lockees?.size ?? 0) > 0
+    const hasOneConfirmed = find(lockees ?? [], lockee => lockee.vaultLockee.isConfirmed) !== undefined
+    isEmpty
+      ? hasOneConfirmed
+        ? screenshots.vaultLocksConfirmed.takeSync(500)
+        : screenshots.vaultLocksPending.takeSync(500)
+      : screenshots.vaultLocksNoLock.takeSync(500)
   }
-  return <EmptyView prototype={elementLocksEmpty} onAdd={handleAdd} onEmpty={screenshots.vaultLocksNoLock.handle(500)}>
-    {
-      lockees?.map(
-        lockee => <RelationListEntry
-          key={lockee.vaultLockee.$modelId}
-          entry={lockee}
-          prototype={lockee.vaultLockee.isConfirmed ? elementRelationSelectListDisplay.revoke.component : elementRelationSelectListCancel}
-          onPress={handleRelationPress}
-        />
-      )
-    }
-  </EmptyView>
+  return <EmptyView empty={elementLocksEmpty} onAdd={onAdd}>{
+    lockees !== undefined && lockees.size > 0
+      ? <BottomButtonView src={elementRelationSelectListDisplay} onPress={onAdd}>
+        {
+          ({ style }) =>
+            <MobxList
+              data={lockees}
+              style={style}
+              itemStyle={{ height: LIST_ENTRY_HEIGHT }}
+              sort={compareNames}
+              renderItem={lockee =>
+                <RelationListEntry
+                  key={lockee.vaultLockee.$modelId}
+                  entry={lockee}
+                  type={lockee.vaultLockee.isConfirmed ? 'revoke' : 'cancel'}
+                  onPress={handleRelationPress}
+                />} />
+        }
+      </BottomButtonView>
+      : undefined
+  }</EmptyView>
 })
+
+const SelectEntry = ({ entry, onSelect }: ISelectEntryProps): JSX.Element => {
+  const [selected, setSelected] = useState<'selected' | 'unselected'>('unselected')
+  const handlePress = (): void => {
+    const isSelected = selected === 'selected'
+    setSelected(isSelected ? 'unselected' : 'selected')
+    onSelect(entry, !isSelected)
+  }
+  return <RelationListEntry entry={entry} type={selected} onPress={handlePress} />
+}
 
 const SelectLockees = ({ onSelect: handleSelectConfirmation }: { onSelect: (relations: Relation[]) => any }): JSX.Element => {
   const selection: { [modelId: string]: IRelationEntry } = {}
   const { user } = useContext(ConsentoContext)
   const { vault } = useContext(VaultContext)
+  assertExists(vault, 'not in vault context')
   const availableRelations = user.availableRelations(vault)
   const screenshots = useContext(ScreenshotContext)
   const handleEntrySelect = (relation: Relation, selected: boolean): void => {
@@ -93,68 +94,66 @@ const SelectLockees = ({ onSelect: handleSelectConfirmation }: { onSelect: (rela
   }
   const handleConfirm = (): void => handleSelectConfirmation(Object.values(selection) as Relation[])
   screenshots.vaultLocksNoSelection.takeSync(200)
-  return <BottomButtonView prototype={elementRelationSelectListAdd} onPress={handleConfirm}>
+  return <BottomButtonView src={elementRelationSelectListAdd} onPress={handleConfirm}>
     {
-      availableRelations.map(
-        relation => <SelectEntry key={relation.$modelId} entry={relation} onSelect={handleEntrySelect} />
-      )
+      ({ style }) =>
+        <MobxList
+          data={availableRelations}
+          style={style}
+          itemStyle={{ height: LIST_ENTRY_HEIGHT }}
+          sort={compareNames}
+          renderItem={relation => <SelectEntry key={relation.$modelId} entry={relation} onSelect={handleEntrySelect} />}
+        />
     }
   </BottomButtonView>
 }
 
+function assertExists <T> (input: T | null | undefined, error?: string): asserts input is T {
+  if (input === null || input === undefined) {
+    throw new Error(`Assertion error: ${error ?? '<x> is null | undefined'}`)
+  }
+}
+
 const LockeeList = observer((): JSX.Element => {
-  const [isSelectionActive, setSelectionActive] = useState<boolean>(false)
-  const [isAddingLockees, setAddingLockees] = useState<boolean>(false)
+  const [state, setState] = useState<'show' | 'select' | 'adding'>('show')
   const { user } = useContext(ConsentoContext)
   const { vault } = useContext(VaultContext)
+  assertExists(vault, 'not in vault context')
   const availableRelations = user.availableRelations(vault)
 
-  if (isAddingLockees) {
+  if (state === 'adding') {
+    // TODO: add to design!
     return <Text>Adding new entries...</Text>
   }
 
-  if (!isSelectionActive) {
-    const handleAdd = availableRelations.length > 0 ? () => setSelectionActive(true) : undefined
-    return <SelectedLockees onAdd={handleAdd} />
+  if (state === 'show') {
+    const handleAdd = availableRelations.size > 0 ? () => setState('select') : undefined
+    return <SelectedLockeeList onAdd={handleAdd} />
   }
   const handleSelectConfirmation = (relations: Relation[]): void => {
-    setAddingLockees(true)
-    ;(async () => {
-      await Promise.all(
-        // eslint-disable-next-line @typescript-eslint/require-await
-        relations.map(async relation => await vault.addLockee(relation))
-      )
-      setSelectionActive(false)
-      setAddingLockees(false)
-    })().catch(error => {
+    setState('adding')
+    Promise.all(
+      relations.map(async relation => await vault.addLockee(relation))
+    ).catch(error => {
       Alert.alert(
         'Failed',
         `Woops, for some reason the lockee could not be added.\n [${String(error.code)}]`
       )
       console.log(error)
-      setSelectionActive(false)
-      setAddingLockees(false)
-    })
+    }).finally(() => setState('show'))
   }
   return <SelectLockees onSelect={handleSelectConfirmation} />
 })
 
-export const FocusedLocks = observer(({ navigation }: ILocksProps): JSX.Element => {
+export const Locks = observer((): JSX.Element => {
   const { user } = useContext(ConsentoContext)
   const screenshots = useContext(ScreenshotContext)
-  if (user.relations.size === 0) {
-    return <EmptyView
-      prototype={user.relations.size === 0 ? elementLocksNoLockee : elementLocksEmpty}
-      onAdd={() => navigation.navigate('newRelation')}
-      onEmpty={screenshots.vaultLocksNoRelation.handle(500)}
-    />
-  }
-  return <LockeeList />
-})
-
-export const Locks = withNavigationFocus(({ navigation, isFocused }: { navigation: TNavigation, isFocused: boolean }) => {
-  if (isFocused) {
-    return <FocusedLocks navigation={navigation} />
-  }
-  return <View />
+  const handleAdd = (): void => navigate('newRelation')
+  return <EmptyView empty={elementLocksNoLockee} onAdd={handleAdd} onEmpty={screenshots.vaultLocksNoRelation.handle(500)}>
+    {
+      user.relations.size > 0
+        ? <LockeeList />
+        : undefined
+    }
+  </EmptyView>
 })

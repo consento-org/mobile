@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { forwardRef, useEffect, useState } from 'react'
 import { Dimensions, ScaledSize, StyleSheet, View, VirtualizedList } from 'react-native'
 import { createView, IArrayView, IFilter, IMap, ISort, ISupportedArray } from '../../util/ArraySetView'
 import { useAutorun } from '../../util/useAutorun'
@@ -117,25 +117,26 @@ function useGrid <TFinal> (style: IGridItemStyle, view: IArrayView<TFinal>, rend
   return grid
 }
 
-export const MobxGrid = function <TSource, TFinal = TSource> ({ data, filter, sort, map, start, limit, itemStyle, renderItem, keyExtractor, centerContent, forwardRef }: IMobxGridProps<TSource, TFinal>): JSX.Element {
+export type IMobxGrid = <TSource, TFinal = TSource>(props: IMobxGridProps<TSource, TFinal> & { ref?: React.Ref<VirtualizedList<any>> }) => JSX.Element | null
+export const MobxGrid: IMobxGrid = forwardRef<VirtualizedList<any>, IMobxGridProps<any, any>>(function <TSource, TFinal = TSource> (props: IMobxGridProps<TSource, TFinal>, ref: any): JSX.Element | null {
+  const { data, filter, sort, map, start, limit, itemStyle, renderItem, keyExtractor, centerContent } = props
   const view = createView<TSource, TFinal>(data, { filter, sort, map, start, limit })
   const { columns, getItem, getItemLayout, renderRow } = useGrid(itemStyle, view, renderItem)
   const numItems = useAutorun(() => view.size)
   const itemCount = Math.ceil(numItems / columns)
-  return React.createElement(
-    VirtualizedList,
-    {
-      ref: forwardRef,
-      data: [],
-      extraData: itemCount,
-      getItem,
-      getItemLayout,
-      getItemCount: () => itemCount,
-      style: styles.list,
-      centerContent,
-      keyExtractor: (keyExtractor ?? defaultKeyExtractor) as () => string,
-      renderItem: renderRow
-    },
-    null
-  )
-}
+  if (numItems === 0) {
+    return null
+  }
+  return <VirtualizedList
+    ref={ref}
+    data={[]}
+    extraData={itemCount}
+    getItemCount={() => itemCount}
+    style={styles.list}
+    keyExtractor={(keyExtractor ?? defaultKeyExtractor) as () => string}
+    renderItem={renderRow}
+    {...{
+      getItem, getItemLayout, centerContent
+    }}
+  />
+} as any) as unknown as IMobxGrid

@@ -16,15 +16,12 @@ export function fromConnection (connection: IConnection): Relation {
 
 @model('consento/Relation')
 export class Relation extends Model({
-  name: tProp(types.string, () => ''),
+  name: tProp(types.maybeNull(types.string), () => null),
   avatarId: tProp(types.maybeNull(types.string), () => null),
   connection: tProp(types.model<Connection>(Connection))
 }) implements ISortable, IRelationEntry {
   @computed get displayName (): string {
-    if (this.name === '') {
-      return this.humanId
-    }
-    return this.name
+    return this.name === '' ? this.humanId : this.name ?? this.humanId
   }
 
   get relationId (): string {
@@ -39,7 +36,7 @@ export class Relation extends Model({
     return humanModelId(this.$modelId)
   }
 
-  @modelAction setName (name: string): void {
+  @modelAction setName (name: string | null): void {
     this.name = name
   }
 

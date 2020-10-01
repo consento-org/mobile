@@ -73,7 +73,7 @@ export interface IAvatarProps {
 }
 
 export const Avatar = ({ avatarId, size }: IAvatarProps): JSX.Element => {
-  if (!exists(avatarId)) {
+  if (!exists(avatarId) || avatarId === '') {
     return <SketchImage src={ImageAsset.avatarUnknown} style={{ width: size, height: size }} />
   }
   const buffer = Buffer.from(avatarId, 'hex')

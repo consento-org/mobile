@@ -28,7 +28,7 @@ export const elementFormInputField = {
     label: new TextBox('label', 'label', {
       ...TextStyles.CaptionPrimaryOnSurfaceLeft,
       textAlign: 'center'
-    }, { x: 31, y: 1, w: 44, h: 16, r: 300, b: 68 }),
+    }, { x: 38.99, y: 1, w: 28, h: 16, r: 308, b: 68 }),
     inactive: new TextBox('inactive', 'Inactive', {
       ...TextStyles.Subtitle1SelectedOnSurfaceHighEmphasisLeft,
       color: Color.darkGrey
@@ -36,7 +36,7 @@ export const elementFormInputField = {
     active: new TextBox('active', 'Active', {
       ...TextStyles.Subtitle1SelectedOnSurfaceHighEmphasisLeft,
       textAlignVertical: 'center'
-    }, { x: 35.49, y: 10, w: 267.5, h: 56, r: 72, b: 19 }),
+    }, { x: 35.49, y: 26, w: 267.5, h: 24, r: 72, b: 35 }),
     reset: new ImagePlacement('reset', ImageAsset.iconCrossGrey, { x: 308.49, y: 26, w: 24, h: 24, r: 42.5, b: 35 })
   }
 }

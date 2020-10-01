@@ -21,18 +21,19 @@ import { elementBottomNavConsentosResting } from '../styles/design/layer/element
 import { Vault } from './Vault'
 import { Vault as VaultModel } from '../model/Vault'
 import { RelationsScreen } from './Relations'
+import { RelationContext } from '../model/RelationContext'
+import { Relation } from './Relation'
+import { Relation as RelationModel } from '../model/Relation'
 /*
 import { createAppContainer, withNavigation, withNavigationFocus } from '@react-navigation/native'
 import { VaultsScreen } from './Vaults'
 import { RelationsScreen } from './Relations'
 import { ConsentosScreen } from './Consentos'
 import { Vault, VaultRouter } from './Vault'
-import { Relation } from './Relation'
 import { TNavigation } from './navigation'
 import { NewRelation } from './NewRelation'
 import { Vault as VaultModel } from '../model/Vault'
 import { isImageFile, isTextFile } from '../model/VaultData'
-import { Relation as RelationModel } from '../model/Relation'
 import { RelationContext } from '../model/RelationContext'
 import { VaultContext } from '../model/VaultContext'
 import { Config } from './Config'
@@ -191,6 +192,17 @@ export const Screens = observer(forwardRef((_, ref: Ref<any>): JSX.Element => {
       return <VaultContext.Provider value={{ vault }}>
         <Vault />
       </VaultContext.Provider>
+    }}</Stack.Screen>
+    <Stack.Screen name='relation'>{({ navigation, route }) => {
+      const relationKey = (route.params as any)?.relation
+      const relation = user.findRelation(relationKey)
+      if (!(relation instanceof RelationModel)) {
+        navigation.navigate('') // TODO: Return 404 alert message?
+        return <></>
+      }
+      return <RelationContext.Provider value={{ relation }}>
+        <Relation />
+      </RelationContext.Provider>
     }}</Stack.Screen>
     <Stack.Screen name='main'>{() => <Tabs.Navigator
       initialRouteName='vaults'

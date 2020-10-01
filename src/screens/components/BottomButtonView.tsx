@@ -5,6 +5,7 @@ import { ILayer } from '../../styles/util/types'
 import { SketchPolygon } from '../../styles/util/react/SketchPolygon'
 import { exists } from '../../styles/util/lang'
 import { Polygon } from '../../styles/util/Polygon'
+import { composeAll } from '../../util/composeAll'
 
 export type IBottomButtonProto = ILayer<{
   bottomArea: ILayer<{
@@ -31,8 +32,6 @@ const styles = StyleSheet.create({
   scrollContainer: { display: 'flex', flexGrow: 1 }
 })
 
-const stylesBySrc = new WeakMap<IBottomButtonSrc, { bottomArea: ViewStyle, scrollContainer: ViewStyle }>()
-
 function hasBottomButton (bottomButton?: IBottomButtonProto, onPress?: Function): bottomButton is IBottomButtonProto {
   return exists(bottomButton) && exists(onPress)
 }
@@ -40,15 +39,11 @@ function hasBottomButton (bottomButton?: IBottomButtonProto, onPress?: Function)
 export function BottomButtonView ({ src, children, onPress, containerStyle }: IBottomButtonProps): JSX.Element {
   const { layers: { bottomButton }, backgroundColor } = src
   const paddingBottom = hasBottomButton(bottomButton, onPress) ? bottomButton.place.height : 0
-  let srcStyles = stylesBySrc.get(src)
-  if (srcStyles === undefined) {
-    srcStyles = StyleSheet.create({
-      bottomArea: { height: paddingBottom },
-      scrollContainer: { paddingBottom }
-    })
-    stylesBySrc.set(src, srcStyles)
+  const srcStyles = {
+    bottomArea: { height: paddingBottom },
+    scrollContainer: { paddingBottom }
   }
-  const styleSheet = StyleSheet.compose(StyleSheet.compose(srcStyles.scrollContainer, styles.scrollContainer), containerStyle)
+  const styleSheet = composeAll<ViewStyle>(srcStyles.scrollContainer, styles.scrollContainer, containerStyle)
   return <View style={styles.scrollView}>
     {
       typeof children === 'function'
@@ -62,7 +57,7 @@ export function BottomButtonView ({ src, children, onPress, containerStyle }: IB
         </ScrollView>
     }
     {hasBottomButton(bottomButton, onPress)
-      ? <View style={StyleSheet.compose(srcStyles.bottomArea, styles.bottomArea)}>
+      ? <View style={StyleSheet.compose<ViewStyle>(srcStyles.bottomArea, styles.bottomArea)}>
         <SketchPolygon src={bottomButton.layers.bottomArea.layers.shape} style={styles.bottomRect} />
         <ConsentoButton src={bottomButton.layers.button} light onPress={onPress} />
       </View>

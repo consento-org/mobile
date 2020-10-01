@@ -5,8 +5,8 @@ import { BaseModel, findParent } from 'mobx-keystone'
 export interface IRelationEntry {
   readonly relationId: string
   readonly humanId: string
-  readonly name: string
-  readonly avatarId: string | undefined | null
+  readonly name: string | null
+  readonly avatarId: string | null
 }
 
 export interface ILogEntry {

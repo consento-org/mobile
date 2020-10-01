@@ -107,13 +107,14 @@ export const RelationListEntry = observer(function <TEntry extends IRelationEntr
       right: iconLabel?.place.right
     }
   }))
+  const hasName = entry.name !== '' && entry.name !== null
   return <TouchableOpacity style={styles.container} onPress={() => onPress(entry)}>
     <View style={styles.sectionA}>
       <Avatar avatarId={entry.avatarId} size={avatarCut.place.width} />
     </View>
     <View style={styles.sectionB}>
-      <SketchElement src={relationName}>{entry.name !== '' ? entry.name : ''}</SketchElement>
-      <SketchElement src={relationID} style={styles.relationID}>{entry.humanId}</SketchElement>
+      <SketchElement src={relationName}>{hasName ? entry.name : entry.humanId}</SketchElement>
+      {hasName ? <SketchElement src={relationID} style={styles.relationID}>{entry.humanId}</SketchElement> : undefined}
     </View>
     <View style={styles.sectionC}>
       <SketchElement src={icon} style={styles.icon} />

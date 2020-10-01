@@ -64,16 +64,16 @@ export class Lockee implements IRelationEntry, ISortable {
     return this.vaultLockee.relationId
   }
 
-  get avatarId (): string | undefined | null {
-    return this.relation?.avatarId
+  get avatarId (): string | null {
+    return this.relation?.avatarId ?? null
   }
 
   get sortBy (): string {
     return this.relation?.name ?? this.humanId
   }
 
-  get name (): string {
-    return this.relation?.name ?? ''
+  get name (): string | null {
+    return this.relation?.name ?? null
   }
 
   get humanId (): string {

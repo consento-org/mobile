@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react'
-import { Text, Alert, GestureResponderEvent } from 'react-native'
+import { Text, Alert, GestureResponderEvent, StyleSheet } from 'react-native'
 import { observer } from 'mobx-react'
 import { EmptyView } from './EmptyView'
 import { VaultContext } from '../../model/VaultContext'
@@ -23,8 +23,7 @@ interface ISelectEntryProps extends Omit<IRelationListEntryProps<Relation>, 'typ
   onSelect: (entry: Relation, selected: boolean) => any
 }
 
-const SelectedLockeeList = observer(({ onAdd }: { onAdd?: (event: GestureResponderEvent) => void }): JSX.Element => {
-  const { user } = useContext(ConsentoContext)
+const renderAddedLockee = (lockee: Lockee): JSX.Element => {
   const { vault } = useContext(VaultContext)
   assertExists(vault, 'not in vault context')
   const handleRelationPress = (entry: IRelationEntry): void => {
@@ -32,6 +31,22 @@ const SelectedLockeeList = observer(({ onAdd }: { onAdd?: (event: GestureRespond
     vault.revokeLockee(lockee.vaultLockee, lockee.relation)
       .catch(error => console.log({ error }))
   }
+  return <RelationListEntry
+    key={lockee.vaultLockee.$modelId}
+    entry={lockee}
+    type={lockee.vaultLockee.isConfirmed ? 'revoke' : 'cancel'}
+    onPress={handleRelationPress}
+  />
+}
+
+const styles = StyleSheet.create({
+  item: { height: LIST_ENTRY_HEIGHT }
+})
+
+const SelectedLockeeList = observer(({ onAdd }: { onAdd?: (event: GestureResponderEvent) => void }): JSX.Element => {
+  const { user } = useContext(ConsentoContext)
+  const { vault } = useContext(VaultContext)
+  assertExists(vault, 'not in vault context')
   const lockees = user.getLockees(vault)
   if (useScreenshotEnabled()) {
     const screenshots = useContext(ScreenshotContext)
@@ -51,15 +66,9 @@ const SelectedLockeeList = observer(({ onAdd }: { onAdd?: (event: GestureRespond
             <MobxList
               data={lockees}
               style={style}
-              itemStyle={{ height: LIST_ENTRY_HEIGHT }}
+              itemStyle={styles.item}
               sort={compareNames}
-              renderItem={lockee =>
-                <RelationListEntry
-                  key={lockee.vaultLockee.$modelId}
-                  entry={lockee}
-                  type={lockee.vaultLockee.isConfirmed ? 'revoke' : 'cancel'}
-                  onPress={handleRelationPress}
-                />} />
+              renderItem={renderAddedLockee} />
         }
       </BottomButtonView>
       : undefined
@@ -83,6 +92,7 @@ const SelectLockees = ({ onSelect: handleSelectConfirmation }: { onSelect: (rela
   assertExists(vault, 'not in vault context')
   const availableRelations = user.availableRelations(vault)
   const screenshots = useContext(ScreenshotContext)
+  screenshots.vaultLocksNoSelection.takeSync(200)
   const handleEntrySelect = (relation: Relation, selected: boolean): void => {
     if (selected) {
       selection[relation.$modelId] = relation
@@ -93,14 +103,13 @@ const SelectLockees = ({ onSelect: handleSelectConfirmation }: { onSelect: (rela
     }
   }
   const handleConfirm = (): void => handleSelectConfirmation(Object.values(selection) as Relation[])
-  screenshots.vaultLocksNoSelection.takeSync(200)
   return <BottomButtonView src={elementRelationSelectListAdd} onPress={handleConfirm}>
     {
       ({ style }) =>
         <MobxList
           data={availableRelations}
           style={style}
-          itemStyle={{ height: LIST_ENTRY_HEIGHT }}
+          itemStyle={styles.item}
           sort={compareNames}
           renderItem={relation => <SelectEntry key={relation.$modelId} entry={relation} onSelect={handleEntrySelect} />}
         />

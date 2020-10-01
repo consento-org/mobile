@@ -16,7 +16,7 @@ export interface IRoute <TParams = any> {
   params?: IRoute<TParams> | TParams
 }
 
-export type TBackHandler <TArgs> = (string | undefined | ((args: TArgs) => any))
+export type TBackHandler <TArgs> = (string | undefined | ((args: TArgs) => true | false | string | void | undefined | null))
 
 export function useBackHandler <TDeps extends DependencyList = []> (back: TBackHandler<TDeps>, { deps, active }: { deps?: TDeps, active?: boolean } = {}): () => boolean {
   const finalDeps = deps ?? ([] as unknown as TDeps)
@@ -28,6 +28,9 @@ export function useBackHandler <TDeps extends DependencyList = []> (back: TBackH
       navigate(back)
     } else {
       const result = back(finalDeps)
+      if (typeof result === 'string') {
+        navigate(result)
+      }
       if (result === true || result === false) {
         return result
       }
@@ -103,4 +106,12 @@ export const navigate: INavigate = <TParams = any> (route: string | string[] | I
     return navigate(route.screen, route.params)
   }
   navigationRef.current?.navigate(route, params)
+}
+
+export function canGoBack (): boolean {
+  return navigationRef.current?.canGoBack() ?? false
+}
+
+export function goBack (): void {
+  navigationRef.current?.goBack()
 }

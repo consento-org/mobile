@@ -1,43 +1,36 @@
 // This file has been generated with expo-export@5.0.0, a Sketch plugin.
-import React from 'react'
+import React, { forwardRef } from 'react'
 import { Text, TextInput, TextProps, TextInputProps, StyleSheet } from 'react-native'
 import { exists } from '../lang'
 import { ISketchElementProps, ITextBox } from '../types'
 
-export interface ISketchTextBoxViewProps extends
-  ISketchElementProps<ITextBox>,
-  TextProps {
-  ref?: React.Ref<Text>
+export interface ISketchTextBoxViewProps extends ISketchElementProps<ITextBox>, TextProps {
   children?: string
   value?: string
 }
 
-export interface ISketchTextBoxInputProps extends
-  ISketchElementProps<ITextBox>,
-  TextInputProps {
-  ref?: React.Ref<TextInput>
+export interface ISketchTextBoxInputProps extends ISketchElementProps<ITextBox>, TextInputProps {
   children?: string
 }
 
 export type ISketchTextBoxProps = ISketchTextBoxInputProps | ISketchTextBoxViewProps
 
-export const SketchTextBoxView = (props: ISketchTextBoxViewProps): JSX.Element => {
+export const SketchTextBoxView = forwardRef<Text, ISketchTextBoxViewProps>((props, ref): JSX.Element => {
+  /* eslint-disable react/prop-types */
   const { text } = props.src
-  const textProps: TextProps = {
-    ...props,
-    style: exists(props.style) ? StyleSheet.compose(props.src.style, props.style) : props.src.style
-  }
-  return React.createElement(Text, textProps, props.value ?? props.children ?? text)
-}
+  const style = exists(props.style) ? StyleSheet.compose(props.src.style, props.style) : props.src.style
+  return <Text {...props} ref={ref} style={style}>{
+    props.value ?? props.children ?? text
+  }</Text>
+})
 
-export const SketchTextBoxInput = (props: ISketchTextBoxInputProps): JSX.Element => {
-  return React.createElement(TextInput, {
-    ...props,
-    style: exists(props.style) ? StyleSheet.compose(props.src.style, props.style) : props.src.style
-  })
-}
+export const SketchTextBoxInput = forwardRef<TextInput, ISketchTextBoxInputProps>((props, ref): JSX.Element => {
+  /* eslint-disable react/prop-types */
+  const style = exists(props.style) ? StyleSheet.compose(props.src.style, props.style) : props.src.style
+  return <TextInput {...props} ref={ref} style={style} />
+})
 
-function isSketchTextBoxInputProps (props: ISketchTextBoxProps): props is ISketchTextBoxInputProps {
+export function isSketchTextBoxInputProps (props: ISketchTextBoxProps): props is ISketchTextBoxInputProps {
   for (const missing of ['onLayout', 'onTextLayout', 'onPress', 'onLongPress']) {
     if (missing in props) {
       return false
@@ -57,9 +50,14 @@ function isSketchTextBoxInputProps (props: ISketchTextBoxProps): props is ISketc
   return false
 }
 
-export const SketchTextBox = (props: ISketchTextBoxProps): JSX.Element => {
-  if (isSketchTextBoxInputProps(props)) {
-    return SketchTextBoxInput(props)
-  }
-  return SketchTextBoxView(props)
+export interface ISketchTextBox {
+  (props: ISketchTextBoxInputProps & { ref?: React.Ref<TextInput> }): JSX.Element
+  (props: ISketchTextBoxViewProps & { ref?: React.Ref<Text> }): JSX.Element
 }
+
+export const SketchTextBox: ISketchTextBox = forwardRef<Text | TextInput, ISketchTextBoxProps>((props, ref): JSX.Element => {
+  if (isSketchTextBoxInputProps(props)) {
+    return <SketchTextBoxInput {...props} ref={ref as React.Ref<TextInput>} />
+  }
+  return <SketchTextBoxView {...props} ref={ref as React.Ref<Text>} />
+}) as ISketchTextBox

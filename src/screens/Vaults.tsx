@@ -1,5 +1,5 @@
-import React, { useContext } from 'react'
-import { View, VirtualizedList } from 'react-native'
+import React, { useContext, useRef, useState } from 'react'
+import { StyleSheet, View, VirtualizedList } from 'react-native'
 import { ConsentoContext } from '../model/Consento'
 import { ScreenshotContext, useScreenshotEnabled } from '../util/screenshots'
 import { ImageAsset } from '../styles/design/ImageAsset'
@@ -14,6 +14,14 @@ import { useAutorun } from '../util/useAutorun'
 import { comparer } from 'mobx'
 
 const AddButton = ImageAsset.buttonAddHexagonal
+const styles = StyleSheet.create({
+  container: { flexGrow: 1 },
+  add: { position: 'absolute', right: 10, bottom: 10, zIndex: 1 }
+})
+
+function renderVault (vault: Vault): JSX.Element {
+  return <VaultCard key={`vault-card-${vault.$modelId}`} vault={vault} />
+}
 
 export const VaultsScreen = (): JSX.Element => {
   const { user: { vaults } } = useContext(ConsentoContext)
@@ -36,21 +44,18 @@ export const VaultsScreen = (): JSX.Element => {
       screenshots.vaultsVaultOneLocked.takeSync(500)
     }
   }
-  const ref = React.createRef<VirtualizedList<any>>()
-  return <View style={{ flexGrow: 1 }}>
+  const ref = useRef<VirtualizedList<any>>(null)
+  const [handlePress] = useState(() => () => {
+    const vault = new Vault({})
+    vaults.add(vault)
+    setTimeout(() => ref.current?.scrollToEnd(), 50 /* Quick delay to wait until the vault is added */)
+    // navigate('vault', { vault: vault.$modelId })
+  })
+  return <View style={styles.container}>
     <TopNavigation title='Vaults' />
-    <SketchImage
-      src={AddButton}
-      style={{ position: 'absolute', right: 10, bottom: 10, zIndex: 1 }}
-      onPress={() => {
-        const vault = new Vault({})
-        vaults.add(vault)
-        setTimeout(() => ref.current?.scrollToEnd(), 50 /* Quick delay to wait until the vault is added */)
-        // navigate('vault', { vault: vault.$modelId })
-      }}
-    />
+    <SketchImage src={AddButton} style={styles.add} onPress={handlePress} />
     <EmptyView empty={elementLocksEmpty}>
-      <MobxGrid forwardRef={ref} data={vaults} itemStyle={VAULT_STYLE} renderItem={vault => <VaultCard key={`vault-card-${vault.$modelId}`} vault={vault} />} />
+      <MobxGrid ref={ref} data={vaults} itemStyle={VAULT_STYLE} renderItem={renderVault} />
     </EmptyView>
   </View>
 }

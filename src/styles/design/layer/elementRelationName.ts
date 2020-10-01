@@ -22,6 +22,6 @@ export const elementRelationName = {
       label: new TextBox('label', 'name', label.style, label.place),
       caption: new TextBox('caption', 'only you will see this name.', caption.style, caption.place)
     })),
-    elementAvatarGenerate: new LayerPlacement('elementAvatarGenerate', elementAvatarGenerate, elementAvatarGenerate.layers, { x: 57, y: 136, w: 239, h: 210, r: 79, b: 624 })
+    avatar: new LayerPlacement('avatar', elementAvatarGenerate, elementAvatarGenerate.layers, { x: 57, y: 136, w: 239, h: 210, r: 79, b: 624 })
   }
 }

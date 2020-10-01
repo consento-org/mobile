@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { forwardRef, useState } from 'react'
 import { ListRenderItemInfo, StyleProp, StyleSheet, ViewStyle, VirtualizedList } from 'react-native'
 import { createView, IFilter, IMap, ISort, ISupportedArray } from '../../util/ArraySetView'
 import { useAutorun } from '../../util/useAutorun'
@@ -23,7 +23,6 @@ export interface IMobxGridProps<TSource, TFinal = TSource> {
   listKey?: (row: number, columns: number) => string
   keyExtractor?: (item: TFinal, index: number) => string
   centerContent?: boolean
-  forwardRef?: React.Ref<VirtualizedList<unknown>>
 }
 
 const styles = StyleSheet.create({
@@ -33,8 +32,11 @@ const styles = StyleSheet.create({
 })
 
 const defaultKeyExtractor = (_: any, index: number): string => index.toString()
+const getItem = (_: any, index: number): number => index
 
-export const MobxList = function <TSource, TFinal = TSource> ({ data, style, filter, sort, map, start, limit, itemStyle, renderItem, keyExtractor, centerContent, forwardRef }: IMobxGridProps<TSource, TFinal>): JSX.Element {
+export type IMobxList = <TSource, TFinal = TSource> (props: IMobxGridProps<TSource, TFinal> & { ref?: React.Ref<VirtualizedList<any>> }) => JSX.Element | null
+export const MobxList: IMobxList = forwardRef<any, any>(function <TSource, TFinal = TSource> (props: IMobxGridProps<TSource, TFinal>, ref: any): JSX.Element | null {
+  const { data, style, filter, sort, map, start, limit, itemStyle, renderItem, keyExtractor, centerContent } = props
   const view = createView<TSource, TFinal>(data, { filter, sort, map, start, limit })
   const [getOrCreateElement] = useState(() => {
     const cache: { [index: number]: React.ReactElement } = {}
@@ -62,22 +64,21 @@ export const MobxList = function <TSource, TFinal = TSource> ({ data, style, fil
     }
   })
   const numItems = useAutorun(() => view.size)
+  if (numItems === 0) {
+    return null
+  }
   const marginVertical = ((itemStyle.marginTop ?? itemStyle.marginVertical ?? 0) + (itemStyle.marginBottom ?? itemStyle.marginVertical ?? 0))
   const height = itemStyle.height + marginVertical
-  return React.createElement(
-    VirtualizedList,
-    {
-      ref: forwardRef,
-      data: [],
-      style: style !== undefined ? StyleSheet.compose<ViewStyle>(styles.list, style) : styles.list,
-      extraData: numItems,
-      getItem: (_, index) => index,
-      getItemLayout: (_, index) => ({ length: height, offset: index * height, index }),
-      getItemCount: () => numItems,
-      centerContent,
-      keyExtractor: (keyExtractor ?? defaultKeyExtractor) as () => string,
-      renderItem: (item: ListRenderItemInfo<unknown>) => getOrCreateElement(item.index)
-    },
-    null
-  )
-}
+  return <VirtualizedList
+    ref={ref}
+    data={[]}
+    style={style !== undefined ? StyleSheet.compose<ViewStyle>(styles.list, style) : styles.list}
+    extraData={numItems}
+    getItem={getItem}
+    getItemLayout={(_, index) => ({ length: height, offset: index * height, index })}
+    getItemCount={() => numItems}
+    centerContent={centerContent}
+    keyExtractor={(keyExtractor ?? defaultKeyExtractor) as () => string}
+    renderItem={(item: ListRenderItemInfo<unknown>) => getOrCreateElement(item.index)}
+  />
+} as any) as any

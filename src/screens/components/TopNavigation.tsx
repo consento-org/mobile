@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { View, ViewStyle, StyleSheet, TextInputProps } from 'react-native'
+import { View, ViewStyle, StyleSheet, TextInputProps, NativeSyntheticEvent, TextInputSubmitEditingEventData } from 'react-native'
 import { elementTopNavEmpty } from '../../styles/design/layer/elementTopNavEmpty'
 import { elementTopNavItem } from '../../styles/design/layer/elementTopNavItem'
 import { elementTopNavEdit } from '../../styles/design/layer/elementTopNavEdit'
@@ -91,14 +91,24 @@ function isEmpty (value: string): boolean {
 export const TopNavigation = (props: ITopNavigationProps): JSX.Element => {
   const [editing, setEditing] = useState(false)
   const inset = useSafeAreaInsets()
+  const canEdit = exists(props.onEdit)
+  const canDelete = exists(props.onDelete)
   const handleBack = useBackHandler(props.back)
+  const handleConfig = (): void => navigate('config')
+  const handleEdit = (): void => setEditing(true)
+  const handleBlur = (): void => setEditing(false)
+  const handleSubmit = (e: NativeSyntheticEvent<TextInputSubmitEditingEventData>): void => {
+    const edit = (props?.onEdit) as (text: string) => void
+    edit(e.nativeEvent.text)
+    setEditing(false)
+  }
   return <View style={StyleSheet.compose<ViewStyle>(styles.container, { height: elementTopNavEmpty.place.height + inset.top })}>
     <DarkBar height={inset.top} />
     <View style={styles.header}>
       <View style={styles.left}>
         {exists(props.back)
           ? <SketchElement src={back} style={styles.back} onPress={handleBack} />
-          : <SketchElement src={logo} style={styles.logo} onPress={() => navigate('config')} />}
+          : <SketchElement src={logo} style={styles.logo} onPress={handleConfig} />}
       </View>
       <View style={styles.center}>
         {editing
@@ -110,23 +120,20 @@ export const TopNavigation = (props: ITopNavigationProps): JSX.Element => {
               defaultValue={props.title}
               placeholder={props.titlePlaceholder}
               textContentType={props.titleTextContentType}
-              onSubmitEditing={e => {
-                const edit = (props?.onEdit) as (text: string) => void
-                edit(e.nativeEvent.text)
-                setEditing(false)
-              }}
+              onSubmitEditing={handleSubmit}
               autoFocus
-              onBlur={() => {
-                setEditing(false)
-              }} />
+              onBlur={handleBlur} />
           </>
-          : exists(props.onEdit)
-            ? <SketchTextBoxView style={styles.title} src={titleItem} value={isEmpty(props.title) ? props.titlePlaceholder : props.title} onPress={() => { setEditing(true) }} />
-            : <SketchTextBoxView style={styles.title} src={titleEmpty} value={isEmpty(props.title) ? props.titlePlaceholder : props.title} />}
+          : <SketchTextBoxView
+            style={styles.title}
+            src={canEdit ? titleItem : titleEmpty}
+            value={isEmpty(props.title) ? props.titlePlaceholder : props.title}
+            onPress={handleEdit}
+          />}
       </View>
       <View style={styles.right}>
-        {(exists(props.onEdit) && !editing) ? <SketchImage style={styles.edit} src={edit} onPress={() => setEditing(true)} /> : null}
-        {exists(props.onDelete) ? <SketchImage style={styles.delete} src={deleteButton} onPress={props.onDelete} /> : null}
+        {canEdit && !editing ? <SketchImage style={styles.edit} src={edit} onPress={handleEdit} /> : null}
+        {canDelete ? <SketchImage style={styles.delete} src={deleteButton} onPress={props.onDelete} /> : null}
       </View>
     </View>
   </View>

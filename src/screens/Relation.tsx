@@ -105,7 +105,7 @@ export const Relation = observer((): JSX.Element => {
     <BottomButtonView src={elementRelationName} onPress={save}>
       <View style={styles.container}>
         <InputField
-          proto={relationName}
+          src={relationName}
           value={name.value ?? null}
           autoFocus
           defaultValue={relation.humanId}

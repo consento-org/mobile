@@ -95,7 +95,7 @@ export const TopNavigation = (props: ITopNavigationProps): JSX.Element => {
   const canDelete = exists(props.onDelete)
   const handleBack = useBackHandler(props.back)
   const handleConfig = (): void => navigate('config')
-  const handleEdit = (): void => setEditing(true)
+  const handleEdit = canEdit ? (): void => setEditing(true) : undefined
   const handleBlur = (): void => setEditing(false)
   const handleSubmit = (e: NativeSyntheticEvent<TextInputSubmitEditingEventData>): void => {
     const edit = (props?.onEdit) as (text: string) => void

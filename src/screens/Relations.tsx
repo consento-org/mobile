@@ -40,7 +40,7 @@ export const RelationsScreen = observer(() => {
   }
   return <View style={styles.container}>
     <TopNavigation title='Relations' />
-    <EmptyView empty={elementRelationsEmpty}>
+    <EmptyView empty={elementRelationsEmpty} isEmpty={relations.size === 0}>
       <MobxList
         data={relations}
         sort={compareNames}

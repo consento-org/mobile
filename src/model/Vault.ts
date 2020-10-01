@@ -274,7 +274,7 @@ export class Vault extends Model({
   }
 
   @computed get secretKeyBase64 (): string {
-    return expoVaultSecrets.secretsBase64.get(this.dataKeyHex)
+    return expoVaultSecrets.secretsBase64.get(this.dataKeyHex) as string /* TODO: is there a chance this might be null | undefined */
   }
 
   async addLockee (relation: Relation): Promise<void> {

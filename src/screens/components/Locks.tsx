@@ -143,13 +143,19 @@ const LockeeList = observer((): JSX.Element => {
     setState('adding')
     Promise.all(
       relations.map(async relation => await vault.addLockee(relation))
-    ).catch(error => {
-      Alert.alert(
-        'Failed',
-        `Woops, for some reason the lockee could not be added.\n [${String(error.code)}]`
-      )
-      console.log(error)
-    }).finally(() => setState('show'))
+    ).then(
+      () => { console.log('done') },
+      error => {
+        Alert.alert(
+          'Failed',
+          `Woops, for some reason the lockee could not be added.\n [${String(error.code)}]`
+        )
+        console.log(error)
+      }
+    ).finally(() => {
+      console.log('finally')
+      setState('show')
+    })
   }
   return <SelectLockees onSelect={handleSelectConfirmation} />
 })
@@ -158,11 +164,7 @@ export const Locks = observer((): JSX.Element => {
   const { user } = useContext(ConsentoContext)
   const screenshots = useContext(ScreenshotContext)
   const handleAdd = (): void => navigate('newRelation')
-  return <EmptyView empty={elementLocksNoLockee} onAdd={handleAdd} onEmpty={screenshots.vaultLocksNoRelation.handle(500)}>
-    {
-      user.relations.size > 0
-        ? <LockeeList />
-        : undefined
-    }
+  return <EmptyView empty={elementLocksNoLockee} onAdd={handleAdd} isEmpty={user.relations.size > 0} onEmpty={screenshots.vaultLocksNoRelation.handle(500)}>
+    <LockeeList />
   </EmptyView>
 })

@@ -1,7 +1,7 @@
 import React, { forwardRef, Ref, useContext } from 'react'
 import { observer } from 'mobx-react'
 import { Text } from 'react-native'
-import { createStackNavigator } from '@react-navigation/stack'
+import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { elementBottomNav } from '../styles/design/layer/elementBottomNav'
 import { IImageAsset, ILayer, ViewBorders } from '../styles/util/types'
@@ -24,6 +24,7 @@ import { RelationsScreen } from './Relations'
 import { RelationContext } from '../model/RelationContext'
 import { Relation } from './Relation'
 import { Relation as RelationModel } from '../model/Relation'
+import { Config } from './Config'
 /*
 import { createAppContainer, withNavigation, withNavigationFocus } from '@react-navigation/native'
 import { VaultsScreen } from './Vaults'
@@ -66,6 +67,41 @@ const ConsentosIcon = observer(({ focused }: { focused: boolean }): IImageAsset 
 
 const Stack = createStackNavigator()
 const Tabs = createBottomTabNavigator()
+
+const MainTaps = (): JSX.Element => {
+  return <Tabs.Navigator
+    initialRouteName='vaults'
+    tabBarOptions={{
+      showLabel: true,
+      activeBackgroundColor: elementBottomNav.backgroundColor,
+      inactiveBackgroundColor: elementBottomNav.backgroundColor,
+      style: {
+        ...elementBottomNav.layers.borderTop.borderStyle(ViewBorders.top),
+        height: elementBottomNav.place.height
+      },
+      tabStyle: {
+        padding: elementBottomNav.layers.consento.place.bottom
+      },
+      labelPosition: 'below-icon'
+    }}
+  >
+    <Tabs.Screen
+      name='vaults' component={VaultsScreen} options={{
+        tabBarIcon: FocusIcon(ImageAsset.iconVaultActive, ImageAsset.iconVaultIdle),
+        tabBarLabel: FocusLabel(elementBottomNavVaultActive, elementBottomNavVaultResting)
+      }} />
+    <Tabs.Screen
+      name='consentos' component={Sample} options={{
+        tabBarIcon: FocusIcon(ImageAsset.iconConsentoActive, ImageAsset.iconConsentoIdle),
+        tabBarLabel: FocusLabel(elementBottomNavConsentosActive, elementBottomNavConsentosResting)
+      }} />
+    <Tabs.Screen
+      name='relations' component={RelationsScreen} options={{
+        tabBarIcon: FocusIcon(ImageAsset.iconRelationsActive, ImageAsset.iconRelationsIdle),
+        tabBarLabel: FocusLabel(elementBottomNavRelationsActive, elementBottomNavRelationsResting)
+      }} />
+  </Tabs.Navigator>
+}
 
 export const Screens = observer(forwardRef((_, ref: Ref<any>): JSX.Element => {
   const { user } = useContext(ConsentoContext)
@@ -179,10 +215,26 @@ export const Screens = observer(forwardRef((_, ref: Ref<any>): JSX.Element => {
   */
   return <Stack.Navigator
     initialRouteName='main'
+    mode='modal'
     screenOptions={{
       headerShown: false
     }}>
-    <Stack.Screen name='vault'>{({ navigation, route }) => {
+    <Stack.Screen name='main'>{props => {
+      /* eslint-disable react/prop-types */
+      const navigation: StackNavigationProp<any> = props.navigation
+      if (!navigation.isFocused()) return
+      const { route } = props
+      if ((route.params as any)?.screen === 'vaults') {
+        console.log(route.params)
+      }
+      return <MainTaps />
+    }}</Stack.Screen>
+    <Stack.Screen name='config' component={Config} />
+    <Stack.Screen name='vault'>{props => {
+      /* eslint-disable react/prop-types */
+      const navigation: StackNavigationProp<any> = props.navigation
+      if (!navigation.isFocused()) return
+      const route = props.route
       const vaultKey = (route.params as any)?.vault
       const vault = user.findVault(vaultKey)
       if (!(vault instanceof VaultModel)) {
@@ -204,38 +256,6 @@ export const Screens = observer(forwardRef((_, ref: Ref<any>): JSX.Element => {
         <Relation />
       </RelationContext.Provider>
     }}</Stack.Screen>
-    <Stack.Screen name='main'>{() => <Tabs.Navigator
-      initialRouteName='vaults'
-      tabBarOptions={{
-        showLabel: true,
-        activeBackgroundColor: elementBottomNav.backgroundColor,
-        inactiveBackgroundColor: elementBottomNav.backgroundColor,
-        style: {
-          ...elementBottomNav.layers.borderTop.borderStyle(ViewBorders.top),
-          height: elementBottomNav.place.height
-        },
-        tabStyle: {
-          padding: elementBottomNav.layers.consento.place.bottom
-        },
-        labelPosition: 'below-icon'
-      }}
-    >
-      <Tabs.Screen
-        name='vaults' component={VaultsScreen} options={{
-          tabBarIcon: FocusIcon(ImageAsset.iconVaultActive, ImageAsset.iconVaultIdle),
-          tabBarLabel: FocusLabel(elementBottomNavVaultActive, elementBottomNavVaultResting)
-        }} />
-      <Tabs.Screen
-        name='consentos' component={Sample} options={{
-          tabBarIcon: FocusIcon(ImageAsset.iconConsentoActive, ImageAsset.iconConsentoIdle),
-          tabBarLabel: FocusLabel(elementBottomNavConsentosActive, elementBottomNavConsentosResting)
-        }} />
-      <Tabs.Screen
-        name='relations' component={RelationsScreen} options={{
-          tabBarIcon: FocusIcon(ImageAsset.iconRelationsActive, ImageAsset.iconRelationsIdle),
-          tabBarLabel: FocusLabel(elementBottomNavRelationsActive, elementBottomNavRelationsResting)
-        }} />
-    </Tabs.Navigator>}</Stack.Screen>
   </Stack.Navigator>
 }))
 

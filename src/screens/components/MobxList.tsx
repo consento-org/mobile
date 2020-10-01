@@ -34,8 +34,8 @@ const styles = StyleSheet.create({
 const defaultKeyExtractor = (_: any, index: number): string => index.toString()
 const getItem = (_: any, index: number): number => index
 
-export type IMobxList = <TSource, TFinal = TSource> (props: IMobxGridProps<TSource, TFinal> & { ref?: React.Ref<VirtualizedList<any>> }) => JSX.Element | null
-export const MobxList: IMobxList = forwardRef<any, any>(function <TSource, TFinal = TSource> (props: IMobxGridProps<TSource, TFinal>, ref: any): JSX.Element | null {
+export type IMobxList = <TSource, TFinal = TSource> (props: IMobxGridProps<TSource, TFinal> & { ref?: React.Ref<VirtualizedList<any>> }) => JSX.Element
+export const MobxList: IMobxList = forwardRef<any, any>(function <TSource, TFinal = TSource> (props: IMobxGridProps<TSource, TFinal>, ref: any): JSX.Element {
   const { data, style, filter, sort, map, start, limit, itemStyle, renderItem, keyExtractor, centerContent } = props
   const view = createView<TSource, TFinal>(data, { filter, sort, map, start, limit })
   const [getOrCreateElement] = useState(() => {
@@ -64,9 +64,6 @@ export const MobxList: IMobxList = forwardRef<any, any>(function <TSource, TFina
     }
   })
   const numItems = useAutorun(() => view.size)
-  if (numItems === 0) {
-    return null
-  }
   const marginVertical = ((itemStyle.marginTop ?? itemStyle.marginVertical ?? 0) + (itemStyle.marginBottom ?? itemStyle.marginVertical ?? 0))
   const height = itemStyle.height + marginVertical
   return <VirtualizedList

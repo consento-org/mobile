@@ -124,9 +124,6 @@ export const MobxGrid: IMobxGrid = forwardRef<VirtualizedList<any>, IMobxGridPro
   const { columns, getItem, getItemLayout, renderRow } = useGrid(itemStyle, view, renderItem)
   const numItems = useAutorun(() => view.size)
   const itemCount = Math.ceil(numItems / columns)
-  if (numItems === 0) {
-    return null
-  }
   return <VirtualizedList
     ref={ref}
     data={[]}

@@ -97,10 +97,11 @@ export const VaultCard = observer(({ vault }: { vault: VaultModel }) => {
     navigate('vault', { vault: vault.$modelId })
   }
   const styles = getProtoStyles(layers)
+  const hasName = vault.name !== ''
   return <TouchableOpacity style={VAULT_STYLE} onPress={onPress} activeOpacity={0.55} disabled={vault.isLoading}>
     <SketchElement src={layers.background} style={styles.background} />
-    <SketchElement src={layers.title} style={styles.title} value={vault.name} />
-    <SketchElement src={layers.lastAccess} style={styles.lastAccess} value={vault.humanId} />
+    <SketchElement src={layers.title} style={styles.title} value={hasName ? vault.name : vault.humanId} />
+    {hasName ? <SketchElement src={layers.lastAccess} style={styles.lastAccess} value={vault.humanId} /> : undefined}
     <SketchElement src={layers.icon} style={styles.icon} />
     <SketchElement src={layers.status} style={styles.status} />
   </TouchableOpacity>

@@ -26,7 +26,7 @@ export interface IInputFieldProto {
 
 export interface IInputFieldProps {
   autoFocus?: boolean
-  proto?: IInputFieldProto
+  src?: IInputFieldProto
   invalid?: boolean
   value: string | null
   defaultValue?: string | null
@@ -102,12 +102,12 @@ const styles = StyleSheet.create({
   }
 })
 
-export const InputField = ({ value, defaultValue, onEdit, proto, invalid, style, autoFocus }: IInputFieldProps): JSX.Element => {
-  defaultValue = defaultValue ?? proto?.layers.inactive.text
-  const label = proto?.layers.label.text
-  const caption = proto?.layers.caption.text
+export const InputField = ({ value, defaultValue, onEdit, src, invalid, style, autoFocus }: IInputFieldProps): JSX.Element => {
+  defaultValue = defaultValue ?? src?.layers.inactive.text
+  const label = src?.layers.label.text
+  const caption = src?.layers.caption.text
   const ref = useRef<TextInput>(null)
-  const containerStyle = composeAll<ViewStyle>(styles.container, { top: proto?.place.top, left: proto?.place.left }, style)
+  const containerStyle = composeAll<ViewStyle>(styles.container, style)
   const [focused, setFocused] = useState(false)
   const hasValue = value !== null && value !== ''
   const styleActive = focused || hasValue ? null : styles.invisible

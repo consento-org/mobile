@@ -6,12 +6,12 @@ import { ImageAsset } from '../styles/design/ImageAsset'
 import { SketchImage } from '../styles/util/react/SketchImage'
 import { TopNavigation } from './components/TopNavigation'
 import { EmptyView } from './components/EmptyView'
-import { elementLocksEmpty } from '../styles/design/layer/elementLocksEmpty'
 import { VaultCard, VAULT_STYLE } from './components/VaultCard'
 import { Vault } from '../model/Vault'
 import { MobxGrid } from './components/MobxGrid'
 import { useAutorun } from '../util/useAutorun'
 import { comparer } from 'mobx'
+import { elementVaultsEmpty } from '../styles/design/layer/elementVaultsEmpty'
 
 const AddButton = ImageAsset.buttonAddHexagonal
 const styles = StyleSheet.create({
@@ -54,7 +54,7 @@ export const VaultsScreen = (): JSX.Element => {
   return <View style={styles.container}>
     <TopNavigation title='Vaults' />
     <SketchImage src={AddButton} style={styles.add} onPress={handlePress} />
-    <EmptyView empty={elementLocksEmpty}>
+    <EmptyView empty={elementVaultsEmpty} isEmpty={useAutorun(() => vaults.size === 0)}>
       <MobxGrid ref={ref} data={vaults} itemStyle={VAULT_STYLE} renderItem={renderVault} />
     </EmptyView>
   </View>

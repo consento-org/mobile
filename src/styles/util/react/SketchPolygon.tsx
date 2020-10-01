@@ -27,6 +27,10 @@ function getStyle (polygon: IPolygon): ViewStyle {
   return style
 }
 
+const styles = StyleSheet.create({
+  gradient: { width: '100%', height: '100%' }
+})
+
 export const SketchPolygon = forwardRef<View, ISketchPolygonProps>((props, ref): JSX.Element => {
   /* eslint-disable react/prop-types */
   const polygon = props.src
@@ -38,12 +42,12 @@ export const SketchPolygon = forwardRef<View, ISketchPolygonProps>((props, ref):
   if (isSketchError(data)) {
     throw new Error(data.error)
   }
-  return <View ref={ref}><LinearGradient
+  return <View ref={ref} style={style}><LinearGradient
     colors={data.gradient.stops.map(stop => stop.color)}
     locations={data.gradient.stops.map(stop => stop.position)}
     start={[data.gradient.from.x, data.gradient.from.y]}
     end={[data.gradient.to.x, data.gradient.to.y]}
     {...props}
-    style={style}
+    style={styles.gradient}
   /></View>
 })

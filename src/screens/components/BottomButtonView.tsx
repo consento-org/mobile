@@ -39,10 +39,10 @@ function hasBottomButton (bottomButton?: IBottomButtonProto, onPress?: Function)
 export function BottomButtonView ({ src, children, onPress, containerStyle }: IBottomButtonProps): JSX.Element {
   const { layers: { bottomButton }, backgroundColor } = src
   const paddingBottom = hasBottomButton(bottomButton, onPress) ? bottomButton.place.height : 0
-  const srcStyles = {
+  const srcStyles = StyleSheet.create({
     bottomArea: { height: paddingBottom },
     scrollContainer: { paddingBottom }
-  }
+  })
   const styleSheet = composeAll<ViewStyle>(srcStyles.scrollContainer, styles.scrollContainer, containerStyle)
   return <View style={styles.scrollView}>
     {
@@ -57,7 +57,7 @@ export function BottomButtonView ({ src, children, onPress, containerStyle }: IB
         </ScrollView>
     }
     {hasBottomButton(bottomButton, onPress)
-      ? <View style={StyleSheet.compose<ViewStyle>(srcStyles.bottomArea, styles.bottomArea)}>
+      ? <View style={StyleSheet.compose<ViewStyle>(styles.bottomArea, srcStyles.bottomArea)}>
         <SketchPolygon src={bottomButton.layers.bottomArea.layers.shape} style={styles.bottomRect} />
         <ConsentoButton src={bottomButton.layers.button} light onPress={onPress} />
       </View>

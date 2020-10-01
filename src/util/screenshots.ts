@@ -44,8 +44,8 @@ enum Screens {
 export interface IScreenshot {
   use: () => { done: boolean, take: (delay?: number) => void }
   take: (delay?: number) => Promise<void>
-  handle: (delay?: number) => () => void
-  takeSync: (delay?: number) => void
+  handle: (delay?: number) => () => undefined
+  takeSync: (delay?: number) => undefined
 }
 
 export type IScreenshots = Record<Screens, IScreenshot>

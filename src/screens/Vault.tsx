@@ -50,6 +50,7 @@ export const Vault = observer((): JSX.Element => {
   if (vault === null) {
     throw new Error('not in vault context')
   }
+  const back = ['main', 'vaults']
   useEffect(() => {
     if (!vault.isOpen && !vault.isLoading) {
       vault.requestUnlock(config.expire * 1000)
@@ -57,7 +58,7 @@ export const Vault = observer((): JSX.Element => {
   }, [vault.isLoading])
   useEffect(() => {
     if (!vault.isOpen && !vault.isPending && !vault.isLoading) {
-      navigate('vaults')
+      navigate(back)
     }
   }, [vault.isPending, vault.isLoading])
   if (useScreenshotEnabled()) {
@@ -70,21 +71,20 @@ export const Vault = observer((): JSX.Element => {
   const handleDelete = (): void => {
     deleteWarning({
       onPress (): void {
-        user.vaults.delete(vault)
-        navigate('vaults')
+        navigate(back, { delete: vault.$modelId })
       },
       itemName: 'Vault'
     })
   }
   const handleLock = vault.isClosable ? () => {
-    navigate('vaults')
+    navigate(back)
     vault.lock()
       .catch(lockError => console.error(lockError))
   } : undefined
   return <PopupMenu><ContextMenu>
     <VaultContext.Provider value={{ vault }}>
       <View style={{ flexGrow: 1, display: 'flex' }}>
-        <TopNavigation title={vault.name ?? '-vault-name-missing-'} titlePlaceholder={vault.humanId} back='vaults' onEdit={handleNameEdit} onDelete={handleDelete} />
+        <TopNavigation title={vault.name ?? '-vault-name-missing-'} titlePlaceholder={vault.humanId} back={back} onEdit={handleNameEdit} onDelete={handleDelete} />
         <LockButton onPress={handleLock} />
         <Tab.Navigator tabBarOptions={tabBarOptions}>
           <Tab.Screen name='files' component={FileList} options={labelOptions('Files')} />

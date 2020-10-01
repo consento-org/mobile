@@ -7,9 +7,7 @@ import { TextBox } from '../../util/TextBox'
 import { elementFormInputField } from './elementFormInputField'
 import { buttonContainerDisabled } from './buttonContainerDisabled'
 import { buttonContainerEnabled } from './buttonContainerEnabled'
-import { TextStyles } from '../TextStyles'
-import { ImageAsset } from '../ImageAsset'
-import { ImagePlacement } from '../../util/ImagePlacement'
+import { elementCredits } from './elementCredits'
 
 export const elementConfig = {
   name: 'elementConfig',
@@ -21,13 +19,15 @@ export const elementConfig = {
         label: new TextBox('label', 'Save Changes', label.style, label.place)
       }))
     })),
-    host: new LayerPlacement('host', elementFormInputField, elementFormInputField.layers, { y: 18, w: 375, h: 85, b: 867 }, ({ active, label, caption }) => ({
-      active: new TextBox('active', 'https://192.168.11.11', active.style, active.place),
+    host: new LayerPlacement('host', elementFormInputField, elementFormInputField.layers, { y: 18, w: 375, h: 85, b: 867 }, ({ active, inactive, label, caption }) => ({
+      active: new TextBox('active', '//notify-2.consento.org', active.style, active.place),
+      inactive: new TextBox('inactive', '//notify-2.consento.org', inactive.style, inactive.place),
       label: new TextBox('label', 'host', label.style, label.place),
       caption: new TextBox('caption', 'during beta we need to connect to a server.', caption.style, caption.place)
     })),
-    expire: new LayerPlacement('expire', elementFormInputField, elementFormInputField.layers, { y: 119, w: 375, h: 85, b: 766 }, ({ active, label, caption }) => ({
+    expire: new LayerPlacement('expire', elementFormInputField, elementFormInputField.layers, { y: 119, w: 375, h: 85, b: 766 }, ({ active, inactive, label, caption }) => ({
       active: new TextBox('active', '300', active.style, active.place),
+      inactive: new TextBox('inactive', '300', inactive.style, inactive.place),
       label: new TextBox('label', 'expire', label.style, label.place),
       caption: new TextBox('caption', 'seconds it takes for a consento to expire.', caption.style, caption.place)
     })),
@@ -37,8 +37,6 @@ export const elementConfig = {
     reset2: new LayerPlacement('reset2', buttonContainerEnabled, buttonContainerEnabled.layers, { x: 23, y: 234, w: 180, h: 36, r: 172, b: 700 }, ({ label }) => ({
       label: new TextBox('label', 'RESET', label.style, label.place)
     })),
-    funding: new TextBox('funding', 'This project has received funding from the European Union’s Horizon 2020 research and innovation programme within the framework of the LEDGER Project funded under grant agreement No825268.', TextStyles.SubtitleRobotoRegular13GreyCenter, { x: 21, y: 389, w: 322, h: 66, r: 32, b: 515 }),
-    iconEu: new ImagePlacement('iconEu', ImageAsset.iconEu, { x: 277, y: 327, w: 66, h: 44, r: 32, b: 599 }),
-    iconNgiLedger: new ImagePlacement('iconNgiLedger', ImageAsset.iconNgiLedger, { x: 21, y: 323, w: 189, h: 53, r: 165, b: 594 })
+    credits: new LayerPlacement('credits', elementCredits, elementCredits.layers, { x: 21, y: 323, w: 322, h: 168, r: 32, b: 479 })
   }
 }

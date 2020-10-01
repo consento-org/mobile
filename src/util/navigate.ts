@@ -16,7 +16,7 @@ export interface IRoute <TParams = any> {
   params?: IRoute<TParams> | TParams
 }
 
-export type TBackHandler <TArgs> = (string | undefined | ((args: TArgs) => true | false | string | void | undefined | null))
+export type TBackHandler <TArgs> = (string | string[] | undefined | null | ((args: TArgs) => true | false | string | string[] | undefined | null))
 
 export function useBackHandler <TDeps extends DependencyList = []> (back: TBackHandler<TDeps>, { deps, active }: { deps?: TDeps, active?: boolean } = {}): () => boolean {
   const finalDeps = deps ?? ([] as unknown as TDeps)
@@ -24,16 +24,17 @@ export function useBackHandler <TDeps extends DependencyList = []> (back: TBackH
     if (!exists(back)) {
       return false
     }
-    if (typeof back === 'string') {
-      navigate(back)
-    } else {
+    if (typeof back === 'function') {
       const result = back(finalDeps)
-      if (typeof result === 'string') {
-        navigate(result)
-      }
       if (result === true || result === false) {
         return result
       }
+      back = result
+    }
+    if (typeof back === 'string') {
+      navigate(back)
+    } else if (Array.isArray(back)) {
+      navigate(back)
     }
     return true
   }
@@ -45,7 +46,7 @@ export function useBackHandler <TDeps extends DependencyList = []> (back: TBackH
     return () => {
       BackHandler.removeEventListener('hardwareBackPress', handleBack)
     }
-  }, finalDeps)
+  }, [finalDeps, active])
   return handleBack
 }
 
@@ -97,7 +98,7 @@ export interface INavigate <TParams = any> {
  * @see https://reactnavigation.org/docs/navigating-without-navigation-prop
  * @see https://reactnavigation.org/docs/nesting-navigators/#navigating-to-a-screen-in-a-nested-navigator
  */
-export const navigate: INavigate = <TParams = any> (route: string | string[] | IRoute<TParams>, params?: any) => {
+export const navigate: INavigate = <TParams = any> (route: string | string[] | IRoute<TParams>, params?: any): void => {
   if (Array.isArray(route)) {
     route = routeFromArray(route, params)
     return navigate(route.screen, route.params)

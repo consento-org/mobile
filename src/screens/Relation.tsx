@@ -68,12 +68,12 @@ export const Relation = observer((): JSX.Element => {
   const { user } = useContext(ConsentoContext)
   const { leave, save, useStringField, isDirty } = useForm(
     fields => {
-      relation.setName(fields.name ?? '')
+      relation.setName(fields.name)
       relation.setAvatarId(fields.avatarId)
     }
   )
   const name = useStringField('name', relation.name)
-  const avatarId = useStringField('avatarId', relation.avatarId ?? '')
+  const avatarId = useStringField('avatarId', relation.avatarId)
   if (useScreenshotEnabled()) {
     const screenshots = useContext(ScreenshotContext)
     if (!isDirty) {
@@ -87,7 +87,7 @@ export const Relation = observer((): JSX.Element => {
   }
   const hasAvatar = exists(avatarId.value)
   const handleAvatarPress = (): void => avatarId.setValue(randomAvatarId())
-  const handleClearAvatar = (): void => avatarId.setValue(undefined)
+  const handleClearAvatar = (): void => avatarId.setValue(null)
   const handleDelete = (): void => deleteWarning({
     onPress (): void {
       user.relations.delete(relation)
@@ -95,7 +95,6 @@ export const Relation = observer((): JSX.Element => {
     },
     itemName: 'Relation'
   })
-  console.log({ displayName: relation.displayName, humanId: relation.humanId })
   const handleBack = (): void => leave(() => navigate('relations'))
   return <View style={styles.container}>
     <TopNavigation
@@ -107,7 +106,7 @@ export const Relation = observer((): JSX.Element => {
       <View style={styles.container}>
         <InputField
           proto={relationName}
-          value={name.value ?? undefined}
+          value={name.value ?? null}
           autoFocus
           defaultValue={relation.humanId}
           onEdit={name.handleValue}

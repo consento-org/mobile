@@ -3,6 +3,7 @@ import { View, TextInput, ViewStyle, StyleSheet, ImageStyle, TouchableWithoutFee
 import { elementFormInputField } from '../../styles/design/layer/elementFormInputField'
 import { SketchElement } from '../../styles/util/react/SketchElement'
 import { SketchPolygon } from '../../styles/util/react/SketchPolygon'
+import { SketchTextBoxInput } from '../../styles/util/react/SketchTextBox'
 import { composeAll } from '../../util/composeAll'
 
 export interface IInputTexts {
@@ -27,9 +28,9 @@ export interface IInputFieldProps {
   autoFocus?: boolean
   proto?: IInputFieldProto
   invalid?: boolean
-  value: string | undefined
-  defaultValue?: string
-  onEdit: (newValue: string | undefined) => any
+  value: string | null
+  defaultValue?: string | null
+  onEdit: (newValue: string | null) => any
   style?: ViewStyle
 }
 
@@ -108,7 +109,7 @@ export const InputField = ({ value, defaultValue, onEdit, proto, invalid, style,
   const ref = useRef<TextInput>(null)
   const containerStyle = composeAll<ViewStyle>(styles.container, { top: proto?.place.top, left: proto?.place.left }, style)
   const [focused, setFocused] = useState(false)
-  const hasValue = value !== undefined && value !== ''
+  const hasValue = value !== null && value !== ''
   const styleActive = focused || hasValue ? null : styles.invisible
   const styleInactive = !hasValue ? null : styles.invisible
   const [handleRequestFocus] = useState(() => (): void => {
@@ -140,19 +141,19 @@ export const InputField = ({ value, defaultValue, onEdit, proto, invalid, style,
       <SketchElement src={inactive} value={defaultValue} />
     </View>
     <View style={composeAll<ViewStyle>(styles.inputBox, styleActive)}>
-      <SketchElement
+      <SketchTextBoxInput
         src={active}
+        ref={ref}
         onFocus={handleFocus}
         onBlur={handleBlur}
         selectTextOnFocus
-        defaultValue={value}
+        defaultValue={value ?? ''}
         onChangeText={(newName: string): void => { onEdit(newName) }}
-        ref={ref}
       />
     </View>
     <TouchableWithoutFeedback onPress={handleRequestFocus}>
       <View style={composeAll<ViewStyle>(styles.inactiveTouchArea, styleInactive)} />
     </TouchableWithoutFeedback>
-    <SketchElement src={reset} style={composeAll<ImageStyle>(styles.reset, styleActive)} onPress={() => { onEdit(undefined) }} />
+    <SketchElement src={reset} style={composeAll<ImageStyle>(styles.reset, styleActive)} onPress={() => { onEdit(null) }} />
   </View>
 }

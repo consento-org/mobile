@@ -218,6 +218,7 @@ class FormField<T> implements IFormField<T> {
   }
 
   updateState (): boolean {
+    console.log({ value: this.value, initial: this.initial })
     const newState = {
       isDirty: this.value !== this.initial,
       ...this.validate()

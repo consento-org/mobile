@@ -223,20 +223,20 @@ export const Screens = observer(forwardRef((_, ref: Ref<any>): JSX.Element => {
     <Stack.Screen name='main'>{props => {
       /* eslint-disable react/prop-types */
       const navigation: StackNavigationProp<any> = props.navigation
-      if (!navigation.isFocused()) return
+      if (!navigation.isFocused()) return <></>
       return <MainTaps />
     }}</Stack.Screen>
     <Stack.Screen name='config' component={Config} />
     <Stack.Screen name='newRelation'>{props => {
       /* eslint-disable react/prop-types */
       const navigation: StackNavigationProp<any> = props.navigation
-      if (!navigation.isFocused()) return
+      if (!navigation.isFocused()) return <></>
       return <NewRelation />
     }}</Stack.Screen>
     <Stack.Screen name='vault'>{props => {
       /* eslint-disable react/prop-types */
       const navigation: StackNavigationProp<any> = props.navigation
-      if (!navigation.isFocused()) return
+      if (!navigation.isFocused()) return <></>
       const route = props.route
       const vaultKey = (route.params as any)?.vault
       const vault = user.findVault(vaultKey)

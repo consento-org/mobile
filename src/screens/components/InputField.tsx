@@ -113,10 +113,11 @@ export const InputField = ({ value, defaultValue, onEdit, src, invalid, style, a
   const styleActive = focused || hasValue ? null : styles.invisible
   const styleInactive = !hasValue ? null : styles.invisible
   const [handleRequestFocus] = useState(() => (): void => {
-    if (value === undefined) {
+    if (value === null) {
       onEdit('')
     }
-    ref.current?.focus()
+    setFocused(true)
+    setTimeout(() => ref.current?.focus(), 0)
   })
   const handleFocus = (): void => setFocused(true)
   const handleBlur = (): void => setFocused(false)

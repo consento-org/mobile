@@ -84,9 +84,9 @@ function outgoingMachine (
   reset: () => void,
   [onHandshake, { crypto, notifications }]: InitData
 ): IStateMachine<OutgoingState, any> {
-  let formerAcceptLink
+  let formerAcceptLink: string | undefined
   const control = new AbortController()
-  let outgoing: Promise<IConnection>
+  let outgoing: Promise<IConnection> | undefined
   const close = (): void => {
     if (outgoing !== undefined) {
       // eslint-disable-next-line @typescript-eslint/no-floating-promises

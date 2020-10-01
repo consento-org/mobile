@@ -71,7 +71,8 @@ export const Vault = observer((): JSX.Element => {
   const handleDelete = (): void => {
     deleteWarning({
       onPress (): void {
-        navigate(back, { delete: vault.$modelId })
+        navigate(back)
+        user.vaults.delete(vault)
       },
       itemName: 'Vault'
     })

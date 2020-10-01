@@ -10,7 +10,7 @@ import { SketchElement } from '../../styles/util/react/SketchElement'
 import { SketchTextBoxInput, SketchTextBoxView } from '../../styles/util/react/SketchTextBox'
 import { SketchImage } from '../../styles/util/react/SketchImage'
 import { SketchPolygon } from '../../styles/util/react/SketchPolygon'
-import { navigate, TBackHandler as IBackHandler, useBackHandler } from '../../util/navigate'
+import { navigate, IBackHandler, useBackHandler } from '../../util/navigate'
 import { exists } from '../../styles/util/lang'
 import { PropType } from '../../util/PropType'
 

@@ -85,9 +85,9 @@ export const STRING_CONVERT: IStringConvert<string | null> = {
   toString: (string: string | null): string => string === null ? '' : string
 }
 
-export const FLOAT_CONVERT: IStringConvert<number> = {
-  fromString: (string: string): number => parseFloat(string),
-  toString: (value: number): string => value.toString(10)
+export const FLOAT_CONVERT: IStringConvert<number | null> = {
+  fromString: (string: string): number | null => string === '' ? null : parseFloat(string),
+  toString: (value: number | null): string => value === null ? '' : value.toString(10)
 }
 
 function isFnInitator <T> (input: TInitiator<T>): input is TInitiatorFn<T> {

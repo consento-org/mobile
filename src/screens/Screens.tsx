@@ -25,6 +25,7 @@ import { RelationContext } from '../model/RelationContext'
 import { Relation } from './Relation'
 import { Relation as RelationModel } from '../model/Relation'
 import { Config } from './Config'
+import { NewRelation } from './NewRelation'
 /*
 import { createAppContainer, withNavigation, withNavigationFocus } from '@react-navigation/native'
 import { VaultsScreen } from './Vaults'
@@ -223,13 +224,15 @@ export const Screens = observer(forwardRef((_, ref: Ref<any>): JSX.Element => {
       /* eslint-disable react/prop-types */
       const navigation: StackNavigationProp<any> = props.navigation
       if (!navigation.isFocused()) return
-      const { route } = props
-      if ((route.params as any)?.screen === 'vaults') {
-        console.log(route.params)
-      }
       return <MainTaps />
     }}</Stack.Screen>
     <Stack.Screen name='config' component={Config} />
+    <Stack.Screen name='newRelation'>{props => {
+      /* eslint-disable react/prop-types */
+      const navigation: StackNavigationProp<any> = props.navigation
+      if (!navigation.isFocused()) return
+      return <NewRelation />
+    }}</Stack.Screen>
     <Stack.Screen name='vault'>{props => {
       /* eslint-disable react/prop-types */
       const navigation: StackNavigationProp<any> = props.navigation

@@ -16,22 +16,17 @@ export interface IRoute <TParams = any> {
   params?: IRoute<TParams> | TParams
 }
 
-export type TBackHandler <TArgs> = (string | string[] | undefined | null | ((args: TArgs) => true | false | string | string[] | undefined | null))
+export type IBackHandler <TArgs> = string | string[] | undefined | null | ((args: TArgs) => void)
 
-export function useBackHandler <TDeps extends DependencyList = []> (back: TBackHandler<TDeps>, { deps, active }: { deps?: TDeps, active?: boolean } = {}): () => boolean {
+export function useBackHandler <TDeps extends DependencyList = []> (back: IBackHandler<TDeps>, { deps, active }: { deps?: TDeps, active?: boolean } = {}): () => boolean {
   const finalDeps = deps ?? ([] as unknown as TDeps)
   const handleBack = (): boolean => {
     if (!exists(back)) {
       return false
     }
     if (typeof back === 'function') {
-      const result = back(finalDeps)
-      if (result === true || result === false) {
-        return result
-      }
-      back = result
-    }
-    if (typeof back === 'string') {
+      back(finalDeps)
+    } else if (typeof back === 'string') {
       navigate(back)
     } else if (Array.isArray(back)) {
       navigate(back)

@@ -98,16 +98,16 @@ export const Config = observer((): JSX.Element => {
       <InputField
         src={elementConfig.layers.host}
         style={styles.host}
-        value={address.value}
+        value={address.value ?? null}
         invalid={address.isInvalid}
         onEdit={address.handleValue}
       />
       <InputField
         src={elementConfig.layers.expire}
         style={styles.expire}
-        value={expire.valueString}
+        value={expire.valueString ?? null}
         invalid={expire.isInvalid}
-        onEdit={expire.handleValue}
+        onEdit={string => expire.handleString(string ?? undefined)}
       />
       <ConsentoButton src={resetBarrier ? reset1 : reset2} style={styles.reset} onPress={doReset} />
       <Credits style={styles.credits} />

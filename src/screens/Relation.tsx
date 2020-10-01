@@ -95,7 +95,7 @@ export const Relation = observer((): JSX.Element => {
     },
     itemName: 'Relation'
   })
-  const handleBack = (): void => leave(() => navigate('relations'))
+  const handleBack = (): void => { leave(() => navigate('relations')) }
   return <View style={styles.container}>
     <TopNavigation
       title={relation.displayName}

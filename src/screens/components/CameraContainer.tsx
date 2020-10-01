@@ -1,11 +1,12 @@
 import React, { useState, forwardRef, useRef, useLayoutEffect, RefObject } from 'react'
-import { ViewStyle, View, Platform } from 'react-native'
+import { ViewStyle, View, Platform, useWindowDimensions } from 'react-native'
 import { Camera } from 'expo-camera'
 import { BarCodeScanningResult } from 'expo-camera/build/Camera.types'
 import { usePermission, Permissions } from '../../util/usePermission'
 import { ConsentoButton } from './ConsentoButton'
-import { SketchTextBox, SketchTextBoxView } from '../../styles/util/react/SketchTextBox'
+import { SketchTextBoxView } from '../../styles/util/react/SketchTextBox'
 import { elementCamera } from '../../styles/design/layer/elementCamera'
+import { exists } from '../../styles/util/lang'
 
 export interface ISpace {
   width: number
@@ -14,7 +15,7 @@ export interface ISpace {
 
 interface ICameraNativeSize extends ISpace {
   size: string
-  ratio: string
+  ratio: string | null
   space: number
 }
 
@@ -38,7 +39,7 @@ function calculateCameraSize (space: ISpace, cameraSize: ISpace): ViewStyle {
 }
 
 async function getBestSize (camera: Camera, algo: (sizeLists: ICameraNativeSize[]) => ICameraNativeSize): Promise<ICameraNativeSize> {
-  let sizeLists: Array<{ ratio: string, sizes: string[] }>
+  let sizeLists: Array<{ ratio: string | null, sizes: string[] }>
   if (Platform.OS === 'android') {
     const ratios = await camera.getSupportedRatiosAsync()
     sizeLists = await Promise.all(ratios.map(async ratio => await camera
@@ -76,7 +77,8 @@ async function getBestSize (camera: Camera, algo: (sizeLists: ICameraNativeSize[
   return algo(sizeList)
 }
 
-let minCameraSize: Promise<ICameraNativeSize>
+let minCameraSize: Promise<ICameraNativeSize> | undefined
+
 async function getMinCameraSize (camera: Camera, minSpace: number): Promise<ICameraNativeSize> {
   if (minCameraSize === undefined) {
     minCameraSize = getBestSize(camera, (sizeLists: ICameraNativeSize[]): ICameraNativeSize => {
@@ -98,15 +100,16 @@ async function getMinCameraSize (camera: Camera, minSpace: number): Promise<ICam
     })
 }
 
-function updateCamera (camera: RefObject<Camera>, setNativeSize: (size: ICameraNativeSize) => any): void {
-  getMinCameraSize(camera.current, 921600)
+function updateCamera (cameraRef: RefObject<Camera>, setNativeSize: (size: ICameraNativeSize) => any): void {
+  const camera = cameraRef?.current
+  if (!exists(camera)) {
+    return
+  }
+  getMinCameraSize(camera, 921600 /* 1280x720 */)
     .then(setNativeSize)
     .catch(err => {
-      if (camera.current === null) {
-        return
-      }
       console.log(`Notice: trying to update the native size doesn't always work, here is this times error: ${String(err)}`)
-      setTimeout(updateCamera, 100, camera, setNativeSize)
+      setTimeout(updateCamera, 100, cameraRef, setNativeSize)
     }) // Sometimes the camera is not immediately running, retrying again in 100ms is not a bad plan
 }
 
@@ -145,13 +148,25 @@ const permissionStyle: ViewStyle = {
   alignItems: 'center'
 }
 
-export const CameraContainer = forwardRef(({ onCode, children, style, zoom, flashMode, type, onCameraReady }: ICameraContainerProps, ref: RefObject<Camera>): JSX.Element => {
+function assertRefObject (ref: ((instance: Camera | null) => void) | React.MutableRefObject<Camera | null> | null): asserts ref is React.MutableRefObject<Camera | null> | null {
+  if (typeof ref === 'function') {
+    throw new Error('Reference hooks are not supported for camera')
+  }
+}
+
+export const CameraContainer = forwardRef<Camera, ICameraContainerProps>((props, ref): JSX.Element => {
+  /* eslint-disable react/prop-types */
+  const { onCode, style, zoom, flashMode, type, onCameraReady } = props
+  let { children } = props
   const { status, reask } = usePermission(Permissions.CAMERA, error => {
     console.log(`Error while fetching permissions: ${String(error)}`) // TODO: Create a system error log
   })
-  const [nativeSize, setNativeSize] = useState<ICameraNativeSize>(undefined)
-  if (ref === null || ref === undefined) {
-    ref = useRef<Camera>()
+  const [nativeSize, setNativeSize] = useState<ICameraNativeSize | undefined>(undefined)
+  const window = useWindowDimensions()
+  const isHorz = window.width > window.height
+  assertRefObject(ref)
+  if (!exists(ref)) {
+    ref = useRef<Camera>(null)
   }
 
   let cameraStyle: ViewStyle = {
@@ -163,10 +178,10 @@ export const CameraContainer = forwardRef(({ onCode, children, style, zoom, flas
       <SketchTextBoxView
         src={elementCamera.layers.permission}
         style={{
-          marginBottom: elementCamera.layers.retry.place.top - elementCamera.layers.permission.place.bottom
+          marginBottom: elementCamera.layers.retry.place.spaceY(elementCamera.layers.permission.place)
         }}
       />
-      <ConsentoButton proto={elementCamera.layers.retry} style={{ left: null, top: null }} onPress={reask} />
+      <ConsentoButton src={elementCamera.layers.retry} style={{ left: null as unknown as number, top: null as unknown as number }} onPress={reask} />
     </View>
   } else if (nativeSize !== undefined) {
     cameraStyle = {
@@ -178,19 +193,19 @@ export const CameraContainer = forwardRef(({ onCode, children, style, zoom, flas
     }
   }
 
+  const myRef = ref /* Typescript will ignore previous asserts, TODO: write a bug at typescript */
+
   useLayoutEffect(() => {
-    if (ref.current !== undefined) {
-      updateCamera(ref, setNativeSize)
-    }
-  }, [ref, status])
+    updateCamera(myRef, setNativeSize)
+  }, [myRef, status])
 
   return <View style={{ ...containerStyle, ...style }}>
     {
       status === 'granted'
         ? <Camera
-          ref={ref}
+          ref={myRef}
           type={type}
-          ratio={nativeSize?.ratio}
+          ratio={nativeSize?.ratio ?? undefined}
           style={cameraStyle}
           onBarCodeScanned={onCode}
           zoom={zoom}

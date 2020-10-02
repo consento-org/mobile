@@ -164,7 +164,7 @@ export const Locks = observer((): JSX.Element => {
   const { user } = useContext(ConsentoContext)
   const screenshots = useContext(ScreenshotContext)
   const handleAdd = (): void => navigate('newRelation')
-  return <EmptyView empty={elementLocksNoLockee} onAdd={handleAdd} isEmpty={user.relations.size > 0} onEmpty={screenshots.vaultLocksNoRelation.handle(500)}>
+  return <EmptyView empty={elementLocksNoLockee} onAdd={handleAdd} isEmpty={user.relations.size === 0} onEmpty={screenshots.vaultLocksNoRelation.handle(500)}>
     <LockeeList />
   </EmptyView>
 })

@@ -12,6 +12,7 @@ import { elementRelationSelectListCancel } from '../../styles/design/layer/eleme
 import { elementRelationSelectListSelected } from '../../styles/design/layer/elementRelationSelectListSelected'
 import { elementRelationSelectListUnselected } from '../../styles/design/layer/elementRelationSelectListUnselected'
 import { elementRelationSelectListRevoke } from '../../styles/design/layer/elementRelationSelectListRevoke'
+import { SketchTextBox } from '../../styles/util/react/SketchTextBox'
 
 export interface IRelationListEntryPrototype extends ILayer<{
   relationName: ITextBox
@@ -107,14 +108,13 @@ export const RelationListEntry = observer(function <TEntry extends IRelationEntr
       right: iconLabel?.place.right
     }
   }))
-  const hasName = entry.name !== '' && entry.name !== null
   return <TouchableOpacity style={styles.container} onPress={() => onPress(entry)}>
     <View style={styles.sectionA}>
       <Avatar avatarId={entry.avatarId} size={avatarCut.place.width} />
     </View>
     <View style={styles.sectionB}>
-      <SketchElement src={relationName}>{hasName ? entry.name : entry.humanId}</SketchElement>
-      {hasName ? <SketchElement src={relationID} style={styles.relationID}>{entry.humanId}</SketchElement> : undefined}
+      <SketchTextBox src={relationName} value={exists(entry.name) ? entry.name : entry.humanId} />
+      {exists(entry.name) ? <SketchElement src={relationID} style={styles.relationID}>{entry.humanId}</SketchElement> : undefined}
     </View>
     <View style={styles.sectionC}>
       <SketchElement src={icon} style={styles.icon} />

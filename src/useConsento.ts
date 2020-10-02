@@ -1,22 +1,24 @@
 import { useEffect, useState } from 'react'
 import { Consento } from './model/Consento'
-import { autoRegisterRootStore } from './util/autoRegisterRootStore'
 import { when } from 'mobx'
-import { unregisterRootStore } from 'mobx-keystone'
 import { combinedDispose } from './util/combinedDispose'
+import { autoRegisterRootStore } from './util/autoRegisterRootStore'
 
-export const useConsento = (): Consento => {
-  const [consento, setConsento] = useState<Consento>(() => new Consento({}))
+function newConsento (): Consento {
+  return new Consento({})
+}
+
+export const useConsento = (): Consento | undefined => {
+  const [consento, setConsento] = useState<Consento>(newConsento)
   const [ready, setReady] = useState(false)
-  const [error, setError] = useState<Error>(null)
+  const [error, setError] = useState<Error | null>(null)
 
   useEffect(
     () => {
       // Restarting app in development mode if Consento class changes.
       if (!(consento instanceof Consento)) {
-        unregisterRootStore(consento)
         console.log('updating consento')
-        setConsento(new Consento({}))
+        setConsento(newConsento())
       }
     },
     [consento, Consento]

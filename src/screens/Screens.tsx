@@ -26,6 +26,7 @@ import { Relation } from './Relation'
 import { Relation as RelationModel } from '../model/Relation'
 import { Config } from './Config'
 import { NewRelation } from './NewRelation'
+import { ConsentosScreen } from './Consentos'
 /*
 import { createAppContainer, withNavigation, withNavigationFocus } from '@react-navigation/native'
 import { VaultsScreen } from './Vaults'
@@ -72,6 +73,9 @@ const Tabs = createBottomTabNavigator()
 const MainTaps = (): JSX.Element => {
   return <Tabs.Navigator
     initialRouteName='vaults'
+    screenOptions={{
+      unmountOnBlur: true
+    }}
     tabBarOptions={{
       showLabel: true,
       activeBackgroundColor: elementBottomNav.backgroundColor,
@@ -92,7 +96,7 @@ const MainTaps = (): JSX.Element => {
         tabBarLabel: FocusLabel(elementBottomNavVaultActive, elementBottomNavVaultResting)
       }} />
     <Tabs.Screen
-      name='consentos' component={Sample} options={{
+      name='consentos' component={ConsentosScreen} options={{
         tabBarIcon: FocusIcon(ImageAsset.iconConsentoActive, ImageAsset.iconConsentoIdle),
         tabBarLabel: FocusLabel(elementBottomNavConsentosActive, elementBottomNavConsentosResting)
       }} />

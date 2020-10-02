@@ -1,6 +1,6 @@
 import { createContext, useState, useContext } from 'react'
-import { exists } from '@consento/api/util'
 import { captureScreen, releaseCapture } from 'react-native-view-shot'
+import { exists } from '../styles/util/lang'
 
 enum Screens {
   loading = 'loading',
@@ -45,7 +45,7 @@ export interface IScreenshot {
   use: () => { done: boolean, take: (delay?: number) => void }
   take: (delay?: number) => Promise<void>
   handle: (delay?: number) => () => undefined
-  takeSync: (delay?: number) => undefined
+  takeSync: (delay?: number, condition?: boolean) => undefined
 }
 
 export type IScreenshots = Record<Screens, IScreenshot>
@@ -111,7 +111,7 @@ function createSystem (serverUrl?: string): IScreenshotSystem {
     .then(
       ({ files }) => {
         for (const file of files) {
-          if (Screens[file] !== undefined) {
+          if (file in Screens) {
             doneScreenshots.add(file)
           }
         }
@@ -152,15 +152,19 @@ function createSystem (serverUrl?: string): IScreenshotSystem {
 }
 
 function createScreenshot (name: string, system: IScreenshotSystem): IScreenshot {
-  const takeSync = (delay: number = 0): void => {
-    system.take(name, delay)
+  const takeSync = (delay?: number, condition?: boolean): undefined => {
+    if (condition === false) {
+      return undefined
+    }
+    system.take(name, delay ?? 0)
       .catch(screenshotError => console.log({ screenshotError }))
+    return undefined
   }
   return {
     take: async (delay: number = 0): Promise<void> => await system.take(name, delay),
     takeSync,
-    handle: (delay: number = 0): (() => void) => {
-      return () => takeSync(delay)
+    handle: (delay: number = 0): (() => undefined) => {
+      return (): undefined => takeSync(delay)
     },
     use () {
       const [done, setDone] = useState<boolean>(system.isDone(name))
@@ -175,7 +179,7 @@ function createScreenshot (name: string, system: IScreenshotSystem): IScreenshot
   }
 }
 
-export function createScreenshots (serverUrl: string): IScreenshots {
+export function createScreenshots (serverUrl?: string): IScreenshots {
   const system = createSystem(serverUrl)
   return Object.keys(Screens)
     .reduce(
@@ -192,5 +196,5 @@ export function useScreenshotEnabled (): boolean {
   return screenshots !== NO_SCREEN_SHOTS
 }
 
-export const NO_SCREEN_SHOTS = createScreenshots(null)
+export const NO_SCREEN_SHOTS = createScreenshots()
 export const ScreenshotContext = createContext<IScreenshots>(NO_SCREEN_SHOTS)

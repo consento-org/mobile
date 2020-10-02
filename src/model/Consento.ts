@@ -14,10 +14,10 @@ import { vaultStore } from './VaultStore'
 import { IConsentoModel, CONSENTO, ISubscription, ISubscriptionMap } from './Consento.types'
 import { safeReaction } from '../util/safeReaction'
 import { bufferToString } from '@consento/api/util'
-import { autoRegisterRootStore } from '../util/autoRegisterRootStore'
 import { subscribeEvent } from '../util/subscribeEvent'
+import { autoRegisterRootStore } from '../util/autoRegisterRootStore'
 
-export const ConsentoContext = createContext<Consento>(null)
+export const ConsentoContext = createContext<Consento | null>(null)
 
 const DEFAULT_ADDRESS = '//notify-2.consento.org'
 const LEGACY_CONFIG_ITEM_KEY = '@consento/config'
@@ -92,16 +92,17 @@ export class Consento extends Model({
   users: prop<ArraySet<User>>(() => arraySet([createDefaultUser()])),
   legacyConfig: prop<ArraySet<string>>(() => arraySet()),
   transportState: prop(EClientStatus.STARTUP),
-  config: prop<Config>(null),
+  config: prop<Config | null>(null),
   configLoaded: prop(false)
 }) implements IConsentoModel {
-  _api: IAPI
-  _notificationTransport: ExpoTransport
-  _configTask: Promise<void>
+  _api: IAPI | undefined
+  _notificationTransport: ExpoTransport | undefined
+  _configTask: Promise<void> | undefined
 
   onInit (): void {
     this.deleteEverything = this.deleteEverything.bind(this)
     this.updateConfig = this.updateConfig.bind(this)
+
     this._api = setup({
       cryptoCore,
       notificationTransport: control => {
@@ -128,7 +129,7 @@ export class Consento extends Model({
   }
 
   get api (): IAPI {
-    return this._api
+    return this._api as IAPI // set in onInit
   }
 
   @modelAction _setConfig (config: any): void {
@@ -139,7 +140,7 @@ export class Consento extends Model({
 
   updateConfig (config: IConfig): void {
     this._setConfig(config)
-    this._configTask = this._configTask
+    this._configTask = (this._configTask as Promise<void>) // set in onInit
       .then(async (): Promise<void> => await saveConfig(config))
       .then(
         () => console.log('config saved'),
@@ -160,7 +161,7 @@ export class Consento extends Model({
   }
 
   @computed get ready (): boolean {
-    console.log({ state: this.transportState, strategy: this._notificationTransport.error })
+    console.log({ state: this.transportState, strategy: this._notificationTransport?.error })
     switch (this.transportState) {
       case EClientStatus.DESTROYED:
       case EClientStatus.NOADDRESS:
@@ -179,7 +180,7 @@ export class Consento extends Model({
   }
 
   @modelAction _updateTransportState (): void {
-    this.transportState = this._notificationTransport.state
+    this.transportState = (this._notificationTransport as ExpoTransport).state // set in onInit
     console.log({ newState: this.transportState })
     if (this.transportState === EClientStatus.ERROR) {
       console.log('Error State')
@@ -187,9 +188,10 @@ export class Consento extends Model({
   }
 
   onAttachedToRootStore (): () => void {
+    const transport = this._notificationTransport as ExpoTransport // set in onInit
     return combinedDispose(
       autoRegisterRootStore(vaultStore),
-      subscribeEvent(this._notificationTransport, 'change', () => this._updateTransportState(), true),
+      subscribeEvent(transport, 'change', () => this._updateTransportState(), true),
       autorun(
         () => {
           if (!this.configLoaded) return
@@ -198,7 +200,7 @@ export class Consento extends Model({
             address = `https:${address}`
           }
           console.log(`Setting address: ${address}`)
-          this._notificationTransport.address = address
+          transport.address = address
         }
       ),
       safeReaction(
@@ -228,7 +230,7 @@ export class Consento extends Model({
               })
             }
           }
-          const api = this._api
+          const api = this._api as IAPI // set in onInit
           api.notifications.processors.add(processor)
           const receivers = Object.values(subscriptions).map(subscription => new api.crypto.Receiver(subscription.receiver))
           console.log(`Resetting:\n  ${receivers.map(receiver => bufferToString(receiver.id, 'base64')).join('\n  ')}`)

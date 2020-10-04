@@ -1,14 +1,11 @@
 import React, { useContext, useLayoutEffect } from 'react'
-import { View, ViewStyle } from 'react-native'
+import { ScrollView, View, ViewStyle } from 'react-native'
 import { observer } from 'mobx-react'
-import Svg, { Circle, Rect, G } from 'react-native-svg'
 import { EmptyView } from './components/EmptyView'
 import { TopNavigation } from './components/TopNavigation'
 import { IAnyConsento, ConsentoBecomeLockee, ConsentoUnlockVault } from '../model/Consentos'
 import { ConsentoState } from './components/ConsentoState'
-import { screen02Consentos } from '../styles/design/layer/screen02Consentos'
 import { elementConsentosEmpty } from '../styles/design/layer/elementConsentosEmpty'
-import { elementConsentosLockeeIdle } from '../styles/design/layer/elementConsentosLockeeIdle'
 import { elementConsentosAccessIdle } from '../styles/design/layer/elementConsentosAccessIdle'
 import { ConsentoContext } from '../model/Consento'
 import { useHumanSince } from '../util/useHumanSince'
@@ -17,67 +14,10 @@ import { filter } from '../util/filter'
 import { ScreenshotContext, useScreenshotEnabled } from '../util/screenshots'
 import { TRequestState } from '../model/RequestBase'
 import { SketchElement } from '../styles/util/react/SketchElement'
-import { Color } from '../styles/design/Color'
+import { ConsentoBecomeLockeeView } from './components/ConsentoBecomeLockeeView'
+import { screen02Consentos } from '../styles/design/layer/screen02Consentos'
 
 const cardMargin = screen02Consentos.layers.b.place.spaceY(screen02Consentos.layers.a.place)
-
-const viewBox = `0 0 ${elementConsentosLockeeIdle.place.width} ${elementConsentosLockeeIdle.place.height}`
-const lockeeCardStyle: ViewStyle = {
-  position: 'relative',
-  width: elementConsentosLockeeIdle.place.width,
-  height: elementConsentosLockeeIdle.place.height,
-  margin: cardMargin
-}
-
-const BecomeLockee = observer(({ consento }: { consento: ConsentoBecomeLockee }) => {
-  const { card, outline } = elementConsentosLockeeIdle.layers
-  const thickness = card.svg?.strokeWidth ?? 0
-  const borderRadius = card.borderStyle().borderRadius ?? 0
-  return <View style={lockeeCardStyle}>
-    <Svg width={elementConsentosLockeeIdle.place.width} height={elementConsentosLockeeIdle.place.height} viewBox={viewBox}>
-      <G fill={card.svg?.stroke ?? Color.white}>
-        <Rect
-          x={card.place.x}
-          y={card.place.y}
-          width={card.place.width}
-          height={card.place.height}
-          rx={borderRadius}
-          ry={borderRadius}
-        />
-        <Circle
-          x={outline.place.centerX}
-          y={outline.place.centerY}
-          r={outline.place.width / 2}
-        />
-      </G>
-      <G fill={card.fill.color}>
-        <Rect
-          x={card.place.x + thickness}
-          y={card.place.y + thickness}
-          width={card.place.width - thickness * 2}
-          height={card.place.height - thickness * 2}
-          rx={borderRadius - thickness}
-          ry={borderRadius - thickness}
-        />
-        <Circle
-          x={outline.place.centerX}
-          y={outline.place.centerY}
-          r={outline.place.width / 2 - thickness}
-        />
-      </G>
-    </Svg>
-    <SketchElement src={elementConsentosLockeeIdle.layers.vaultIcon} />
-    <SketchElement src={elementConsentosLockeeIdle.layers.lastAccess} value={useHumanSince(consento.creationTime)} />
-    <SketchElement src={elementConsentosLockeeIdle.layers.relationName} value={consento.relationName !== '' ? consento.relationName : undefined} />
-    <SketchElement src={elementConsentosLockeeIdle.layers.relationID} value={consento.relationHumanId} />
-    <View style={{ position: 'absolute', left: elementConsentosLockeeIdle.layers.avatar.place.left, top: elementConsentosLockeeIdle.layers.avatar.place.top }}>
-      <Avatar size={elementConsentosLockeeIdle.layers.avatar.place.width} avatarId={consento.relationAvatarId} />
-    </View>
-    <SketchElement src={elementConsentosLockeeIdle.layers.question} />
-    <SketchElement src={elementConsentosLockeeIdle.layers.vaultName} value={consento.vaultName} />
-    <ConsentoState state={consento.state} onAccept={consento.handleAccept} onDelete={consento.handleHide} style={elementConsentosLockeeIdle.layers.state.place} />
-  </View>
-})
 
 const UnlockVault = observer(({ consento }: { consento: ConsentoUnlockVault }) => {
   const { requestBase, state } = elementConsentosAccessIdle.layers
@@ -110,7 +50,7 @@ const Consento = ({ consento }: { consento: IAnyConsento }): JSX.Element => {
     return <UnlockVault consento={consento} />
   }
   if (consento instanceof ConsentoBecomeLockee) {
-    return <BecomeLockee consento={consento} />
+    return <ConsentoBecomeLockeeView consento={consento} />
   }
   console.log('[Warning] Unknown Consento:')
   console.log({ consento })
@@ -127,7 +67,11 @@ const listStyle: ViewStyle = {
 }
 
 export const ConsentosScreen = observer((): JSX.Element => {
-  const { user } = useContext(ConsentoContext)
+  const consento = useContext(ConsentoContext)
+  if (consento === null) {
+    throw new Error('not in consento context')
+  }
+  const { user } = consento
   const screenshots = useContext(ScreenshotContext)
   const isScreenshotEnabled = useScreenshotEnabled()
   const { consentos } = user
@@ -174,11 +118,11 @@ export const ConsentosScreen = observer((): JSX.Element => {
   return <View style={{ flex: 1 }}>
     <TopNavigation title='Consentos' />
     <EmptyView empty={elementConsentosEmpty} isEmpty={visibleConsentos.length === 0}>
-      <View style={listStyle}>
+      <ScrollView contentContainerStyle={listStyle}>
         {
           visibleConsentos.map(consento => <Consento consento={consento} key={consento.$modelId} />)
         }
-      </View>
+      </ScrollView>
     </EmptyView>
   </View>
 })

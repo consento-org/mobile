@@ -241,11 +241,12 @@ export class User extends Model({
   }
 
   @computed get subscriptions (): ISubscriptionMap {
-    return {
+    const userSubscriptions = {
       ...this.relationSubscriptions,
       ...this.vaultSubscriptions,
       ...this.consentoSubscriptions
     }
+    return userSubscriptions
   }
 
   @modelAction _markLoaded (): void {

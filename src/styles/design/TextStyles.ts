@@ -117,7 +117,7 @@ export const H5RobotoRegular24BlackLeft: TextStyle = {
   color: Color.black,
   fontFamily: Font.RobotoRegular,
   fontSize: 24,
-  lineHeight: 18,
+  lineHeight: 28,
   textAlign: 'left',
   textTransform: 'none',
   textAlignVertical: 'center'
@@ -127,7 +127,7 @@ export const H5RobotoRegular24GreenCenter: TextStyle = {
   color: Color.green,
   fontFamily: Font.RobotoMedium,
   fontSize: 24,
-  lineHeight: 18,
+  lineHeight: 28,
   textAlign: 'center',
   textTransform: 'uppercase',
   textAlignVertical: 'center'
@@ -137,7 +137,7 @@ export const H5RobotoRegular24GreyCenter: TextStyle = {
   color: Color.darkGrey,
   fontFamily: Font.RobotoMedium,
   fontSize: 24,
-  lineHeight: 18,
+  lineHeight: 28,
   textAlign: 'center',
   textTransform: 'uppercase',
   textAlignVertical: 'center'

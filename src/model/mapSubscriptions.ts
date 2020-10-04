@@ -11,7 +11,7 @@ export function mapSubscriptions<T> (
   for (const item of items) {
     const receiver = getReceiver(item)
     if (receiver !== null && receiver !== undefined) {
-      subscriptions[receiver.id] = {
+      subscriptions[receiver.receiveKey] = {
         receiver,
         action: (notification: ISuccessNotification, api: IAPI) => action(item, notification, api)
       }

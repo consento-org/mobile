@@ -98,14 +98,14 @@ export class VaultOpenRequest extends ExtendedModel(RequestBase, {
 
 export type VaultAccessEntry = typeof VaultOpenRequest | VaultClose | VaultOpen
 
-function findParentVault (item: BaseModel<any, any>): Vault {
+function findParentVault (item: BaseModel<any, any>): Vault | undefined {
   return findParent(
     item,
     (parent: BaseModel<any, any>): parent is Vault => parent.$modelType === Vault.$modelType
   )
 }
 
-function findVaultLockee (item: BaseModel<any, any>, lockeeId: string): VaultLockee {
+function findVaultLockee (item: BaseModel<any, any>, lockeeId: string): VaultLockee | undefined {
   const vault = findParentVault(item)
   return find(vault?.data.lockees, (lockee): lockee is VaultLockee => lockee.$modelId === lockeeId)
 }
@@ -400,15 +400,19 @@ export class Vault extends Model({
     })().catch(error => console.log({ error }))
   }
 
-  findFile (modelId: string): File {
+  findFile (modelId: string): File | undefined {
     return this.data?.findFile(modelId)
   }
 
   newFilename (): string {
-    return this.data?.newFilename()
+    const data = this.data
+    if (data === undefined) {
+      throw new Error('locked')
+    }
+    return data.newFilename()
   }
 
-  @computed get data (): VaultData {
+  @computed get data (): VaultData | undefined {
     return vaultStore.vaults.get(this.dataKeyHex)
   }
 
@@ -465,7 +469,7 @@ export class Vault extends Model({
     return mergeLog(
       this.operationLog,
       this.accessLogAsLog,
-      this.data.log
+      this.data?.log ?? []
     ).reverse()
   }
 
@@ -521,9 +525,10 @@ export class Vault extends Model({
       }
     }
     if (!this.isOpen) {
-      return // Nothing to see/nothing to do.
+      return true// Nothing to see/nothing to do.
     }
     this._addAccessEntry(new VaultClose({}))
+    console.log({ deleting: this.dataKeyHex })
     return await expoVaultSecrets.delete(this.dataKeyHex)
   }
 

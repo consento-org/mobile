@@ -2,7 +2,7 @@ import { computed, autorun } from 'mobx'
 import { Model, model, tProp, types, prop, arraySet, ArraySet, modelAction } from 'mobx-keystone'
 import { createContext } from 'react'
 import { AsyncStorage } from 'react-native'
-import { setup, IAPI, INotifications, IConsentoCrypto, INotification, EErrorCode } from '@consento/api'
+import { setup, IAPI, INotifications, IConsentoCrypto, INotification, EErrorCode, IReceiver } from '@consento/api'
 import { ExpoTransport, EClientStatus } from '@consento/notification-server'
 import isURL from 'is-url-superb'
 import { User, createDefaultUser } from './User'
@@ -13,9 +13,9 @@ import { combinedDispose } from '../util/combinedDispose'
 import { vaultStore } from './VaultStore'
 import { IConsentoModel, CONSENTO, ISubscription, ISubscriptionMap } from './Consento.types'
 import { safeReaction } from '../util/safeReaction'
-import { bufferToString } from '@consento/api/util'
 import { subscribeEvent } from '../util/subscribeEvent'
 import { autoRegisterRootStore } from '../util/autoRegisterRootStore'
+import { map } from '../util/map'
 
 export const ConsentoContext = createContext<Consento | null>(null)
 
@@ -61,7 +61,23 @@ function assertConfig (config: any): asserts config is IConfig {
   }
 }
 
-function diffSubscriptions (stored: ISubscriptionMap, current: ISubscriptionMap): { newSubscriptions: ISubscription[], goneSubscriptions: ISubscription[] } {
+interface IOperationSubscription {
+  receiver: IReceiver
+  subscription: ISubscription
+}
+type IOperationSubscriptions = Record<string, IOperationSubscription>
+
+function fromUserSubscriptions (api: IAPI, subscriptions: ISubscriptionMap): IOperationSubscriptions {
+  // TODO: This is a bad idea, this needs to be optimizied, the amount of operations done here grows exponentially
+  const result: IOperationSubscriptions = {}
+  for (const subscription of Object.values(subscriptions)) {
+    const receiver = new api.crypto.Receiver(subscription.receiver)
+    result[receiver.idBase64] = { receiver, subscription }
+  }
+  return result
+}
+
+function diffSubscriptions (stored: IOperationSubscriptions, current: IOperationSubscriptions): { newSubscriptions: IOperationSubscription[], goneSubscriptions: IOperationSubscription[] } {
   const newSubscriptions = []
   const goneReceiveKeys = new Set(Object.keys(stored))
   for (const receiveKey in current) {
@@ -75,7 +91,7 @@ function diffSubscriptions (stored: ISubscriptionMap, current: ISubscriptionMap)
     // Replace the internal handler with the current subscription, not need to inform the subscription system
     stored[receiveKey] = subscription
   }
-  const goneSubscriptions = Array.from(goneReceiveKeys).map(receiveKey => {
+  const goneSubscriptions = map(goneReceiveKeys.values(), receiveKey => {
     const subscription = stored[receiveKey]
     // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
     delete stored[receiveKey]
@@ -207,9 +223,8 @@ export class Consento extends Model({
         () => ({ ready: this.ready, user: this.user }),
         ({ ready, user }) => {
           if (!ready) return
-          const subscriptions = {
-            ...user.subscriptions
-          }
+          const api = this._api as IAPI // set in onInit
+          const subscriptions: IOperationSubscriptions = fromUserSubscriptions(api, user.subscriptions)
           const processor = (message: INotification, encryptedMessage?: any): void => {
             if (message.type === 'success') {
               const subscription = subscriptions[message.channelIdBase64]
@@ -218,22 +233,21 @@ export class Consento extends Model({
                 return
               }
               console.log(`Received notification: ${message.channelIdBase64}`)
-              subscription.action(message, this.api)
+              subscription.subscription.action(message, this.api)
             } else {
               if (message.code === EErrorCode.transportError) {
                 console.error(message.error)
               }
               console.log({
                 state: this.transportState,
-                address: this._notificationTransport.address,
+                address: transport.address,
                 errorNotification: message
               })
             }
           }
-          const api = this._api as IAPI // set in onInit
           api.notifications.processors.add(processor)
           const receivers = Object.values(subscriptions).map(subscription => new api.crypto.Receiver(subscription.receiver))
-          console.log(`Resetting:\n  ${receivers.map(receiver => bufferToString(receiver.id, 'base64')).join('\n  ')}`)
+          console.log(`Resetting:\n  ${receivers.map(receiver => receiver.idBase64).join('\n  ')}`)
           api.notifications
             .reset(receivers)
             .then(
@@ -248,28 +262,28 @@ export class Consento extends Model({
               api.notifications.processors.delete(processor)
             },
             autorun(() => {
-              const { newSubscriptions, goneSubscriptions } = diffSubscriptions(subscriptions, user.subscriptions)
+              const { newSubscriptions, goneSubscriptions } = diffSubscriptions(subscriptions, fromUserSubscriptions(api, user.subscriptions))
               if (newSubscriptions.length > 0) {
-                const receivers = newSubscriptions.map(subscription => new api.crypto.Receiver(subscription.receiver))
-                console.log(`Subscribing:\n  ${receivers.map(receiver => bufferToString(receiver.id, 'base64')).join('\n  ')}`)
+                const receivers = newSubscriptions.map(({ receiver }) => receiver)
+                console.log(`Subscribing:\n  ${receivers.map(receiver => receiver.idBase64).join('\n  ')}`)
                 this.api.notifications
                   .subscribe(receivers)
                   .catch(subscribeError => {
-                    for (const subscription of newSubscriptions) {
+                    for (const receiver of receivers) {
                       // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-                      delete subscriptions[subscription.receiver.receiveKey]
+                      delete subscriptions[receiver.idBase64]
                     }
                     console.log({ subscribeError })
                   })
               }
               if (goneSubscriptions.length > 0) {
-                const receivers = goneSubscriptions.map(subscription => new api.crypto.Receiver(subscription.receiver))
-                console.log(`Unsubscribing:\n  ${receivers.map(receiver => bufferToString(receiver.id, 'base64')).join('\n  ')}`)
+                const receivers = goneSubscriptions.map(({ receiver }) => receiver)
+                console.log(`Unsubscribing:\n  ${receivers.map(receiver => receiver.idBase64).join('\n  ')}`)
                 this.api.notifications
                   .unsubscribe(receivers)
                   .catch(unsubscribeError => {
-                    for (const subscription of goneSubscriptions) {
-                      subscriptions[subscription.receiver.receiveKey] = subscription
+                    for (const op of goneSubscriptions) {
+                      subscriptions[op.receiver.idBase64] = op
                     }
                     console.log({ unsubscribeError })
                   })

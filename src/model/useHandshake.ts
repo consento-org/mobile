@@ -7,7 +7,7 @@ import { ConsentoContext, Consento } from './Consento'
 function isAcceptMessage (body: IEncodable): body is IHandshakeAcceptMessage {
   if (typeof body === 'object' && !(body instanceof Uint8Array)) {
     // eslint-disable-next-line @typescript-eslint/dot-notation
-    return typeof body['token'] === 'string' && typeof body['secret'] === 'string'
+    return typeof (body as any)['token'] === 'string' && typeof (body as any)['secret'] === 'string'
   }
   return false
 }
@@ -148,7 +148,10 @@ export function useHandshake (onHandshake: (connection: IConnection) => any): {
   connect: (initLink: string) => void
 } {
   const api = useContext(ConsentoContext)
-  const stateOps = [onHandshake, api]
+  if (api === null) {
+    throw new Error('not in a consento context')
+  }
+  const stateOps: [typeof onHandshake, typeof api] = [onHandshake, api]
   const [incoming] = useStateMachine(incomingMachine, stateOps)
   const [outgoing, outgoingManager] = useStateMachine(outgoingMachine, stateOps)
   return {

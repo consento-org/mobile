@@ -1,46 +1,48 @@
 import { useState, useEffect } from 'react'
 
-export type TSetStateOps<StateEnum, Ops> = (state: StateEnum, stateOps?: Ops) => boolean
+export type TSetStateOptions<StateEnum, Ops> = (state: StateEnum, stateOptions?: Ops) => boolean
 export interface IStateMachine <StateEnum, Ops = any> {
   initialState: StateEnum
-  setState: TSetStateOps<StateEnum, Ops>
-  close(): void
+  setState: TSetStateOptions<StateEnum, Ops>
+  close: () => void
 }
 export interface IStateManager <StateEnum, Ops = any> {
-  setState: TSetStateOps<StateEnum, Ops>
-  close(): void
-  reset(): void
+  setState: TSetStateOptions<StateEnum, Ops>
+  close: () => void
+  reset: () => void
 }
-export type TMachineFactory <StateEnum, Ops, Init> = (updateState: (state: StateEnum) => void, reset: () => void, init: Init) => IStateMachine<StateEnum, Ops>
+export type TMachineFactory <StateEnum, Options, Init> = (updateState: (state: StateEnum) => void, reset: () => void, init: Init) => IStateMachine<StateEnum, Options>
 
-export interface IState <StateEnum, Ops> {
+export interface IState <StateEnum, Options> {
   state: StateEnum
-  ops?: Ops
+  options?: Options
 }
 
-function createStateManager <StateEnum, Ops, Init> (create: TMachineFactory<StateEnum, Ops, Init>, init: Init, setInternal: (state: IState<StateEnum, Ops>) => void): IStateManager<StateEnum, Ops> {
-  let machine: IStateMachine<StateEnum, Ops>
+function createStateManager <StateEnum, Options, Init> (create: TMachineFactory<StateEnum, Options, Init>, init: Init, setInternal: (state: IState<StateEnum, Options>) => void): IStateManager<StateEnum, Options> {
+  let machine: IStateMachine<StateEnum, Options> | undefined
   const reset = (): void => {
     if (machine !== undefined) {
       machine.close()
     }
-    machine = create((state: StateEnum, ops?: Ops): void => {
-      setInternal({ state, ops })
+    machine = create((state: StateEnum, options?: Options): void => {
+      setInternal({ state, options })
     }, reset, init)
     setInternal({ state: machine.initialState })
   }
   reset()
   return {
     close: () => {
-      machine.close()
+      if (machine !== undefined) {
+        machine.close()
+      }
       machine = undefined
     },
-    setState: (state: StateEnum, ops?: Ops): boolean => {
+    setState: (state: StateEnum, options?: Options): boolean => {
       if (machine === undefined) {
         return false
       }
-      if (machine.setState(state, ops)) {
-        setInternal({ state, ops })
+      if (machine.setState(state, options)) {
+        setInternal({ state, options })
         return true
       }
       return false
@@ -49,13 +51,13 @@ function createStateManager <StateEnum, Ops, Init> (create: TMachineFactory<Stat
   }
 }
 
-export function useStateMachine <StateEnum extends string, Ops, Init extends any[]> (
-  createStateMachine: TMachineFactory<StateEnum, Ops, Init>,
-  init: Init = [] as Init
-): [ IState<StateEnum, Ops>, IStateManager<StateEnum, Ops> ] {
-  const [state, setInternal] = useState<IState<StateEnum, Ops>>()
-  const [manager] = useState<IStateManager<StateEnum, Ops>>(() =>
-    createStateManager<StateEnum, Ops, Init>(createStateMachine, init, setInternal)
+export function useStateMachine <StateEnum extends string, Options, Init extends any[] = any[]> (
+  createStateMachine: TMachineFactory<StateEnum, Options, Init>,
+  init?: Init
+): [ IState<StateEnum, Options>, IStateManager<StateEnum, Options> ] {
+  const [state, setInternal] = useState<IState<StateEnum, Options>>()
+  const [manager] = useState<IStateManager<StateEnum, Options>>(() =>
+    createStateManager<StateEnum, Options, Init>(createStateMachine, init ?? ([] as unknown as Init), setInternal)
   )
   useEffect(() => {
     return () => manager.close()

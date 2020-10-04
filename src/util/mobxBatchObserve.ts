@@ -20,14 +20,22 @@ function errorToConsole (error: Error): void {
 export function mobxBatchObserveMapAsync <K, V> (
   map: ObservableMap<K, V>,
   handleChanges: (batch: IMapDidChangeBatch<K, V>, signal: AbortSignal) => Promise<void>,
-  onError?: (error: Error) => void,
-  delay?: number | {
-    limit: number
-    time: number
-  }
+  opts: {
+    onError?: (error: Error) => void
+    delay?: number | {
+      limit: number
+      time: number
+    }
+    firstRun?: boolean
+  } = {}
 ): () => Promise<void> {
-  const { observer, close } = mobxBatchObserveAsync(handleChanges, onError, delay)
+  const { observer, close, signal } = mobxBatchObserveAsync(handleChanges, opts.onError, opts.delay)
   const unlisten = map.observe(observer)
+  if (opts.firstRun === true && map.size > 0) {
+    const changes = { add: new Map<K, V>(map) }
+    handleChanges(changes, signal)
+      .catch(opts.onError ?? errorToConsole)
+  }
   return async () => {
     unlisten()
     await close()
@@ -43,6 +51,7 @@ export function mobxBatchObserveAsync <K, V> (
   }
 ): {
     observer: (change: IMapDidChange<K, V>) => void
+    signal: AbortSignal
     close: () => Promise<void>
   } {
   const handleError = onError ?? errorToConsole
@@ -102,6 +111,7 @@ export function mobxBatchObserveAsync <K, V> (
   })
   return {
     observer,
+    signal: controller.signal,
     close: async () => {
       if (closed) {
         throw new Error('Already closed!')

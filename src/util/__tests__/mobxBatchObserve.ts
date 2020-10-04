@@ -182,7 +182,7 @@ describe('advanced async', () => {
     const batches: IBatches = []
     const dispose = mobxBatchObserveMapAsync(map, async (batch): Promise<void> => {
       batches.push(batch)
-    }, undefined, 10)
+    }, { delay: 10 })
     map.set('a', 1)
     map.set('b', 2)
     await time(20)
@@ -200,7 +200,7 @@ describe('advanced async', () => {
     const batches: IBatches = []
     const dispose = mobxBatchObserveMapAsync(map, async (batch): Promise<void> => {
       batches.push(batch)
-    }, undefined, { time: 10, limit: 2 })
+    }, { delay: { time: 10, limit: 2 } })
     map.set('a', 1)
     map.set('b', 2) // this will trigger the batch as two operations are running now
     map.set('c', 3) // this will be part of the next batch
@@ -221,7 +221,7 @@ describe('advanced async', () => {
     const dispose = mobxBatchObserveMapAsync(map, async (batch) => {
       batches.push(batch)
       await time(11)
-    }, undefined, 8)
+    }, { delay: 8 })
     map.set('a', 1)
     await time(15)
     /**
@@ -255,20 +255,20 @@ describe('advanced async', () => {
     await dispose()
     const optionA = [
       { add: toMap({ a: 1 }) },
-      { add: toMap({ b: 2 }) },
-      { add: toMap({ c: 3, d: 4 }) }
+      { add: toMap({ b: 2, c: 3 }) },
+      { add: toMap({ d: 4 }) }
     ]
     const optionB = [
       { add: toMap({ a: 1 }) },
-      { add: toMap({ b: 2, c: 3 }) },
-      { add: toMap({ d: 4 }) }
+      { add: toMap({ b: 2 }) },
+      { add: toMap({ c: 3, d: 4 }) }
     ]
     const optionC = [
       { add: toMap({ a: 1 }) },
       { add: toMap({ b: 2, c: 3, d: 4 }) }
     ]
-    expect(batches).not.toEqual(optionA)
-    expect(batches).toEqual(optionB)
+    expect(batches).toEqual(optionA)
+    expect(batches).not.toEqual(optionB)
     expect(batches).not.toEqual(optionC)
   })
 })

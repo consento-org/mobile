@@ -12,6 +12,7 @@ import { MobxGrid } from './components/MobxGrid'
 import { useAutorun } from '../util/useAutorun'
 import { comparer } from 'mobx'
 import { elementVaultsEmpty } from '../styles/design/layer/elementVaultsEmpty'
+import { assertExists } from '../util/assertExists'
 
 const AddButton = ImageAsset.buttonAddHexagonal
 const styles = StyleSheet.create({
@@ -24,7 +25,9 @@ function renderVault (vault: Vault): JSX.Element {
 }
 
 export const VaultsScreen = (): JSX.Element => {
-  const { user: { vaults } } = useContext(ConsentoContext)
+  const consento = useContext(ConsentoContext)
+  assertExists(consento)
+  const { user: { vaults } } = consento
   if (useScreenshotEnabled()) {
     const screenshots = useContext(ScreenshotContext)
     const { hasPending, hasLocked, isEmpty } = useAutorun(() => ({

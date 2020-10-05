@@ -4,50 +4,18 @@ import { observer } from 'mobx-react'
 import { EmptyView } from './components/EmptyView'
 import { TopNavigation } from './components/TopNavigation'
 import { IAnyConsento, ConsentoBecomeLockee, ConsentoUnlockVault } from '../model/Consentos'
-import { ConsentoState } from './components/ConsentoState'
 import { elementConsentosEmpty } from '../styles/design/layer/elementConsentosEmpty'
-import { elementConsentosAccessIdle } from '../styles/design/layer/elementConsentosAccessIdle'
 import { ConsentoContext } from '../model/Consento'
-import { useHumanSince } from '../util/useHumanSince'
-import { Avatar } from './components/Avatar'
 import { filter } from '../util/filter'
 import { ScreenshotContext, useScreenshotEnabled } from '../util/screenshots'
 import { TRequestState } from '../model/RequestBase'
-import { SketchElement } from '../styles/util/react/SketchElement'
 import { ConsentoBecomeLockeeView } from './components/ConsentoBecomeLockeeView'
-import { screen02Consentos } from '../styles/design/layer/screen02Consentos'
-
-const cardMargin = screen02Consentos.layers.b.place.spaceY(screen02Consentos.layers.a.place)
-
-const UnlockVault = observer(({ consento }: { consento: ConsentoUnlockVault }) => {
-  const { requestBase, state } = elementConsentosAccessIdle.layers
-  const { lastAccess, relationName, relationID, actionRequested, avatar, vaultIcon, vaultName } = requestBase.layers
-  const accessCardStyle: ViewStyle = {
-    position: 'relative',
-    width: requestBase.place.width,
-    height: requestBase.place.height,
-    backgroundColor: requestBase.layers.background.fill.color,
-    margin: cardMargin,
-    ...requestBase.layers.background.borderStyle()
-  }
-  return <View style={accessCardStyle}>
-    <SketchElement src={lastAccess} style={{ position: 'absolute', left: lastAccess.place.left, top: lastAccess.place.top }} value={useHumanSince(consento.time)} />
-    <SketchElement src={relationName} style={{ position: 'absolute', left: relationName.place.left, top: relationName.place.top }} value={consento.relationName !== '' ? consento.relationName : undefined} />
-    <SketchElement src={relationID} style={{ position: 'absolute', left: relationID.place.left, top: relationID.place.top }} value={consento.relationHumanId} />
-    <SketchElement src={actionRequested} style={{ position: 'absolute', left: actionRequested.place.left, top: actionRequested.place.top }} />
-    <View style={{ position: 'absolute', left: avatar.place.left, top: avatar.place.top }}>
-      <Avatar size={avatar.place.width} avatarId={consento.relationAvatarId} />
-    </View>
-    <SketchElement src={vaultIcon} style={{ position: 'absolute', left: vaultIcon.place.left, top: vaultIcon.place.top }} />
-    <SketchElement src={vaultName} style={{ position: 'absolute', left: vaultIcon.place.left, top: vaultIcon.place.top }} />
-    <SketchElement src={vaultName} value={consento.vaultName} />
-    <ConsentoState state={consento.state} onAccept={consento.handleAccept} onDelete={consento.handleDelete} style={{ position: 'absolute', left: state.place.left, top: state.place.top }} expiration={consento.expiration} />
-  </View>
-})
+import { ConsentoUnlockVaultView } from './components/ConsentoUnlockVaultView'
+import { assertExists } from '../util/assertExists'
 
 const Consento = ({ consento }: { consento: IAnyConsento }): JSX.Element => {
   if (consento instanceof ConsentoUnlockVault) {
-    return <UnlockVault consento={consento} />
+    return <ConsentoUnlockVaultView consento={consento} />
   }
   if (consento instanceof ConsentoBecomeLockee) {
     return <ConsentoBecomeLockeeView consento={consento} />
@@ -68,9 +36,7 @@ const listStyle: ViewStyle = {
 
 export const ConsentosScreen = observer((): JSX.Element => {
   const consento = useContext(ConsentoContext)
-  if (consento === null) {
-    throw new Error('not in consento context')
-  }
+  assertExists(consento)
   const { user } = consento
   const screenshots = useContext(ScreenshotContext)
   const isScreenshotEnabled = useScreenshotEnabled()

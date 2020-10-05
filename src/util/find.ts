@@ -1,4 +1,4 @@
-function _find <In, Out extends In> (iterable: Iterable<In> | null | undefined, match: (input: In) => input is Out): Out | undefined {
+export function find <In, Out extends In = In> (iterable: Iterable<In> | null | undefined, match: (input: In) => input is Out): Out | undefined {
   if (iterable === null || iterable === undefined) {
     return
   }
@@ -14,9 +14,10 @@ function _find <In, Out extends In> (iterable: Iterable<In> | null | undefined, 
   }
 }
 
-export interface IFind {
-  <In, Out extends In> (iterable: Iterable<In> | null | undefined, match: (input: In) => input is Out): Out | undefined
-  <In>(iterable: Iterable<In> | null | undefined, match: (input: In) => boolean): In | undefined
+export function assertFind <In, Out extends In = In> (iterable: Iterable<In> | null | undefined, match: (input: In) => input is Out, errorIfMissing: string): Out {
+  const result = find(iterable, match)
+  if (result === undefined) {
+    throw new Error(`[Not found]: ${errorIfMissing}`)
+  }
+  return result
 }
-
-export const find: IFind = _find

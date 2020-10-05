@@ -93,9 +93,7 @@ function getProtoStyles (layers: PropType<IVaultPrototype, 'layers'>): IStyles {
 
 export const VaultCard = observer(({ vault }: { vault: VaultModel }) => {
   const { layers } = getPrototype(vault.state)
-  const onPress = (): void => {
-    navigate('vault', { vault: vault.$modelId })
-  }
+  const onPress = (): void => navigate('vault', { vault: vault.$modelId })
   const styles = getProtoStyles(layers)
   const hasName = vault.name !== ''
   return <TouchableOpacity style={VAULT_STYLE} onPress={onPress} activeOpacity={0.55} disabled={vault.isLoading}>

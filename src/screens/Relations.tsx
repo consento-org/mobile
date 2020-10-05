@@ -15,6 +15,7 @@ import { ImageAsset } from '../styles/design/ImageAsset'
 import { SketchElement } from '../styles/util/react/SketchElement'
 import { Color } from '../styles/design/Color'
 import { Relation } from '../model/Relation'
+import { assertExists } from '../util/assertExists'
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
@@ -30,7 +31,9 @@ const renderRelation = (relation: Relation): JSX.Element =>
   <RelationListEntry type='item' key={relation.relationId} entry={relation} onPress={handlePress} />
 
 export const RelationsScreen = observer(() => {
-  const { user } = useContext(ConsentoContext)
+  const consento = useContext(ConsentoContext)
+  assertExists(consento)
+  const { user } = consento
   const relations = user.relations
   if (useScreenshotEnabled()) {
     const screenshots = useContext(ScreenshotContext)

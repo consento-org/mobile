@@ -17,6 +17,8 @@ import { ConsentoContext } from '../model/Consento'
 import { ScreenshotContext, useScreenshotEnabled } from '../util/screenshots'
 import { deleteWarning } from './components/deleteWarning'
 import { navigate } from '../util/navigate'
+import { assertExists } from '../util/assertExists'
+import { Waiting } from './components/Waiting'
 
 const Tab = createMaterialTopTabNavigator()
 
@@ -45,7 +47,9 @@ const tabBarOptions = {
 }
 
 export const Vault = observer((): JSX.Element => {
-  const { user, config } = useContext(ConsentoContext)
+  const consento = useContext(ConsentoContext)
+  assertExists(consento)
+  const { user, config } = consento
   const { vault } = useContext(VaultContext)
   if (vault === null) {
     throw new Error('not in vault context')
@@ -53,7 +57,7 @@ export const Vault = observer((): JSX.Element => {
   const back = ['main', 'vaults']
   useEffect(() => {
     if (!vault.isOpen && !vault.isLoading) {
-      vault.requestUnlock(config.expire * 1000)
+      setTimeout(() => vault.requestUnlock((config?.expire ?? 1) * 1000), 0)
     }
   }, [vault.isLoading])
   useEffect(() => {
@@ -79,19 +83,28 @@ export const Vault = observer((): JSX.Element => {
   }
   const handleLock = vault.isClosable ? () => {
     navigate(back)
-    vault.lock()
-      .catch(lockError => console.error(lockError))
+    setImmediate(() => {
+      vault.lock()
+        .catch(lockError => console.error(lockError))
+    })
   } : undefined
+  const handleBack = (): void => navigate(back)
   return <PopupMenu><ContextMenu>
     <VaultContext.Provider value={{ vault }}>
       <View style={{ flexGrow: 1, display: 'flex' }}>
         <TopNavigation title={vault.name ?? '-vault-name-missing-'} titlePlaceholder={vault.humanId} back={back} onEdit={handleNameEdit} onDelete={handleDelete} />
-        <LockButton onPress={handleLock} />
-        <Tab.Navigator tabBarOptions={tabBarOptions}>
-          <Tab.Screen name='files' component={FileList} options={labelOptions('Files')} />
-          <Tab.Screen name='locks' component={Locks} options={labelOptions('Locks')} />
-          <Tab.Screen name='logs' component={Logs} options={labelOptions('Logs')} />
-        </Tab.Navigator>
+        {
+          vault.isOpen
+            ? <>
+              <LockButton onPress={handleLock} />
+              <Tab.Navigator tabBarOptions={tabBarOptions}>
+                <Tab.Screen name='files' component={FileList} options={labelOptions('Files')} />
+                <Tab.Screen name='locks' component={Locks} options={labelOptions('Locks')} />
+                <Tab.Screen name='logs' component={Logs} options={labelOptions('Logs')} />
+              </Tab.Navigator>
+            </>
+            : <Waiting vault={vault} onClose={handleBack} />
+        }
       </View>
     </VaultContext.Provider>
   </ContextMenu></PopupMenu>

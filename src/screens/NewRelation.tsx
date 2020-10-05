@@ -12,6 +12,7 @@ import { goBack, navigate } from '../util/navigate'
 import { screen09ScanQRCode } from '../styles/design/layer/screen09ScanQRCode'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { SketchElement } from '../styles/util/react/SketchElement'
+import { assertExists } from '../util/assertExists'
 
 const barContainer: ViewStyle = {
   position: 'absolute',
@@ -43,7 +44,9 @@ const retryButtonStyle: ViewStyle = {
 }
 
 export const NewRelation = (): JSX.Element => {
-  const { user } = useContext(ConsentoContext)
+  const consento = useContext(ConsentoContext)
+  assertExists(consento)
+  const { user } = consento
   const inset = useSafeAreaInsets()
   const window = useWindowDimensions()
   // eslint-disable-next-line @typescript-eslint/require-await
@@ -164,7 +167,7 @@ export const NewRelation = (): JSX.Element => {
                   </View>
                   : null
               }
-              <QRCode value={incoming.ops as string} logo={screen09ScanQRCode.layers.logo.source()} backgroundColor='#00000000' color={screen09ScanQRCode.layers.code.svg?.stroke} size={size} />
+              <QRCode value={incoming.options as string} logo={screen09ScanQRCode.layers.logo.source()} backgroundColor='#00000000' color={screen09ScanQRCode.layers.code.svg?.stroke} size={size} />
             </>
         }
       </View>

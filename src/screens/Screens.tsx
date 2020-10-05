@@ -1,6 +1,5 @@
 import React, { forwardRef, Ref, useContext } from 'react'
 import { observer } from 'mobx-react'
-import { Text } from 'react-native'
 import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { elementBottomNav } from '../styles/design/layer/elementBottomNav'
@@ -27,45 +26,8 @@ import { Relation as RelationModel } from '../model/Relation'
 import { Config } from './Config'
 import { NewRelation } from './NewRelation'
 import { ConsentosScreen } from './Consentos'
-/*
-import { createAppContainer, withNavigation, withNavigationFocus } from '@react-navigation/native'
-import { VaultsScreen } from './Vaults'
-import { RelationsScreen } from './Relations'
-import { ConsentosScreen } from './Consentos'
-import { Vault, VaultRouter } from './Vault'
-import { TNavigation } from './navigation'
-import { NewRelation } from './NewRelation'
-import { Vault as VaultModel } from '../model/Vault'
-import { isImageFile, isTextFile } from '../model/VaultData'
-import { RelationContext } from '../model/RelationContext'
-import { VaultContext } from '../model/VaultContext'
-import { Config } from './Config'
-import { Camera } from './Camera'
-import { TextEditor } from './TextEditor'
-import { ImageEditor } from './ImageEditor'
-import { ConsentoContext } from '../model/Consento'
+import { assertExists } from '../util/assertExists'
 import { useScreenshotEnabled } from '../util/screenshots'
-import { ImageAsset } from '../styles/design/ImageAsset'
-import { IImageAsset } from '../styles/util/types'
-
-const noTransition = (): TransitionConfig & HeaderTransitionConfig => {
-  return {
-    transitionSpec: {
-      duration: 0
-    }
-  } as any
-}
-
-const ConsentosIcon = observer(({ focused }: { focused: boolean }): IImageAsset => {
-  const { user } = useContext(ConsentoContext)
-  const hasNewNotifications = user.newConsentosCount > 0
-  return focused
-    ? ImageAsset.iconConsentoActive
-    : hasNewNotifications
-      ? ImageAsset.iconConsentoNotificationNew
-      : ImageAsset.iconConsentoIdle
-})
-*/
 
 const Stack = createStackNavigator()
 const Tabs = createBottomTabNavigator()
@@ -97,7 +59,7 @@ const MainTaps = (): JSX.Element => {
       }} />
     <Tabs.Screen
       name='consentos' component={ConsentosScreen} options={{
-        tabBarIcon: FocusIcon(ImageAsset.iconConsentoActive, ImageAsset.iconConsentoIdle),
+        tabBarIcon: ({ focused }: { focused: boolean }) => <ConsentosIcon focused={focused} />,
         tabBarLabel: FocusLabel(elementBottomNavConsentosActive, elementBottomNavConsentosResting)
       }} />
     <Tabs.Screen
@@ -109,71 +71,13 @@ const MainTaps = (): JSX.Element => {
 }
 
 export const Screens = observer(forwardRef((_, ref: Ref<any>): JSX.Element => {
-  const { user } = useContext(ConsentoContext)
-  /*
+  const consento = useContext(ConsentoContext)
+  assertExists(consento)
+  const { user } = consento
   const isScreenshotEnabled = useScreenshotEnabled()
+  /*
   const Container = (() => {
     {
-      main: {
-        path: '',
-        screen: createBottomTabBar({
-          vaults: {
-            label: 'Vaults',
-            screen: () => <VaultsScreen />,
-            tabBarIcon: ({ focused }) => focused ? Asset.iconVaultActive().img() : Asset.iconVaultIdle().img()
-          },
-          consentos: {
-            label: 'Consentos',
-            screen: () => <ConsentosScreen />,
-            tabBarIcon: ({ focused }: { focused: boolean }) => <ConsentosIcon focused={focused} />
-          },
-          relations: {
-            label: 'Relations',
-            screen: () => <RelationsScreen />,
-            tabBarIcon: ({ focused }) => focused ? Asset.iconRelationsActive().img() : Asset.iconRelationsIdle().img()
-          }
-        })
-      },
-      vault: {
-        path: 'vault',
-        screen: withNavigation(class extends React.Component<{ navigation: TNavigation }, {}> {
-          static router = VaultRouter
-          render (): JSX.Element {
-            const { navigation } = this.props
-            const vaultKey = navigation.state.params.vault
-            const vault = user.findVault(vaultKey)
-            if (!(vault instanceof VaultModel)) {
-              navigation.navigate('') // TODO: Return 404 alert message?
-              return <></>
-            }
-            return <VaultContext.Provider value={{ vault }}>
-              <Vault />
-            </VaultContext.Provider>
-          }
-        })
-      },
-      relation: {
-        path: 'relation',
-        screen: withNavigation(({ navigation }: { navigation: TNavigation }): JSX.Element => {
-          const relationKey = navigation.state.params.relation
-          const relation = user.findRelation(relationKey)
-          if (!(relation instanceof RelationModel)) {
-            navigation.navigate('') // TODO: Return 404 alert message?
-            return <></>
-          }
-          return <RelationContext.Provider value={{ relation }}>
-            <Relation />
-          </RelationContext.Provider>
-        })
-      },
-      newRelation: {
-        path: 'newRelation',
-        screen: () => <NewRelation />
-      },
-      config: {
-        path: 'config',
-        screen: () => <Config />
-      },
       camera: {
         path: 'camera',
         screen: withNavigationFocus(({ navigation, isFocused }: { navigation: TNavigation, isFocused: boolean }): JSX.Element => {
@@ -209,20 +113,15 @@ export const Screens = observer(forwardRef((_, ref: Ref<any>): JSX.Element => {
           return <></>
         })
       }
-    }, {
-      headerMode: 'none',
-      initialRouteKey: 'vaults',
-      transitionConfig: isScreenshotEnabled ? noTransition : undefined
-    }
-    )
-    return createAppContainer(AppNavigator)
+    },
   })()
   */
   return <Stack.Navigator
     initialRouteName='main'
     mode='modal'
     screenOptions={{
-      headerShown: false
+      headerShown: false,
+      animationEnabled: !isScreenshotEnabled
     }}>
     <Stack.Screen name='main'>{props => {
       /* eslint-disable react/prop-types */
@@ -270,11 +169,21 @@ const FocusIcon = (focusedSrc: IImageAsset, regularSrc: IImageAsset) => {
   return ({ focused }: { focused: boolean }) => <SketchImage src={focused ? focusedSrc : regularSrc} />
 }
 
+const ConsentosIcon = observer(({ focused }: { focused: boolean }) => {
+  const consento = useContext(ConsentoContext)
+  assertExists(consento)
+  const { user } = consento
+  const hasNewNotifications = user.newConsentosCount > 0
+  return <SketchImage src={focused
+    ? ImageAsset.iconConsentoActive
+    : hasNewNotifications
+      ? ImageAsset.iconConsentoNotificationNew
+      : ImageAsset.iconConsentoIdle} />
+})
+
 const FocusLabel = (focusedStyle: ILayer<{ title: TextBox }>, regularStyle: ILayer<{ title: TextBox }>): (focused: { focused: boolean }) => JSX.Element => {
   return ({ focused }: { focused: boolean }): JSX.Element => {
     const src = (focused ? focusedStyle : regularStyle).layers.title
     return <SketchTextBoxView src={src} style={src.style} />
   }
 }
-
-const Sample = (): JSX.Element => <Text>Hi</Text>

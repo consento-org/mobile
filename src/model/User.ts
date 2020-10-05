@@ -9,11 +9,13 @@ import { mobxPersist } from '../util/mobxPersist'
 import { VaultLockee } from './VaultData'
 import { ISuccessNotification, IAPI } from '@consento/api'
 import { ISubscriptionMap, Message, MessageType, IRelationEntry } from './Consento.types'
-import { Buffer, exists } from '@consento/api/util'
+import { Buffer } from '@consento/api/util'
 import { mapSubscriptions } from './mapSubscriptions'
 
 import { combinedDispose } from '../util/combinedDispose'
 import { createView, IArrayView } from '../util/ArraySetView'
+import { ISortable } from '../util/compareNames'
+import { exists } from '../styles/util/lang'
 
 const ASSUMED_SAFETY_DELAY: number = 1000 // Lets count off a second for network overhead
 
@@ -186,7 +188,7 @@ export class User extends Model({
     let count = 0
     const lastConsentosView = this.lastConsentosView
     for (const consento of Array.from(this.consentos.values()).reverse()) {
-      if (consento.creationTime < lastConsentosView) {
+      if (lastConsentosView !== null && consento.creationTime < lastConsentosView) {
         break
       }
       count += 1

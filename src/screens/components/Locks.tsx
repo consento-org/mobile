@@ -44,14 +44,16 @@ const styles = StyleSheet.create({
 })
 
 const SelectedLockeeList = observer(({ onAdd }: { onAdd?: (event: GestureResponderEvent) => void }): JSX.Element => {
-  const { user } = useContext(ConsentoContext)
+  const consento = useContext(ConsentoContext)
+  assertExists(consento, 'not in user context')
+  const { user } = consento
   const { vault } = useContext(VaultContext)
   assertExists(vault, 'not in vault context')
   const lockees = user.getLockees(vault)
   if (useScreenshotEnabled()) {
     const screenshots = useContext(ScreenshotContext)
     const isEmpty = (lockees?.size ?? 0) > 0
-    const hasOneConfirmed = find(lockees ?? [], lockee => lockee.vaultLockee.isConfirmed) !== undefined
+    const hasOneConfirmed = find(lockees ?? [], (lockee): lockee is Lockee => lockee.vaultLockee.isConfirmed) !== undefined
     isEmpty
       ? hasOneConfirmed
         ? screenshots.vaultLocksConfirmed.takeSync(500)
@@ -87,7 +89,9 @@ const SelectEntry = ({ entry, onSelect }: ISelectEntryProps): JSX.Element => {
 
 const SelectLockees = ({ onSelect: handleSelectConfirmation }: { onSelect: (relations: Relation[]) => any }): JSX.Element => {
   const selection: { [modelId: string]: IRelationEntry } = {}
-  const { user } = useContext(ConsentoContext)
+  const consento = useContext(ConsentoContext)
+  assertExists(consento, 'not in user context')
+  const { user } = consento
   const { vault } = useContext(VaultContext)
   assertExists(vault, 'not in vault context')
   const availableRelations = user.availableRelations(vault)
@@ -125,7 +129,9 @@ function assertExists <T> (input: T | null | undefined, error?: string): asserts
 
 const LockeeList = observer((): JSX.Element => {
   const [state, setState] = useState<'show' | 'select' | 'adding'>('show')
-  const { user } = useContext(ConsentoContext)
+  const consento = useContext(ConsentoContext)
+  assertExists(consento, 'not in user context')
+  const { user } = consento
   const { vault } = useContext(VaultContext)
   assertExists(vault, 'not in vault context')
   const availableRelations = user.availableRelations(vault)
@@ -161,7 +167,9 @@ const LockeeList = observer((): JSX.Element => {
 })
 
 export const Locks = observer((): JSX.Element => {
-  const { user } = useContext(ConsentoContext)
+  const consento = useContext(ConsentoContext)
+  assertExists(consento, 'not in user context')
+  const { user } = consento
   const screenshots = useContext(ScreenshotContext)
   const handleAdd = (): void => navigate('newRelation')
   return <EmptyView empty={elementLocksNoLockee} onAdd={handleAdd} isEmpty={user.relations.size === 0} onEmpty={screenshots.vaultLocksNoRelation.handle(500)}>

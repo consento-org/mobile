@@ -12,6 +12,7 @@ import { ScreenshotContext } from '../util/screenshots'
 import { navigate } from '../util/navigate'
 import { elementConfig } from '../styles/design/layer/elementConfig'
 import { Credits } from './components/Credits'
+import { assertExists } from '../util/assertExists'
 
 const isURL = (value: string | null): string | true => {
   const isValid = value === null ? false : _isURL(value)
@@ -65,13 +66,16 @@ const styles = StyleSheet.create({
 export const Config = observer((): JSX.Element => {
   const [resetBarrier, setBarrier] = useState(true)
   const screenshots = useContext(ScreenshotContext)
-  const { config, updateConfig, deleteEverything } = useContext(ConsentoContext)
+  const consento = useContext(ConsentoContext)
+  assertExists(consento)
+  const { config, updateConfig, deleteEverything } = consento
+  assertExists(config)
   const { leave, save, useField, useStringField } = useForm(newConfig => {
     setTimeout(() => {
       try {
         updateConfig(newConfig)
       } catch (updateConfigError) {
-        console.error(updateConfigError)
+        console.error({ updateConfigError })
       }
     }, 0)
   })
@@ -90,7 +94,7 @@ export const Config = observer((): JSX.Element => {
     ])
   }
 
-  const handleBack = (): void => leave(() => navigate('vaults'))
+  const handleBack = (): void => leave(() => navigate('vaults') /* TODO: navigate back to where you came from :) */)
 
   return <View style={styles.screen} onLayout={screenshots.config.handle(200)}>
     <TopNavigation title='Consento' back={handleBack} />

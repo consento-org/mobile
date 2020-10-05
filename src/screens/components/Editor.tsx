@@ -1,30 +1,28 @@
 import React, { useContext } from 'react'
 import { View, TouchableOpacity, StyleSheet } from 'react-native'
-import { elementTextEditor } from '../../styles/component/elementTextEditor'
-import { useVUnits } from '../../styles/Component'
 import { File, FileType } from '../../model/VaultData'
 import { useForm } from '../../util/useForm'
 import { observer } from 'mobx-react'
 import { TNavigation } from '../navigation'
 import { Vault } from '../../model/Vault'
-import { Color } from '../../styles/Color'
 import { DarkBar } from './DarkBar'
 import { ScreenshotContext } from '../../util/screenshots'
+import { elementTextEditor } from '../../styles/design/layer/elementTextEditor'
 
 const styles = StyleSheet.create({
   saveSize: {
     position: 'absolute',
-    ...elementTextEditor.saveSize.place.style()
+    ...elementTextEditor.layers.saveSize.place.style()
   },
   saveText: {
-    ...elementTextEditor.save.style,
-    top: elementTextEditor.save.place.top,
+    ...elementTextEditor.layers.save.style,
+    top: elementTextEditor.layers.save.place.top,
     left: 0,
-    width: elementTextEditor.save.place.width
+    width: elementTextEditor.layers.save.place.width
   },
   closeSize: {
     position: 'absolute',
-    ...elementTextEditor.closeSize.place.style()
+    ...elementTextEditor.layers.closeSize.place.style()
   }
 })
 

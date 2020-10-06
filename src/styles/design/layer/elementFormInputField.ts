@@ -35,7 +35,7 @@ export const elementFormInputField = {
     }, { x: 35.49, y: 26, w: 297, h: 24, r: 42.5, b: 35 }),
     active: new TextBox('active', 'Active', {
       ...TextStyles.Subtitle1SelectedOnSurfaceHighEmphasisLeft,
-      color: Color.darkGrey,
+      color: Color.black,
       textAlignVertical: 'center'
     }, { x: 35.49, y: 26, w: 267.5, h: 24, r: 72, b: 35 }),
     reset: new ImagePlacement('reset', ImageAsset.iconCrossGrey, { x: 308.49, y: 26, w: 24, h: 24, r: 42.5, b: 35 })

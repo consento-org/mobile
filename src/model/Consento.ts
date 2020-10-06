@@ -177,7 +177,10 @@ export class Consento extends Model({
   }
 
   @computed get ready (): boolean {
-    console.log({ state: this.transportState, strategy: this._notificationTransport?.error })
+    return this.configLoaded && this.user.loaded
+  }
+
+  @computed get transportReady (): boolean {
     switch (this.transportState) {
       case EClientStatus.DESTROYED:
       case EClientStatus.NOADDRESS:
@@ -185,7 +188,11 @@ export class Consento extends Model({
       case EClientStatus.ERROR:
         return false
     }
-    return this.configLoaded && this.user.loaded
+    return true
+  }
+
+  @computed get transportError (): Error | undefined {
+    return this._notificationTransport?.error
   }
 
   deleteEverything (): void {
@@ -197,10 +204,6 @@ export class Consento extends Model({
 
   @modelAction _updateTransportState (): void {
     this.transportState = (this._notificationTransport as ExpoTransport).state // set in onInit
-    console.log({ newState: this.transportState })
-    if (this.transportState === EClientStatus.ERROR) {
-      console.log('Error State')
-    }
   }
 
   onAttachedToRootStore (): () => void {

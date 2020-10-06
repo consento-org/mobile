@@ -8,7 +8,7 @@ function newConsento (): Consento {
   return new Consento({})
 }
 
-export const useConsento = (): Consento | undefined => {
+export const useConsento = (): { ready: boolean, consento: Consento, error: Error | null } => {
   const [consento, setConsento] = useState<Consento>(newConsento)
   const [ready, setReady] = useState(false)
   const [error, setError] = useState<Error | null>(null)
@@ -17,7 +17,6 @@ export const useConsento = (): Consento | undefined => {
     () => {
       // Restarting app in development mode if Consento class changes.
       if (!(consento instanceof Consento)) {
-        console.log('updating consento')
         setConsento(newConsento())
       }
     },
@@ -30,18 +29,17 @@ export const useConsento = (): Consento | undefined => {
       setReady(false)
       return combinedDispose(
         autoRegisterRootStore(consento),
-        when(() => consento.ready, () => setReady(true), { onError: setError })
+        when(
+          () => consento.ready,
+          () => setReady(consento.ready),
+          { onError: setError }
+        )
       )
     },
     [consento]
   )
-  if (error !== null) {
-    throw error
-  }
-  if (!ready) {
-    return
-  }
-  return consento
+
+  return { ready, consento, error }
 }
 
 export default useConsento

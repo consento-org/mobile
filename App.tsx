@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import 'react-native-gesture-handler' // Imported to fix gesture error in tab navigation
-import { SafeAreaProvider } from 'react-native-safe-area-context'
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Text, View, StyleSheet } from 'react-native'
 import { AppLoading } from 'expo'
 import { loadFonts } from './src/styles/design/Font'
@@ -11,6 +11,8 @@ import { createScreenshots, ScreenshotContext } from './src/util/screenshots'
 import useConsento from './src/useConsento'
 import { Screens } from './src/screens/Screens'
 import { ConsentoContext } from './src/model/Consento'
+import { exists } from './src/styles/util/lang'
+import { DarkBar } from './src/screens/components/DarkBar'
 
 export const Screenshot = (address: string): (() => JSX.Element) => {
   const screenshots = createScreenshots(address)
@@ -28,15 +30,18 @@ async function loadApp (): Promise<void> {
 }
 
 function ErrorScreen ({ error }: { error: Error }): JSX.Element {
-  return <Text>{`Error while loading App:\n${String(error)}`}</Text>
+  const insets = useSafeAreaInsets()
+  return <View>
+    <DarkBar height={insets.top} />
+    <Text>{`Error while loading App:\n${String(error)}`}</Text>
+    {/* TODO: improve screen to send error & info to github repo */}
+  </View>
 }
 
 const styles = StyleSheet.create({
   root: {
     width: '100%',
-    height: '100%',
-    display: 'flex',
-    flexDirection: 'column'
+    height: '100%'
   }
 })
 
@@ -46,36 +51,29 @@ const styles = StyleSheet.create({
  */
 export default function App (): JSX.Element {
   const [loaded, setLoaded] = useState<boolean>(false)
-  const [error, setError] = useState<Error>()
-  let consento
-  try {
-    consento = useConsento()
-  } catch (error) {
-    setError(error)
-  }
-  if (error === undefined && !loaded) {
+  const [loadError, setLoadError] = useState<Error>()
+  const { consento, error: consentoError, ready } = useConsento()
+  if (loadError === undefined && !loaded) {
     console.log('loading fonts etc.')
     return <AppLoading
       startAsync={loadApp}
       onFinish={() => setLoaded(true)}
-      onError={setError}
+      onError={setLoadError}
     />
   }
-  if (consento === undefined) {
-    console.log('waiting for consento')
+  const error = loadError ?? consentoError
+  if (!ready && !exists(error)) {
     return <AppLoading />
   }
   return <SafeAreaProvider>
     <ConsentoContext.Provider value={consento}>
       <NavigationContainer ref={navigationRef}>
         <View style={styles.root}>
-          <View style={{ flexGrow: 1 }}>
-            {
-              error !== undefined
-                ? <ErrorScreen error={error} />
-                : <Screens />
-            }
-          </View>
+          {
+            exists(error)
+              ? <ErrorScreen error={error} />
+              : <Screens />
+          }
         </View>
       </NavigationContainer>
     </ConsentoContext.Provider>

@@ -20,7 +20,7 @@ interface ICreationBaseData { [key: string]: any }
 export function mobxPersist <
   TData extends IBaseData,
   TCreationData extends ICreationBaseData,
-  TItem extends BaseModel<TData, TCreationData> & { _markLoaded (): void }
+  TItem extends BaseModel<TData, TCreationData> & { _markLoaded: () => void }
 > ({ location, secretKey, item, init, filter, clearClone, prepareSnapshot }: {
   location?: string
   item: TItem

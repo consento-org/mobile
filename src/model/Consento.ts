@@ -1,4 +1,4 @@
-import { computed, autorun } from 'mobx'
+import { computed, autorun, observable } from 'mobx'
 import { Model, model, tProp, types, prop, arraySet, ArraySet, modelAction } from 'mobx-keystone'
 import { createContext } from 'react'
 import { AsyncStorage } from 'react-native'
@@ -19,7 +19,8 @@ import { map } from '../util/map'
 
 export const ConsentoContext = createContext<Consento | null>(null)
 
-const DEFAULT_ADDRESS = '//notify-2.consento.org'
+export const DEFAULT_ADDRESS = '//notify-2.consento.org'
+export const DEFAULT_EXPIRES = 600
 const LEGACY_CONFIG_ITEM_KEY = '@consento/config'
 const CONFIG_ITEM_KEY = '@consento/config/2'
 
@@ -43,7 +44,7 @@ interface IEventSubscription {
 @model('consento/Config')
 export class Config extends Model({
   address: tProp(types.nonEmptyString, () => DEFAULT_ADDRESS),
-  expire: tProp(types.number, () => 600)
+  expire: tProp(types.number, () => DEFAULT_EXPIRES)
 }) implements IConfig {}
 
 function assertConfig (config: any): asserts config is IConfig {
@@ -113,6 +114,7 @@ export class Consento extends Model({
 }) implements IConsentoModel {
   _api: IAPI | undefined
   _notificationTransport: ExpoTransport | undefined
+  _loadConfigError = observable.box<Error | undefined>()
   _configTask: Promise<void> | undefined
 
   onInit (): void {
@@ -134,7 +136,7 @@ export class Consento extends Model({
         },
         error => {
           this.updateConfig({})
-          console.log({ loadConfigError: error })
+          this._loadConfigError.set(error)
         }
       )
     loadConfig(LEGACY_CONFIG_ITEM_KEY)
@@ -193,6 +195,10 @@ export class Consento extends Model({
 
   @computed get transportError (): Error | undefined {
     return this._notificationTransport?.error
+  }
+
+  get loadConfigError (): Error | undefined {
+    return this._loadConfigError.get() ?? this.user.loadError
   }
 
   deleteEverything (): void {

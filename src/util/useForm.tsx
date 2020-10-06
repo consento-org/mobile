@@ -60,6 +60,7 @@ export interface IForm {
   invalid?: {
     [key: string]: string
   }
+  dirty?: string[]
   isDirty: boolean
   isInvalid: boolean
   isSaving: boolean
@@ -69,10 +70,6 @@ export interface IForm {
 
 export interface IMainForm extends IForm {
   Form: ({ children }: { children?: React.ReactChild | React.ReactChild[] }) => JSX.Element
-}
-
-function isInitiatorFn <T> (input: TInitiator<T>): input is TInitiatorFn<T> {
-  return typeof input === 'function'
 }
 
 export interface IStringConvert<T> {
@@ -158,9 +155,9 @@ class FormField<T> implements IFormField<T> {
 
   _finishInitial (initial: T, async: boolean = false): void {
     if (this.initial !== initial || !this._firstInitFinished) {
+      this.initial = initial
       const doUpdate = !this.loaded || this.updateState()
       this.loaded = true
-      this.initial = initial
       if (!this._firstInitFinished) {
         this._firstInitFinished = true
         this._value = this._convert.toString(initial)
@@ -171,9 +168,12 @@ class FormField<T> implements IFormField<T> {
       if (doUpdate) {
         this._triggerUpdate()
       }
-    } else if (!this.loaded) {
+    } else {
+      const wasLoaded = this.loaded
       this.loaded = true
-      this._triggerUpdate()
+      if (this.updateState() || !wasLoaded) {
+        this._triggerUpdate()
+      }
     }
   }
 
@@ -284,9 +284,11 @@ export function useForm (
           await save(data)
         }
         await Promise.all(ops)
-        form.isDirty = false
+        for (const field of Object.values(fields)) {
+          // If all the fields have a new initial, they should not be dirty anymore
+          field.setInitial(field.value)
+        }
         form.isSaving = false
-        setUpdate(Date.now())
         return true
       } catch (error) {
         form.error = error
@@ -296,12 +298,15 @@ export function useForm (
       }
     }
     const form: IMainForm = {
-      isDirty: false,
       isInvalid: false,
       isSaving: false,
       invalid: undefined,
+      dirty: undefined,
       error: undefined,
       save: undefined,
+      get isDirty (): boolean {
+        return this.dirty !== undefined && this.dirty.length > 0
+      },
       async leave (next?: () => any): Promise<boolean> {
         const handleNext = next ?? leave ?? goBack
         if (!form.isDirty) {
@@ -332,12 +337,12 @@ export function useForm (
         return this.useField<string | null>(key, initial, STRING_CONVERT, validate, save)
       },
       useField <T> (key: string, initial: TInitiator<T>, convert: IStringConvert<T>, validate?: (value: string) => boolean | string, save?: (value: T) => void | Promise<void>): IFormField<T> {
-        const setUpdate = useState<number>(Date.now())[1]
-        const [field] = useState<FormField<T>>(() => {
+        const [field, setField] = useState<FormField<T>>(() => {
           const field = new FormField<T>(convert, () => {
             triggerUpdate()
-            setUpdate(Date.now())
+            setField(field)
           }, validate, save)
+          field.setInitial(initial)
           return field
         })
         useEffect(() => {
@@ -348,13 +353,6 @@ export function useForm (
           // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
           return () => { delete fields[key] }
         }, [])
-        if (isInitiatorFn(initial)) {
-          useEffect(() => {
-            field.setInitial((initial as Function)())
-          }, [])
-        } else {
-          field.setInitial(initial)
-        }
         return field
       },
       Form ({ children }: { children?: React.ReactChild | React.ReactChild[] }) {
@@ -368,23 +366,26 @@ export function useForm (
     form.useStringField = form.useStringField.bind(form)
 
     const triggerUpdate = (): void => {
-      let isDirty = false
-      const invalid = Object
+      const { invalid, dirty } = Object
         .keys(fields)
-        .reduce<{ [key: string]: string } | undefined>(
-        (invalid, key) => {
+        .reduce<{ invalid?: { [key: string]: string }, dirty?: string[] }>(
+        (reduced, key) => {
           const field = fields[key]
           if (field.isInvalid) {
-            if (invalid === undefined) {
-              invalid = {}
+            if (reduced.invalid === undefined) {
+              reduced.invalid = {}
             }
-            invalid[key] = field.invalid as string /* invalid is certainly a string when the field is invalid */
+            reduced.invalid[key] = field.invalid as string /* invalid is certainly a string when the field is invalid */
           }
           if (field.isDirty) {
-            isDirty = true
+            if (reduced.dirty === undefined) {
+              reduced.dirty = [key]
+            } else {
+              reduced.dirty.push(key)
+            }
           }
-          return invalid
-        }, undefined)
+          return reduced
+        }, {})
       let hasChange = false
       // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
       if (!deepEqual(invalid, form.invalid)) {
@@ -392,11 +393,11 @@ export function useForm (
         form.isInvalid = invalid !== undefined
         hasChange = true
       }
-      if (isDirty !== form.isDirty) {
-        form.isDirty = isDirty
-        form.save = isDirty ? _save : undefined
+      if (!deepEqual(dirty, form.dirty)) {
+        form.dirty = dirty
         hasChange = true
       }
+      form.save = (form.isDirty && !form.isInvalid) ? _save : undefined
       if (hasChange) {
         setUpdate(Date.now())
       }

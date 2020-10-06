@@ -61,7 +61,7 @@ export default function App (): JSX.Element {
       onError={setLoadError}
     />
   }
-  const error = loadError ?? consentoError
+  const error = loadError ?? consentoError ?? consento.loadConfigError
   if (!ready && !exists(error)) {
     return <AppLoading />
   }

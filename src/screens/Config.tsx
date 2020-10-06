@@ -7,7 +7,7 @@ import { InputField } from './components/InputField'
 import { BottomButtonView } from './components/BottomButtonView'
 import { useForm, FLOAT_CONVERT } from '../util/useForm'
 import { ConsentoButton } from './components/ConsentoButton'
-import { ConsentoContext } from '../model/Consento'
+import { ConsentoContext, DEFAULT_ADDRESS, DEFAULT_EXPIRES } from '../model/Consento'
 import { ScreenshotContext } from '../util/screenshots'
 import { navigate } from '../util/navigate'
 import { elementConfig } from '../styles/design/layer/elementConfig'
@@ -15,7 +15,10 @@ import { Credits } from './components/Credits'
 import { assertExists } from '../util/assertExists'
 
 const isURL = (value: string | null): string | true => {
-  const isValid = value === null ? false : _isURL(value)
+  if (value === null) {
+    return 'please enter url'
+  }
+  const isValid = _isURL(value)
   if (isValid) {
     return true
   }
@@ -103,6 +106,7 @@ export const Config = observer((): JSX.Element => {
         src={elementConfig.layers.host}
         style={styles.host}
         value={address.value ?? null}
+        defaultValue={DEFAULT_ADDRESS}
         invalid={address.isInvalid}
         onEdit={address.handleValue}
       />
@@ -110,6 +114,7 @@ export const Config = observer((): JSX.Element => {
         src={elementConfig.layers.expire}
         style={styles.expire}
         value={expire.valueString ?? null}
+        defaultValue={DEFAULT_EXPIRES.toString()}
         invalid={expire.isInvalid}
         onEdit={string => expire.handleString(string ?? undefined)}
       />

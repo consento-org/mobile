@@ -99,6 +99,9 @@ const styles = StyleSheet.create({
   inactiveTouchArea: {
     width: '100%',
     height: '100%'
+  },
+  inactive: {
+    opacity: 0.2
   }
 })
 
@@ -112,6 +115,7 @@ export const InputField = ({ value, defaultValue, onEdit, src, invalid, style, a
   const hasValue = value !== null && value !== ''
   const styleActive = focused || hasValue ? null : styles.invisible
   const styleInactive = !hasValue ? null : styles.invisible
+  const styleReset = value !== defaultValue ? null : styles.inactive
   const [handleRequestFocus] = useState(() => (): void => {
     if (value === null) {
       onEdit('')
@@ -155,6 +159,6 @@ export const InputField = ({ value, defaultValue, onEdit, src, invalid, style, a
     <TouchableWithoutFeedback onPress={handleRequestFocus}>
       <View style={composeAll<ViewStyle>(styles.inactiveTouchArea, styleInactive)} />
     </TouchableWithoutFeedback>
-    <SketchElement src={reset} style={composeAll<ImageStyle>(styles.reset, styleActive)} onPress={() => { onEdit(null) }} />
+    <SketchElement src={reset} style={composeAll<ImageStyle>(styles.reset, styleReset)} onPress={styleReset === null ? () => { onEdit(defaultValue ?? null) } : undefined} />
   </View>
 }

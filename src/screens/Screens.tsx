@@ -31,6 +31,7 @@ import { isImageFile, isTextFile } from '../model/VaultData'
 import { ImageEditor } from './ImageEditor'
 import { TextEditor } from './TextEditor'
 import { TextBox } from '../styles/util/TextBox'
+import { Camera } from './Camera'
 
 const Stack = createStackNavigator()
 const Tabs = createBottomTabNavigator()
@@ -78,23 +79,6 @@ export const Screens = observer(forwardRef((_, ref: Ref<any>): JSX.Element => {
   assertExists(consento)
   const { user } = consento
   const isScreenshotEnabled = useScreenshotEnabled()
-  /*
-  const Container = (() => {
-    {
-      camera: {
-        path: 'camera',
-        screen: withNavigationFocus(({ navigation, isFocused }: { navigation: TNavigation, isFocused: boolean }): JSX.Element => {
-          if (!isFocused) {
-            return <></>
-          }
-          const onPicture = navigation.state.params.onPicture
-          const onClose = navigation.state.params.onClose
-          return <Camera onPicture={onPicture} onClose={onClose} />
-        })
-      },
-    },
-  })()
-  */
   return <Stack.Navigator
     initialRouteName='main'
     mode='modal'
@@ -158,6 +142,12 @@ export const Screens = observer(forwardRef((_, ref: Ref<any>): JSX.Element => {
       }
       navigation.navigate('') // TODO: Return 404 alert message?
       return <></>
+    }}</Stack.Screen>
+    <Stack.Screen name='camera'>{({ route }) => {
+      console.log({ params: route.params })
+      const { onPicture, onClose } = (route.params as any) ?? {}
+      console.log({ onPicture, onClose })
+      return <Camera onPicture={onPicture} onClose={onClose} />
     }}</Stack.Screen>
   </Stack.Navigator>
 }))

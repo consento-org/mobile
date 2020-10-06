@@ -235,7 +235,7 @@ export const FileList = observer((): JSX.Element => {
         ? <BottomButtonView src={elementFileList} containerStyle={styles.container} onPress={handleAdd}>
           <Section name={elementFileList.layers.sectionText.layers.label.text} items={textFiles} />
           <Section name={elementFileList.layers.sectionImage.layers.label.text} items={imageFiles} />
-          <SketchElement src={elementFileList.layers.size} style={styles.size} />
+          {/* TODO: calculate size <SketchElement src={elementFileList.layers.size} style={styles.size} /> */}
         </BottomButtonView>
         : undefined
     }

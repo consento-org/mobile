@@ -54,7 +54,7 @@ export type TInitiatorFn<T> = () => TOrPromise<T>
 export type TInitiator<T> = TOrPromise<T> | TInitiatorFn<T>
 
 export interface IForm {
-  leave: (next: () => void) => void
+  leave: (next?: () => void) => void
   save?: () => Promise<boolean>
   error?: Error
   invalid?: {
@@ -158,17 +158,17 @@ class FormField<T> implements IFormField<T> {
 
   _finishInitial (initial: T, async: boolean = false): void {
     if (this.initial !== initial || !this._firstInitFinished) {
+      const doUpdate = !this.loaded || this.updateState()
       this.loaded = true
       this.initial = initial
       if (!this._firstInitFinished) {
         this._firstInitFinished = true
         this._value = this._convert.toString(initial)
         if (!async) {
-          this.updateState()
           return
         }
       }
-      if (this.updateState()) {
+      if (doUpdate) {
         this._triggerUpdate()
       }
     } else if (!this.loaded) {
@@ -218,7 +218,6 @@ class FormField<T> implements IFormField<T> {
   }
 
   updateState (): boolean {
-    console.log({ value: this.value, initial: this.initial })
     const newState = {
       isDirty: this.value !== this.initial,
       ...this.validate()
@@ -303,13 +302,14 @@ export function useForm (
       invalid: undefined,
       error: undefined,
       save: undefined,
-      async leave (next: () => any): Promise<boolean> {
+      async leave (next?: () => any): Promise<boolean> {
+        const handleNext = next ?? leave ?? goBack
         if (!form.isDirty) {
-          next()
+          handleNext()
           return true
         }
         if (form.isInvalid) {
-          alertInvalid(next)
+          alertInvalid(handleNext)
           return false
         }
         let _resolve: (successful: boolean) => void
@@ -320,11 +320,11 @@ export function useForm (
           async (): Promise<void> => {
             const done = form.save !== undefined ? await form.save() : true
             if (done) {
-              next()
+              handleNext()
             }
             _resolve(done)
           },
-          next
+          handleNext
         )
         return await result
       },

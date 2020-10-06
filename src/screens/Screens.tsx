@@ -3,10 +3,9 @@ import { observer } from 'mobx-react'
 import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { elementBottomNav } from '../styles/design/layer/elementBottomNav'
-import { IImageAsset, ILayer, ViewBorders } from '../styles/util/types'
+import { IImageAsset, ViewBorders } from '../styles/util/types'
 import { SketchImage } from '../styles/util/react/SketchImage'
 import { ImageAsset } from '../styles/design/ImageAsset'
-import { TextBox } from '../styles/util/TextBox'
 import { SketchTextBoxView } from '../styles/util/react/SketchTextBox'
 import { VaultsScreen } from './Vaults'
 import { ConsentoContext } from '../model/Consento'
@@ -28,6 +27,10 @@ import { NewRelation } from './NewRelation'
 import { ConsentosScreen } from './Consentos'
 import { assertExists } from '../util/assertExists'
 import { useScreenshotEnabled } from '../util/screenshots'
+import { isImageFile, isTextFile } from '../model/VaultData'
+import { ImageEditor } from './ImageEditor'
+import { TextEditor } from './TextEditor'
+import { TextBox } from '../styles/util/TextBox'
 
 const Stack = createStackNavigator()
 const Tabs = createBottomTabNavigator()
@@ -89,30 +92,6 @@ export const Screens = observer(forwardRef((_, ref: Ref<any>): JSX.Element => {
           return <Camera onPicture={onPicture} onClose={onClose} />
         })
       },
-      editor: {
-        path: 'editor',
-        screen: withNavigationFocus(({ navigation, isFocused }: { navigation: TNavigation, isFocused: boolean }): JSX.Element => {
-          if (!isFocused) {
-            return <></>
-          }
-          const vaultKey = navigation.state.params.vault
-          const vault = user.findVault(vaultKey)
-          if (!(vault instanceof VaultModel)) {
-            navigation.navigate('') // TODO: Return 404 alert message?
-            return <></>
-          }
-          const fileKey = navigation.state.params.file
-          const file = vault.findFile(fileKey)
-          if (isImageFile(file)) {
-            return <ImageEditor image={file} vault={vault} navigation={navigation} />
-          }
-          if (isTextFile(file)) {
-            return <TextEditor textFile={file} vault={vault} navigation={navigation} />
-          }
-          navigation.navigate('') // TODO: Return 404 alert message?
-          return <></>
-        })
-      }
     },
   })()
   */
@@ -161,6 +140,24 @@ export const Screens = observer(forwardRef((_, ref: Ref<any>): JSX.Element => {
       return <RelationContext.Provider value={{ relation }}>
         <Relation />
       </RelationContext.Provider>
+    }}</Stack.Screen>
+    <Stack.Screen name='editor'>{({ navigation, route }) => {
+      const vaultKey = (route.params as any)?.vault
+      const vault = user.findVault(vaultKey)
+      if (!(vault instanceof VaultModel)) {
+        navigation.navigate('') // TODO: Return 404 alert message?
+        return <></>
+      }
+      const fileKey = (route.params as any)?.file
+      const file = vault.findFile(fileKey)
+      if (isImageFile(file)) {
+        return <ImageEditor image={file} vault={vault} navigation={navigation} />
+      }
+      if (isTextFile(file)) {
+        return <TextEditor textFile={file} vault={vault} navigation={navigation} />
+      }
+      navigation.navigate('') // TODO: Return 404 alert message?
+      return <></>
     }}</Stack.Screen>
   </Stack.Navigator>
 }))

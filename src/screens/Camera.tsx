@@ -1,3 +1,10 @@
+import React from 'react'
+import { View } from 'react-native'
+
+export const Camera = (): JSX.Element => {
+  return <View />
+}
+/*
 import React, { useState, useRef, useEffect } from 'react'
 import { CameraContainer } from './components/CameraContainer'
 import { ViewStyle, View } from 'react-native'
@@ -5,14 +12,13 @@ import { Camera as NativeCamera } from 'expo-camera'
 import { TouchableWithoutFeedback, TouchableOpacity } from 'react-native-gesture-handler'
 import { ImageFile } from '../model/VaultData'
 import { importFile } from '../util/expoSecureBlobStore'
-import { useSafeArea } from 'react-native-safe-area-context'
 import { bufferToString } from '@consento/crypto/util/buffer'
-import { ImageAsset } from '../styles/design/ImageAsset'
 import { IImageAsset } from '../styles/util/types'
 import { SketchImage } from '../styles/util/react/SketchImage'
 import { elementCamera } from '../styles/design/layer/elementCamera'
 import { ImagePlacement } from '../styles/util/ImagePlacement'
 import { Polygon } from '../styles/util/Polygon'
+import { SketchElement } from '../styles/util/react/SketchElement'
 
 const containerStyle: ViewStyle = {
   backgroundColor: elementCamera.backgroundColor,
@@ -153,19 +159,20 @@ export const Camera = ({ onPicture, onClose }: ICameraProps): JSX.Element => {
       />
     </View>
     <View style={{ display: 'flex', flexDirection: 'row', width: vw(100), height: elementCamera.bg.place.height - (elementCamera.height - elementCamera.image.place.height), position: 'absolute', top: vh(100) - elementCamera.bg.place.height, backgroundColor: elementCamera.bg.fill.color }}>
-      <FlatButton item={elementCamera.minus} pressed={elementCamera.minusBg} onPress={zoomOut} />
-      <FlatButton item={elementCamera.plus} pressed={elementCamera.plusBg} onPress={zoomIn} />
+      <FlatButton item={elementCamera.layers.minus} pressed={elementCamera.layers.minusBg} onPress={zoomOut} />
+      <FlatButton item={elementCamera.layers.plus} pressed={elementCamera.layers.plusBg} onPress={zoomIn} />
       <View style={{ flexGrow: 1, alignItems: 'center', justifyContent: 'center' }}>
         <ShutterButton onPress={takePic} />
       </View>
-      <FlatButton item={elementCamera.flip} pressed={elementCamera.flipBg} onPress={flip} />
+      <FlatButton item={elementCamera.layers.flip} pressed={elementCamera.layers.flipBg} onPress={flip} />
     </View>
     {
       isEncrypting
-        ? <View style={{ width: '100%', height: '100%', position: 'absolute', backgroundColor: elementCamera.encryptingBg.fill.color, zIndex: 1 }}>
-          <elementCamera.encryptingText.Render horz='center' vert='center' />
+        ? <View style={{ width: '100%', height: '100%', position: 'absolute', backgroundColor: elementCamera.layers.encryptingBg.fill, zIndex: 1 }}>
+          <SketchElement src={elementCamera.layers.encryptingText} />
         </View>
         : <></>
     }
   </View>
 }
+*/

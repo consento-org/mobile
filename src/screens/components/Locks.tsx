@@ -18,6 +18,7 @@ import { elementRelationSelectListDisplay } from '../../styles/design/layer/elem
 import { MobxList } from './MobxList'
 import { compareNames } from '../../util/compareNames'
 import { find } from '../../util/find'
+import { assertExists } from '../../util/assertExists'
 
 interface ISelectEntryProps extends Omit<IRelationListEntryProps<Relation>, 'type' | 'onPress'> {
   onSelect: (entry: Relation, selected: boolean) => any
@@ -119,12 +120,6 @@ const SelectLockees = ({ onSelect: handleSelectConfirmation }: { onSelect: (rela
         />
     }
   </BottomButtonView>
-}
-
-function assertExists <T> (input: T | null | undefined, error?: string): asserts input is T {
-  if (input === null || input === undefined) {
-    throw new Error(`Assertion error: ${error ?? '<x> is null | undefined'}`)
-  }
 }
 
 const LockeeList = observer((): JSX.Element => {

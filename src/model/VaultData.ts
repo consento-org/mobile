@@ -23,8 +23,8 @@ export enum FileType {
   text = 'text'
 }
 
-export const isImageFile = (file: File): file is ImageFile => file.type === FileType.image
-export const isTextFile = (file: File): file is TextFile => file.type === FileType.text
+export const isImageFile = (file: File | null | undefined): file is ImageFile => file?.type === FileType.image
+export const isTextFile = (file: File | null | undefined): file is TextFile => file?.type === FileType.text
 
 @model('consento/VaultData/Image')
 export class ImageFile extends Model({

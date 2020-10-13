@@ -1,4 +1,4 @@
-// This file has been generated with expo-export@5.0.0, a Sketch plugin.
+// This file has been generated with expo-export@5.0.1, a Sketch plugin.
 export function createCache<TType> (): (key: string, load: () => TType) => () => TType {
   const cache: { [key: string]: TType } = {}
   return (key, load) => {

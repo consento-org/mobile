@@ -1,4 +1,4 @@
-// This file has been generated with expo-export@5.0.0, a Sketch plugin.
+// This file has been generated with expo-export@5.0.1, a Sketch plugin.
 import { Placement } from './Placement'
 import { IPlacement, FillData, IShadow, BorderStyle, IBorder, TBorderData, IPolygon, IPolygonSvgStroke, BorderPropsBase, BorderPropsLeft, BorderPropsRight, BorderPropsHorizontal, BorderPropsTop, BorderPropsBottom, BorderPropsVertical, BorderPropsAll, ViewBorders } from './types'
 import { Fill } from './Fill'

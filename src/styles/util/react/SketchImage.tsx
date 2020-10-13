@@ -1,4 +1,4 @@
-// This file has been generated with expo-export@5.0.0, a Sketch plugin.
+// This file has been generated with expo-export@5.0.1, a Sketch plugin.
 import React, { forwardRef } from 'react'
 import { Image, ImageStyle, ImageProps, TouchableWithoutFeedback, TouchableWithoutFeedbackProps, StyleSheet, GestureResponderEvent } from 'react-native'
 import { IImageAsset, ISketchElementProps } from '../types'

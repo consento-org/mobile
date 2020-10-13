@@ -1,4 +1,4 @@
-// This file has been generated with expo-export@5.0.0, a Sketch plugin.
+// This file has been generated with expo-export@5.0.1, a Sketch plugin.
 import { forSize } from '../../util/Placement'
 import { Polygon } from '../../util/Polygon'
 import { Color } from '../Color'
@@ -16,7 +16,10 @@ export const elementConsentosBaseDenied = {
       thickness: 1,
       strokeLinecap: 'butt'
     }, []),
-    state: new TextBox('state', 'denied', TextStyles.H5RobotoRegular24RedCenter, { y: 30.5, w: 340, h: 36, b: 47.5 }),
+    state: new TextBox('state', 'denied', {
+      ...TextStyles.H5RobotoRegular24RedCenter,
+      lineHeight: 28
+    }, { y: 30.5, w: 340, h: 36, b: 47.5 }),
     deleteButton: new LayerPlacement('deleteButton', buttonContainerDisabled, buttonContainerDisabled.layers, { x: 80, y: 78, w: 180, h: 36, r: 80 }, ({ label }) => ({
       label: new TextBox('label', 'delete', label.style, label.place)
     }))

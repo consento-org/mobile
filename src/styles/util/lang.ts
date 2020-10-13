@@ -1,4 +1,4 @@
-// This file has been generated with expo-export@5.0.0, a Sketch plugin.
+// This file has been generated with expo-export@5.0.1, a Sketch plugin.
 export function exists <T> (value: T | null | undefined): value is T {
   return value !== null && value !== undefined
 }

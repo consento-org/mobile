@@ -16,7 +16,7 @@
   "dependencies": {
     "@consento/api": "file:../api/dist/consento-api-0.5.0.tgz",
     "@consento/crypto": "^0.4.3",
-    "@consento/notification-server": "file:../notification-server/dist/consento-notification-server-0.1.19.tgz",
+    "@consento/notification-server": "^0.1.19",
     "@consento/shamirs-secret-sharing": "^1.0.4",
     "@react-native-community/masked-view": "0.1.10",
     "@react-navigation/bottom-tabs": "^5.9.2",

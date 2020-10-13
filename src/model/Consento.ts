@@ -104,14 +104,13 @@ function diffSubscriptions (stored: IOperationSubscriptions, current: IOperation
 export class Consento extends Model({
   users: prop<ArraySet<User>>(() => arraySet([createDefaultUser()])),
   legacyConfig: prop<ArraySet<string>>(() => arraySet()),
-  transportState: prop(EClientStatus.STARTUP),
   config: prop<Config | null>(null),
   configLoaded: prop(false)
 }) implements IConsentoModel {
-  _api: IAPI | undefined
-  _notificationTransport: ExpoTransport | undefined
+  _api: IAPI<ExpoTransport> | undefined
   _loadConfigError = observable.box<Error | undefined>()
   _configTask: Promise<void> | undefined
+  _transportState = observable.box<EClientStatus>(EClientStatus.STARTUP)
 
   onInit (): void {
     this.deleteEverything = this.deleteEverything.bind(this)
@@ -171,7 +170,7 @@ export class Consento extends Model({
   }
 
   @computed get transportReady (): boolean {
-    switch (this.transportState) {
+    switch (this._transportState.get()) {
       case EClientStatus.DESTROYED:
       case EClientStatus.NOADDRESS:
       case EClientStatus.STARTUP:
@@ -181,8 +180,12 @@ export class Consento extends Model({
     return true
   }
 
-  @computed get transportError (): Error | undefined {
-    return this._notificationTransport?.error
+  get transportError (): Error | undefined {
+    const api = this._api
+    if (api === undefined) {
+      return new Error('No api')
+    }
+    return api.notifications.transport.error
   }
 
   get loadConfigError (): Error | undefined {
@@ -197,20 +200,23 @@ export class Consento extends Model({
   }
 
   @modelAction _updateTransportState (): void {
-    this.transportState = (this._notificationTransport as ExpoTransport).state // set in onInit
+    this._transportState.set(this._api?.notifications.transport.state ?? EClientStatus.ERROR)
+  }
+
+  get transportState (): EClientStatus {
+    return this._transportState.get()
   }
 
   onAttachedToRootStore (): () => void {
     this._api = setup({
       cryptoCore,
-      notificationTransport: control => {
-        const transport = new ExpoTransport({ control })
-        this._notificationTransport = transport
-        return transport
-      }
+      notificationTransport: control => new ExpoTransport({ control })
     })
-    const transport: ExpoTransport = this._notificationTransport as ExpoTransport
+    const { transport } = this._api.notifications
     return combinedDispose(
+      autorun(() => {
+        console.log(`TransportState: ${this.transportState} ${this.transportError?.toString() ?? ''}`)
+      }),
       () => {
         transport
           .destroy()

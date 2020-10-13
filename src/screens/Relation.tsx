@@ -14,6 +14,7 @@ import { navigate } from '../util/navigate'
 import { SketchElement } from '../styles/util/react/SketchElement'
 import { exists } from '../styles/util/lang'
 import { elementRelationName } from '../styles/design/layer/elementRelationName'
+import { assertExists } from '../util/assertExists'
 
 const { avatar, relationName } = elementRelationName.layers
 
@@ -65,7 +66,9 @@ const styles = StyleSheet.create({
 
 export const Relation = observer((): JSX.Element => {
   const { relation } = useContext(RelationContext)
-  const { user } = useContext(ConsentoContext)
+  const consento = useContext(ConsentoContext)
+  assertExists(consento)
+  const { user } = consento
   const { leave, save, useStringField, isDirty } = useForm(
     fields => {
       relation.setName(fields.name)

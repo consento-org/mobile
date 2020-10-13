@@ -7,8 +7,8 @@ export interface TPoint {
 
 export interface ILinePart {
   length: number
-  point (from: number, target: TPoint): void
-  target (to: number): string
+  point: (from: number, target: TPoint) => void
+  target: (to: number) => string
 }
 
 export function distance (start: TPoint, end: TPoint): number {

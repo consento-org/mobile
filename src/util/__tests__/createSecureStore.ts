@@ -1,6 +1,7 @@
 import { createSecureStore, ISecureStore, IStoreEntry } from '../createSecureStore'
 import { cryptoCore } from '../../cryptoCore'
-import { Buffer, bufferToString } from '@consento/crypto/util/buffer'
+import { bufferToString } from '@consento/crypto/util/buffer'
+import { Buffer } from 'buffer'
 
 const jsonEncoding = {
   toBuffer: (entry: any) => Buffer.from(JSON.stringify(entry)),
@@ -38,7 +39,7 @@ async function createStore (secretKey?: Uint8Array, dataStore?: any): Promise<{ 
           if (entry.indexOf(base) === 0) {
             return entry.substr(base.length)
           }
-        }).filter(Boolean)
+        }).filter((entry): entry is string => entry !== undefined)
       },
       // eslint-disable-next-line @typescript-eslint/require-await
       async info (path: string[]): Promise<IStoreEntry> {

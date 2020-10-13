@@ -16,25 +16,38 @@ import { exists } from '../../styles/util/lang'
 
 type IStateStyle = ILayer<{ state: ITextBox, line: Polygon, deleteButton?: typeof elementConsentosBaseAccepted.layers.deleteButton }>
 
-export const TimeDisplay = ({ expiration }: { expiration: number }): JSX.Element => {
-  return <SketchElement src={elementConsentosBaseIdle.layers.timeLeft} value={useHumanUntil(expiration)} />
-}
+const { allowButton, deleteButton, timeLeft } = elementConsentosBaseIdle.layers
 
-const { allowButton, deleteButton } = elementConsentosBaseIdle.layers
+const styles = StyleSheet.create({
+  allowButton: {
+    position: 'absolute',
+    left: allowButton.place.left,
+    top: allowButton.place.top,
+    width: allowButton.place.width
+  },
+  expiration: {
+    position: 'absolute',
+    left: timeLeft.place.left,
+    top: timeLeft.place.top,
+    width: timeLeft.place.width
+  },
+  deleteButton: {
+    position: 'absolute',
+    left: deleteButton.place.left,
+    top: deleteButton.place.top,
+    width: deleteButton.place.width
+  }
+})
+
+export const TimeDisplay = ({ expiration }: { expiration: number }): JSX.Element => {
+  return <SketchElement src={elementConsentosBaseIdle.layers.timeLeft} style={styles.expiration} value={useHumanUntil(expiration)} />
+}
 
 function ActiveState ({ expiration, onDelete, onAccept, style }: IConsentoState): JSX.Element {
   return <View style={style}>
     {exists(expiration) ? <TimeDisplay expiration={expiration} /> : null}
-    <ConsentoButton
-      style={{ ...allowButton.place, position: 'absolute' }}
-      light
-      title={allowButton.layers.label.text}
-      onPress={onAccept} />
-    <ConsentoButton
-      style={{ ...deleteButton.place, position: 'absolute' }}
-      thin
-      title={deleteButton.layers.label.text}
-      onPress={onDelete} />
+    <ConsentoButton style={styles.allowButton} light title={allowButton.layers.label.text} onPress={onAccept} />
+    <ConsentoButton style={styles.deleteButton} thin title={deleteButton.layers.label.text} onPress={onDelete} />
   </View>
 }
 
@@ -76,11 +89,7 @@ function createInactiveState (stateStyle: IStateStyle): (props: IConsentoInactiv
       <SketchElement style={styles.state} src={state} />
       {
         exists(deleteButton)
-          ? <ConsentoButton
-            src={deleteButton}
-            style={styles.delete}
-            onPress={onDelete}
-          />
+          ? <ConsentoButton src={deleteButton} style={styles.delete} onPress={onDelete} />
           : null
       }
     </View>

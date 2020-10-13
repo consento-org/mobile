@@ -57,6 +57,7 @@ export const Vault = observer((): JSX.Element => {
   const back = ['main', 'vaults']
   useEffect(() => {
     if (!vault.isOpen && !vault.isLoading) {
+      console.log({ time: (config?.expire ?? 1) * 1000, expire: config?.expire })
       setTimeout(() => vault.requestUnlock((config?.expire ?? 1) * 1000), 0)
     }
   }, [vault.isLoading])

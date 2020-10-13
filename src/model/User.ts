@@ -2,7 +2,7 @@ import { model, Model, prop, arraySet, Ref, findParent, tProp, types, modelActio
 import { Vault } from './Vault'
 import { Relation } from './Relation'
 import { IAnyConsento, ConsentoBecomeLockee, ConsentoUnlockVault } from './Consentos'
-import { computed, autorun } from 'mobx'
+import { computed, autorun, observable } from 'mobx'
 import { find } from '../util/find'
 import { contains } from '../util/contains'
 import { mobxPersist } from '../util/mobxPersist'
@@ -92,6 +92,8 @@ export class User extends Model({
   consentos: prop(() => arraySet<IAnyConsento>()),
   lastConsentosView: prop<number | null>(() => null)
 }) {
+  _loadError = observable.box<Error>()
+
   onAttachedToRootStore (): () => any {
     return combinedDispose(
       autorun(() => {
@@ -251,10 +253,17 @@ export class User extends Model({
     return userSubscriptions
   }
 
-  @modelAction _markLoaded (): void {
+  @modelAction _markLoaded (error?: Error): void {
+    if (exists(error)) {
+      this._loadError.set(error)
+    }
     if (!this.loaded) {
       this.loaded = true
     }
+  }
+
+  get loadError (): Error | undefined {
+    return this._loadError.get()
   }
 
   getLockees (vault: Vault): IArrayView<Lockee> | undefined {

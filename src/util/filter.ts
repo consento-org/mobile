@@ -3,7 +3,7 @@ export function filter <In, Out extends In> (iterable: Iterable<In>, match: (inp
   const result: Out[] = []
   while (true) {
     const next = iterator.next()
-    if (next.done) {
+    if (next.done === true) {
       break
     }
     if (match(next.value)) {

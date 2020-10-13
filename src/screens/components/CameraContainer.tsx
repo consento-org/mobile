@@ -201,17 +201,16 @@ export const CameraContainer = forwardRef<Camera, ICameraContainerProps>((props,
 
   return <View style={{ ...containerStyle, ...style }}>
     {
-      status === 'granted'
-        ? <Camera
-          ref={myRef}
-          type={type}
-          ratio={nativeSize?.ratio ?? undefined}
-          style={cameraStyle}
-          onBarCodeScanned={onCode}
-          zoom={zoom}
-          flashMode={flashMode}
-          onCameraReady={onCameraReady}
-        /> : null
+      status === 'granted' ? <Camera
+        ref={myRef}
+        type={type}
+        ratio={nativeSize?.ratio ?? undefined}
+        style={cameraStyle}
+        onBarCodeScanned={onCode}
+        zoom={zoom}
+        flashMode={flashMode}
+        onCameraReady={onCameraReady}
+      /> : null
     }
     <View style={uiStyle}>{children}</View>
   </View>

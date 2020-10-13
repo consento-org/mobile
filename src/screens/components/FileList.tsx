@@ -17,8 +17,6 @@ import { elementPopUpMenu } from '../../styles/design/layer/elementPopUpMenu'
 import { elementFileList } from '../../styles/design/layer/elementFileList'
 import { SketchElement } from '../../styles/util/react/SketchElement'
 import { BottomButtonView } from './BottomButtonView'
-import { IImageAsset } from '../../styles/util/types'
-import { SketchImage } from '../../styles/util/react/SketchImage'
 
 export interface ISectionProps <T extends File> {
   name: string

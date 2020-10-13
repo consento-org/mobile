@@ -37,10 +37,6 @@ interface IConfig {
   expire?: number
 }
 
-interface IEventSubscription {
-  remove: () => void
-}
-
 @model('consento/Config')
 export class Config extends Model({
   address: tProp(types.nonEmptyString, () => DEFAULT_ADDRESS),
@@ -121,14 +117,6 @@ export class Consento extends Model({
     this.deleteEverything = this.deleteEverything.bind(this)
     this.updateConfig = this.updateConfig.bind(this)
 
-    this._api = setup({
-      cryptoCore,
-      notificationTransport: control => {
-        const transport = new ExpoTransport({ control })
-        this._notificationTransport = transport
-        return transport
-      }
-    })
     this._configTask = loadConfig()
       .then(
         config => {
@@ -213,8 +201,25 @@ export class Consento extends Model({
   }
 
   onAttachedToRootStore (): () => void {
-    const transport = this._notificationTransport as ExpoTransport // set in onInit
+    this._api = setup({
+      cryptoCore,
+      notificationTransport: control => {
+        const transport = new ExpoTransport({ control })
+        this._notificationTransport = transport
+        return transport
+      }
+    })
+    const transport: ExpoTransport = this._notificationTransport as ExpoTransport
     return combinedDispose(
+      () => {
+        transport
+          .destroy()
+          .catch(error => {
+            console.log('cant be destroyed')
+            console.error({ error })
+          })
+        this._api = undefined
+      },
       autoRegisterRootStore(vaultStore),
       subscribeEvent(transport, 'change', () => this._updateTransportState(), true),
       autorun(
@@ -234,12 +239,12 @@ export class Consento extends Model({
           if (!ready) return
           const api = this._api as IAPI // set in onInit
           const subscriptions: IOperationSubscriptions = fromUserSubscriptions(api, user.subscriptions)
-          const processor = (message: INotification, encryptedMessage?: any): void => {
+          const processor = async (message: INotification, encryptedMessage?: any): Promise<boolean> => {
             if (message.type === 'success') {
               const subscription = subscriptions[message.channelIdBase64]
               if (subscription === undefined) {
                 console.log(`Received notification for ${message.channelIdBase64} but there was no subscriber ${String(encryptedMessage)}?!`)
-                return
+                return false
               }
               console.log(`Received notification: ${message.channelIdBase64}`)
               subscription.subscription.action(message, this.api)
@@ -247,12 +252,8 @@ export class Consento extends Model({
               if (message.code === EErrorCode.transportError) {
                 console.error(message.error)
               }
-              console.log({
-                state: this.transportState,
-                address: transport.address,
-                errorNotification: message
-              })
             }
+            return true
           }
           api.notifications.processors.add(processor)
           const receivers = Object.values(subscriptions).map(subscription => new api.crypto.Receiver(subscription.receiver))

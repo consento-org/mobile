@@ -124,12 +124,14 @@ export const TopNavigation = (props: ITopNavigationProps): JSX.Element => {
               autoFocus
               onBlur={handleBlur} />
           </>
-          : <SketchTextBoxView
-            style={styles.title}
-            src={canEdit ? titleItem : titleEmpty}
-            value={isEmpty(props.title) ? props.titlePlaceholder : props.title}
-            onPress={handleEdit}
-          />}
+          : <>
+            <SketchTextBoxView
+              style={styles.title}
+              src={canEdit ? titleItem : titleEmpty}
+              value={isEmpty(props.title) ? props.titlePlaceholder : props.title}
+              onPress={handleEdit}
+            />
+          </>}
       </View>
       <View style={styles.right}>
         {canEdit && !editing ? <SketchImage style={styles.edit} src={edit} onPress={handleEdit} /> : null}

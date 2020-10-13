@@ -37,7 +37,7 @@ async function _getExpoToken (): Promise<string> {
 
   // Get the token that uniquely identifies this device
   try {
-    return await Notifications.getExpoPushTokenAsync()
+    return Notifications.getExpoPushTokenAsync()
   } catch (error) {
     if (Constants.debugMode) {
       console.warn(`[DEV MODE ONLY!] Error while collecting expo token, using dummy token: ${String(error)}`)

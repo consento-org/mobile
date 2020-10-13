@@ -50,11 +50,7 @@ export function BottomButtonView ({ src, children, onPress, containerStyle }: IB
         ? React.createElement(children, {
           style: StyleSheet.compose({ backgroundColor }, styleSheet)
         })
-        : <ScrollView
-          centerContent
-          style={{ backgroundColor }}
-          contentContainerStyle={styleSheet}>{children}
-        </ScrollView>
+        : <ScrollView centerContent style={{ backgroundColor }} contentContainerStyle={styleSheet}>{children}</ScrollView>
     }
     {hasBottomButton(bottomButton, onPress)
       ? <View style={StyleSheet.compose<ViewStyle>(styles.bottomArea, srcStyles.bottomArea)}>

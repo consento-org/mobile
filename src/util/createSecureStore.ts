@@ -1,5 +1,5 @@
 import { ICryptoCore } from '@consento/crypto/core/types'
-import { bufferToString, Buffer } from '@consento/api/util'
+import { bufferToString } from '@consento/api/util'
 
 /**
  * TODO: This secure store belongs into consento/crypto or consento/api
@@ -44,23 +44,23 @@ export interface ISecureStoreOptions <LogEntry> {
 }
 
 export interface IIndexer <Index> {
-  read (): Promise<Index>
-  persist (): Promise<void>
-  isDirty (): Promise<boolean>
-  persistedVersion (): Promise<number>
+  read: () => Promise<Index>
+  persist: () => Promise<void>
+  isDirty: () => Promise<boolean>
+  persistedVersion: () => Promise<number>
 }
 
 export interface ISecureStore <LogEntry> {
   readonly root: Promise<string>
-  version (): Promise<number>
-  defineIndex <Index> (name: string, init: () => Index, encoding: IEncoding<Index>, merge: (index: Index, logEntry: LogEntry, version: number) => void): IIndexer<Index>
-  append (entry: LogEntry): Promise<void>
-  delete (): Promise<void>
+  version: () => Promise<number>
+  defineIndex: <Index>(name: string, init: () => Index, encoding: IEncoding<Index>, merge: (index: Index, logEntry: LogEntry, version: number) => void) => IIndexer<Index>
+  append: (entry: LogEntry) => Promise<void>
+  delete: () => Promise<void>
 }
 
 interface IInternalIndexer <Index, LogEntry> extends IIndexer<Index> {
-  update (logEntry: LogEntry): Promise<void>
-  delete (): Promise<void>
+  update: (logEntry: LogEntry) => Promise<void>
+  delete: () => Promise<void>
 }
 
 interface IIndexState<Index> {
@@ -104,11 +104,11 @@ export function createSecureStore <LogEntry> (secretKey: Uint8Array, options: IS
       myLock = versionLock
       await myLock
     }
-    let release: () => void
+    let release: (() => void) | undefined
     versionLock = new Promise<void>(resolve => {
       release = resolve
     })
-    return release
+    return release as () => void
   }
   const write = async (path: string[], data: Uint8Array): Promise<void> => {
     const encrypted = await crypto.encrypt(secretKey, data)
@@ -145,7 +145,7 @@ export function createSecureStore <LogEntry> (secretKey: Uint8Array, options: IS
         data
       }
     }
-    const readIndex = async (indexVersion: number, maxLogVersion: number): Promise<IIndexState<Index>> => {
+    const readIndex = async (indexVersion: number, maxLogVersion: number): Promise<IIndexState<Index> | null> => {
       const logVersions = (await cleanList(['data']))
         .filter(logVersion => logVersion > indexVersion && logVersion <= maxLogVersion)
 
@@ -164,9 +164,9 @@ export function createSecureStore <LogEntry> (secretKey: Uint8Array, options: IS
     let indexLock: Promise<IIndexState<Index>> = (async () => {
       // The version at the creation of the index is taken as latest
       const maxLogVersion = version
-      const indexVersions = (await cleanList(['index', indexName])).filter(indexVersion => indexVersion < version)
-      while (indexVersions.length > 0) {
-        const read = await readIndex(indexVersions.pop(), maxLogVersion)
+      const indexVersions = (await cleanList(['index', indexName])).filter(indexVersion => indexVersion < version).reverse()
+      for (const indexVersion of indexVersions) {
+        const read = await readIndex(indexVersion, maxLogVersion)
         if (read !== null) {
           return read
         }
@@ -191,16 +191,16 @@ export function createSecureStore <LogEntry> (secretKey: Uint8Array, options: IS
     indexLock.catch(noop)
     const lockIndex = async (): Promise<{ state: IIndexState<Index>, release: (newState: IIndexState<Index>) => void }> => {
       let myLock
-      let state: IIndexState<Index>
+      let state: IIndexState<Index> | undefined
       while (myLock !== indexLock) {
         myLock = indexLock
         state = await myLock
       }
-      let release: (newState) => void
+      let release: (newState: IIndexState<Index>) => void = () => {}
       indexLock = new Promise<IIndexState<Index>>(resolve => {
         release = resolve
       })
-      return { state, release }
+      return { state: state as IIndexState<Index>, release }
     }
     const indexer: IInternalIndexer<Index, LogEntry> = {
       async update (entry: LogEntry) {

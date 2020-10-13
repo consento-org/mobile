@@ -12,9 +12,9 @@ export enum TRequestState {
 }
 
 export interface IRequestBase extends BaseModel<any, any> {
-  cancel(): boolean
-  accept(): boolean
-  deny(): boolean
+  cancel: () => boolean
+  accept: () => boolean
+  deny: () => boolean
   readonly time: number
   readonly keepAlive: number
   readonly accepted: number | undefined

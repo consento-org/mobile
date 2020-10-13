@@ -65,13 +65,15 @@ const SelectedLockeeList = observer(({ onAdd }: { onAdd?: (event: GestureRespond
     lockees !== undefined && lockees.size > 0
       ? <BottomButtonView src={elementRelationSelectListDisplay} onPress={onAdd}>
         {
+          /* eslint-disable react/jsx-indent-props */
           ({ style }) =>
             <MobxList
               data={lockees}
               style={style}
               itemStyle={styles.item}
               sort={compareNames}
-              renderItem={renderAddedLockee} />
+              renderItem={renderAddedLockee}
+            />
         }
       </BottomButtonView>
       : undefined

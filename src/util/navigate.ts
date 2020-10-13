@@ -101,7 +101,10 @@ export const navigate: INavigate = <TParams = any> (route: string | string[] | I
   if (typeof route !== 'string') {
     return navigate(route.screen, route.params)
   }
-  navigationRef.current?.navigate(route, params)
+  const r = route
+  setImmediate(() => {
+    navigationRef.current?.navigate(r, params)
+  })
 }
 
 export function canGoBack (): boolean {

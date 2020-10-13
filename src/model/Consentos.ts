@@ -136,15 +136,15 @@ export class ConsentoBecomeLockee extends Model({
   }
 
   @computed get handleHide (): () => any {
-    const accept = this.acceptHandshake
-    const { lockId } = this
-    if (!exists(accept)) {
-      throw new Error('No Accept token available')
-    }
-    if (!exists(lockId)) {
-      throw new Error('Missing the lock id')
-    }
     if (this.state === TRequestState.active) {
+      const accept = this.acceptHandshake
+      const { lockId } = this
+      if (!exists(accept)) {
+        throw new Error('No Accept token available')
+      }
+      if (!exists(lockId)) {
+        throw new Error('Missing the lock id')
+      }
       const api = requireAPI(this)
       return () => {
         ;(async () => {
@@ -169,7 +169,7 @@ export class ConsentoBecomeLockee extends Model({
   @modelAction _setAccept (ok: boolean): void {
     const accept = this.acceptHandshakeJSON
     if (!exists(accept)) {
-      throw new Error('No Accept token available')
+      throw new Error('No Accept token available' + String(this.acceptHandshakeJSON))
     }
     this.acceptTime = ok ? Date.now() : null
     this.receiver = ok ? new Receiver(toJS(accept.receiver)) : null

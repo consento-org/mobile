@@ -66,6 +66,7 @@ const styles = StyleSheet.create({
 
 export const Relation = observer((): JSX.Element => {
   const { relation } = useContext(RelationContext)
+  assertExists(relation)
   const consento = useContext(ConsentoContext)
   assertExists(consento)
   const { user } = consento

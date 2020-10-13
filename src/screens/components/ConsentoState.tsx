@@ -53,7 +53,7 @@ function ActiveState ({ expiration, onDelete, onAccept, style }: IConsentoState)
 
 export interface IConsentoBaseState {
   onDelete: () => any
-  onAccept: () => any
+  onAccept?: () => any
   style?: ViewStyle
   expiration?: number
 }

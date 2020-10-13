@@ -1,6 +1,5 @@
 import { createVaultSecrets, IVaultSecrets, IVaultSecretsProps } from '../createVaultSecrets'
 import { cryptoCore } from '../../cryptoCore'
-import { exists } from '@consento/api/util'
 
 async function waitABit <T> (next: () => T): Promise<T> {
   return await new Promise <T>(resolve => {
@@ -15,29 +14,27 @@ function factory (store?: { [key: string]: string }, impl?: Partial<IVaultSecret
   store: { [key: string]: string }
   vaultSecrets: IVaultSecrets
 } {
-  if (!exists(store)) {
-    store = {}
-  }
+  const _store = store ?? {}
   const vaultSecrets = createVaultSecrets({
     cryptoCore,
     async setItemAsync (key: string, value: string): Promise<void> {
       return await waitABit(() => {
-        store[key] = value
+        _store[key] = value
       })
     },
     async getItemAsync (key: string): Promise<string> {
-      return await waitABit(() => store[key])
+      return await waitABit(() => _store[key])
     },
     async deleteItemAsync (key: string): Promise<void> {
       return await waitABit(() => {
         // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-        delete store[key]
+        delete _store[key]
       })
     },
     ...impl
   })
   return {
-    store,
+    store: _store,
     vaultSecrets
   }
 }

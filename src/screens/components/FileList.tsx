@@ -70,7 +70,7 @@ const deleteAction: IPopupMenuItem<IFileContext> = {
   name: 'Delete',
   action: ({ file, vault }): void => {
     deleteWarning({
-      onPress: () => vault.data.deleteFile(file),
+      onPress: () => vault.data?.deleteFile(file),
       itemName: 'file'
     })
   },
@@ -98,7 +98,7 @@ const addActions: Array<IPopupMenuEntry<Vault>> = [
     action: vault =>
       navigate('camera', {
         onPicture (input: ImageFile): void {
-          vault.data.addFile(input)
+          vault.data?.addFile(input)
           navigate('editor', {
             vault: vault.$modelId,
             file: input.$modelId
@@ -118,7 +118,7 @@ const addActions: Array<IPopupMenuEntry<Vault>> = [
         name: vault.newFilename(),
         secretKeyBase64: ''
       })
-      vault.data.addFile(textFile)
+      vault.data?.addFile(textFile)
       navigate('editor', {
         vault: vault.$modelId,
         file: textFile.$modelId

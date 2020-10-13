@@ -120,7 +120,6 @@ export interface ICameraContainerProps {
     height: number
   }
   children?: React.ReactChild | React.ReactChild[]
-  ref?: RefObject<Camera>
   zoom?: number
   flashMode?: any
   type?: any

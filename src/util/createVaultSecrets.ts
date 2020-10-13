@@ -1,12 +1,13 @@
 import randomBytes from 'get-random-values-polypony'
 import { bufferToString } from '@consento/api/util'
 import { ICryptoCore } from '@consento/crypto/core/types'
+import { exists } from '../styles/util/lang'
 
 export interface IVaultSecretsProps {
   prefix?: string
   cryptoCore: ICryptoCore
   setItemAsync: (key: string, value: string) => Promise<void>
-  getItemAsync: (key: string) => Promise<string>
+  getItemAsync: (key: string) => Promise<string | null>
   deleteItemAsync: (key: string) => Promise<void>
 }
 
@@ -77,7 +78,7 @@ export function createVaultSecrets ({ prefix: _prefix, setItemAsync, getItemAsyn
     if (read === undefined) {
       return await _setMemory(key, async () => {
         const value = await getItemAsync(key)
-        if (value === undefined) {
+        if (!exists(value)) {
           return
         }
         return {

@@ -30,14 +30,14 @@ export class VaultStore extends Model({
   vaults: prop<ObjectMap<VaultData>>(() => objectMap())
 }) {
   _disposersByKeyHex: { [key: string]: () => void } = {}
-  _loading: IObservableValue<boolean>
+  _loading: IObservableValue<boolean> = observable.box<boolean>(true)
 
   onInit (): void {
     this._loading = observable.box<boolean>(true)
   }
 
   @computed get loading (): boolean {
-    return this._loading.get()
+    return this._loading?.get() ?? true
   }
 
   @modelAction clear (): void {
@@ -55,10 +55,9 @@ export class VaultStore extends Model({
       () => this.clear(),
       autorun(() => {
         const toDelete = new Set(this.vaults.keys())
-        for (const dataKeyHex of expoVaultSecrets.secretsBase64.keys()) {
+        for (const [dataKeyHex, secret] of expoVaultSecrets.secretsBase64.entries()) {
           if (!this.vaults.has(dataKeyHex)) {
             const data = new VaultData({ dataKeyHex })
-            const secret = expoVaultSecrets.secretsBase64.get(dataKeyHex)
             this._disposersByKeyHex[dataKeyHex] = persist(data, secret)
             this.vaults.set(dataKeyHex, data)
           } else {

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { MutableRefObject, useEffect, useRef, useState } from 'react'
 import { View, useWindowDimensions, StyleSheet, TouchableWithoutFeedback, TouchableOpacity, GestureResponderEvent, ViewStyle } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ImageFile } from '../model/VaultData'
@@ -115,7 +115,7 @@ export const Camera = ({ onPicture, onClose }: ICameraProps): JSX.Element => {
   const [direction, setDirection] = useState(NativeCamera.Constants.Type.back)
   const [zoom, setZoom] = useState<number>(0)
   const [isEncrypting, setEncrypting] = useState<boolean>(false)
-  const ref = useRef<NativeCamera>()
+  const ref = useRef<NativeCamera>() as MutableRefObject<NativeCamera>
 
   const flip = (): void => {
     setDirection(

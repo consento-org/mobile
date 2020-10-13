@@ -31,7 +31,10 @@ export class ExpoVaultSecrets extends Model({
     (async () => {
       const persistedKeysHex = await vaultSecrets.persistedKeys()
       await Promise.all(persistedKeysHex.map(async (keyHex) => {
-        this.secretsBase64.set(keyHex, await vaultSecrets.get(keyHex))
+        const secretKey = await vaultSecrets.get(keyHex)
+        if (secretKey !== undefined) {
+          this.secretsBase64.set(keyHex, secretKey)
+        }
       }))
     })().catch(vaultInitError => console.error({ vaultInitError }))
   }

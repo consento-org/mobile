@@ -62,5 +62,5 @@ export function useStateMachine <StateEnum extends string, Options, Init extends
   useEffect(() => {
     return () => manager.close()
   }, [])
-  return [state, manager]
+  return [state as IState<StateEnum, Options>, manager]
 }

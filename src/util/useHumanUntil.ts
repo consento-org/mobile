@@ -6,7 +6,7 @@ const timespan = new Timespan({
   millisecond: false
 })
 
-function stringify (timestamp): string {
+function stringify (timestamp: number): string {
   return `${timespan.parse(timestamp - Date.now())} left`
 }
 

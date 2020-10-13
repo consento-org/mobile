@@ -10,6 +10,7 @@ import { Avatar } from './Avatar'
 import { useHumanSince } from '../../util/useHumanSince'
 import { ConsentoState } from './ConsentoState'
 import { screen02Consentos } from '../../styles/design/layer/screen02Consentos'
+import { SketchTextBoxView } from '../../styles/util/react/SketchTextBox'
 
 const cardMargin = screen02Consentos.layers.b.place.spaceY(screen02Consentos.layers.a.place)
 
@@ -111,7 +112,7 @@ export const ConsentoBecomeLockeeView = observer(({ consento }: { consento: Cons
     </Svg>
     <SketchElement style={styles.vaultIcon} src={vaultIcon} />
     <SketchElement style={styles.lastAccess} src={lastAccess} value={useHumanSince(consento.creationTime)} />
-    <SketchElement style={styles.relationName} src={relationName} value={consento.relationName !== '' ? consento.relationName : undefined} />
+    <SketchTextBoxView style={styles.relationName} src={relationName} value={consento.relationName !== '' ? consento.relationName ?? undefined : undefined} />
     <SketchElement style={styles.relationID} src={relationID} value={consento.relationHumanId} />
     <View style={styles.avatar}><Avatar size={avatar.place.width} avatarId={consento.relationAvatarId} /></View>
     <SketchElement style={styles.question} src={question} />

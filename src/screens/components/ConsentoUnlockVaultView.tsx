@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
 export const ConsentoUnlockVaultView = observer(({ consento }: { consento: ConsentoUnlockVault }) => {
   return <View style={styles.container}>
     <SketchElement src={lastAccess} style={styles.lastAccess} value={useHumanSince(consento.time)} />
-    <SketchElement src={relationName} style={styles.relationName} value={consento.relationName !== '' ? consento.relationName : undefined} />
+    <SketchElement src={relationName} style={styles.relationName} value={consento.relationName !== '' ? consento.relationName ?? undefined : undefined} />
     <SketchElement src={relationID} style={styles.relationID} value={consento.relationHumanId} />
     <SketchElement src={actionRequested} style={styles.actionRequested} />
     <View style={styles.avatar}><Avatar size={avatar.place.width} avatarId={consento.relationAvatarId} /></View>

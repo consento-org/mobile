@@ -3,7 +3,7 @@ import { observer } from 'mobx-react'
 import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { elementBottomNav } from '../styles/design/layer/elementBottomNav'
-import { IImageAsset, ViewBorders } from '../styles/util/types'
+import { IImageAsset, ILayer, ViewBorders } from '../styles/util/types'
 import { SketchImage } from '../styles/util/react/SketchImage'
 import { ImageAsset } from '../styles/design/ImageAsset'
 import { SketchTextBoxView } from '../styles/util/react/SketchTextBox'
@@ -135,10 +135,10 @@ export const Screens = observer(forwardRef((_, ref: Ref<any>): JSX.Element => {
       const fileKey = (route.params as any)?.file
       const file = vault.findFile(fileKey)
       if (isImageFile(file)) {
-        return <ImageEditor image={file} vault={vault} navigation={navigation} />
+        return <ImageEditor image={file} vault={vault} />
       }
       if (isTextFile(file)) {
-        return <TextEditor textFile={file} vault={vault} navigation={navigation} />
+        return <TextEditor textFile={file} vault={vault} />
       }
       navigation.navigate('') // TODO: Return 404 alert message?
       return <></>

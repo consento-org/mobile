@@ -3,7 +3,7 @@ export function map <In, Out> (iter: Iterator<In>, op: (value: In, index: number
   let index = -1
   while (true) {
     const data = iter.next()
-    if (data.done) {
+    if (data.done === true) {
       break
     }
     index += 1

@@ -6,22 +6,22 @@ import { Buffer } from 'buffer'
 export { Buffer } from 'buffer'
 
 export interface IFSUtils {
-  resolve (path: string[]): string
-  write (path: string[], contents: string | Uint8Array, options?: { mkdir?: boolean }): Promise<void>
-  readBuffer (path: string[]): Promise<Buffer>
-  readString (path: string[]): Promise<string>
-  delete (path: string[], options?: { idempotent?: boolean }): Promise<void>
-  mkdirp (path: string[]): Promise<string[]>
-  rimraf (path?: string[]): Promise<void>
-  list (path: string[]): Promise<string[]>
-  info (path: string[], options?: { md5?: boolean, size?: boolean }): Promise<FileInfo>
+  resolve: (path: string[]) => string
+  write: (path: string[], contents: string | Uint8Array, options?: { mkdir?: boolean }) => Promise<void>
+  readBuffer: (path: string[]) => Promise<Buffer>
+  readString: (path: string[]) => Promise<string>
+  delete: (path: string[], options?: { idempotent?: boolean }) => Promise<void>
+  mkdirp: (path: string[]) => Promise<string[]>
+  rimraf: (path?: string[]) => Promise<void>
+  list: (path: string[]) => Promise<string[]>
+  info: (path: string[], options?: { md5?: boolean, size?: boolean }) => Promise<FileInfo>
 }
 
 export interface ICacheFSUtils extends IFSUtils {
-  mkdirTmpAsync (): Promise<string[]>
+  mkdirTmpAsync: () => Promise<string[]>
 }
 
-function pathToString (root: string, path: string[]): string {
+function pathToString (root: string, path?: string[] | null): string {
   let result = root
   if (path === null || path === undefined) {
     return result
@@ -61,9 +61,25 @@ async function mkdirp (root: string, path: string[]): Promise<string[]> {
   return path
 }
 
-function createFSUtils (root: string): IFSUtils {
+function createFSUtils (root: string | null): IFSUtils {
+  if (root === null) {
+    // eslint-disable-next-line @typescript-eslint/promise-function-async
+    const rejectError = (): Promise<any> => Promise.reject<any>(new Error('Expo root directory not available.'))
+    const throwError = (): any => { throw new Error('Expo root directory not available.') }
+    return {
+      write: rejectError,
+      readString: rejectError,
+      readBuffer: rejectError,
+      delete: rejectError,
+      rimraf: rejectError,
+      list: rejectError,
+      info: rejectError,
+      mkdirp: rejectError,
+      resolve: throwError
+    }
+  }
   const resolve = (path: string[]): string => pathToString(root, path)
-  const _mkdirp = async (path: string[]): Promise<string[]> => mkdirp(root, path)
+  const _mkdirp = async (path: string[]): Promise<string[]> => await mkdirp(root, path)
   return {
     write: async (path: string[], contents: string | Uint8Array, options?: { mkdir?: boolean }) => {
       const contentsAsString = typeof contents === 'string' ? contents : bufferToString(contents, 'base64')
@@ -74,7 +90,7 @@ function createFSUtils (root: string): IFSUtils {
       try {
         await writeAsStringAsync(uri, contentsAsString, writeOptions)
       } catch (err) {
-        if (options?.mkdir) {
+        if (options?.mkdir === true) {
           await docs.mkdirp(dirname(path))
           await writeAsStringAsync(uri, contentsAsString, writeOptions)
         } else {
@@ -83,15 +99,15 @@ function createFSUtils (root: string): IFSUtils {
       }
     },
     readString: async (path: string[]): Promise<string> => {
-      return readAsStringAsync(resolve(path), { encoding: 'utf8' })
+      return await readAsStringAsync(resolve(path), { encoding: 'utf8' })
     },
     readBuffer: async (path: string[]): Promise<Buffer> => {
       return Buffer.from(await readAsStringAsync(resolve(path), { encoding: 'base64' }), 'base64')
     },
-    delete: async (path: string[], options?: { idempotent?: boolean }) => deleteAsync(resolve(path), options),
-    rimraf: async (path: string[]) => rimraf(root, path),
-    list: async (path: string[]) => readDirectoryAsync(resolve(path)),
-    info: async (path: string[], options?: { md5?: boolean, size?: boolean }) => getInfoAsync(resolve(path), options),
+    delete: async (path: string[], options?: { idempotent?: boolean }) => await deleteAsync(resolve(path), options),
+    rimraf: async (path?: string[]) => await rimraf(root, path),
+    list: async (path: string[]) => await readDirectoryAsync(resolve(path)),
+    info: async (path: string[], options?: { md5?: boolean, size?: boolean }) => await getInfoAsync(resolve(path), options),
     mkdirp: _mkdirp,
     resolve
   }

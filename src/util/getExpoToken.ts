@@ -1,8 +1,9 @@
 import * as Permissions from 'expo-permissions'
 import { Notifications } from 'expo'
-import randomBytes from '@consento/sync-randombytes'
+import randomBytes from 'get-random-values-polypony'
 import Constants from 'expo-constants'
-import { bufferToString } from '@consento/crypto/util/buffer'
+import { bufferToString } from '@consento/api/util'
+import { createError } from './createError'
 
 function rndChar (num: number): string {
   return bufferToString(randomBytes(new Uint8Array(num * 2)), 'hex')
@@ -28,7 +29,7 @@ async function _getExpoToken (): Promise<string> {
 
     // Stop here if the user did not grant permissions
     if (finalStatus !== 'granted') {
-      throw Object.assign(new Error('Permission to receive Notifications not granted!'), {
+      throw createError('Permission to receive Notifications not granted!', {
         status: finalStatus
       })
     }
@@ -49,5 +50,5 @@ async function _getExpoToken (): Promise<string> {
 const expoToken = _getExpoToken()
 
 export async function getExpoToken (): Promise<string> {
-  return expoToken
+  return await expoToken
 }

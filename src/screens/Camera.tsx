@@ -1,76 +1,121 @@
-import React, { useState, useRef, useEffect } from 'react'
-import { CameraContainer } from './components/CameraContainer'
-import { elementCamera } from '../styles/component/elementCamera'
-import { ViewStyle, View } from 'react-native'
-import { Camera as NativeCamera } from 'expo-camera'
-import { TouchableWithoutFeedback, TouchableOpacity } from 'react-native-gesture-handler'
-import { Polygon, ImagePlacement, useVUnits } from '../styles/Component'
-import { Asset } from '../Asset'
+import React, { MutableRefObject, useEffect, useRef, useState } from 'react'
+import { View, useWindowDimensions, StyleSheet, TouchableWithoutFeedback, TouchableOpacity, GestureResponderEvent, ViewStyle } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ImageFile } from '../model/VaultData'
+import { Camera as NativeCamera } from 'expo-camera'
+import { IImageAsset, IPolygon } from '../styles/util/types'
+import { ImageAsset } from '../styles/design/ImageAsset'
+import { elementCamera } from '../styles/design/layer/elementCamera'
+import { SketchImage } from '../styles/util/react/SketchImage'
+import { ImagePlacement } from '../styles/util/ImagePlacement'
+import { CameraContainer } from './components/CameraContainer'
+import { SketchElement } from '../styles/util/react/SketchElement'
 import { importFile } from '../util/expoSecureBlobStore'
-import { useSafeArea } from 'react-native-safe-area-context'
-import { bufferToString } from '@consento/crypto/util/buffer'
-
-const containerStyle: ViewStyle = {
-  backgroundColor: elementCamera.backgroundColor,
-  width: '100%',
-  height: '100%',
-  position: 'absolute',
-  display: 'flex'
-}
+import { bufferToString } from '@consento/api/util'
 
 const ShutterButton = ({ onPress }: { onPress: () => any }): JSX.Element => {
   const [pressed, setPressed] = useState<boolean>(false)
 
-  return <TouchableWithoutFeedback
+  return <SketchImage
+    src={pressed ? elementCamera.layers.shutterActive : elementCamera.layers.shutter}
+    onPress={onPress}
     onPressIn={() => setPressed(true)}
     onPressOut={() => setPressed(false)}
-    onPress={onPress}
-    style={{
-      ...elementCamera.shutterActive.place.size()
-    }}
-  >
-    {(pressed ? elementCamera.shutterActive : elementCamera.shutter).img()}
-  </TouchableWithoutFeedback>
+  />
 }
 
-function FlatButton ({ item, pressed: poly, onPress }: {
+type IFlatButton = (props: { onPress: () => any }) => JSX.Element
+
+function createFlatButton ({ item, pressed: poly }: {
   item: ImagePlacement
-  pressed: Polygon
-  onPress: () => any
-}): JSX.Element {
-  const [pressed, setPressed] = useState<boolean>(false)
-  return <TouchableWithoutFeedback
-    onPressIn={() => setPressed(true)}
-    onPressOut={() => setPressed(false)}
-    onPress={onPress}
-  >
-    <View
-      style={{
-        width: poly.place.width,
-        height: '100%',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: pressed ? poly.fill.color : undefined
-      }}
+  pressed: IPolygon
+}): IFlatButton {
+  const basicStyle: ViewStyle = {
+    width: poly.place.width,
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center'
+  }
+  const buttonStyles = StyleSheet.create({
+    normal: {
+      ...basicStyle
+    },
+    pressed: {
+      ...basicStyle,
+      backgroundColor: poly.fill.color
+    }
+  })
+  return ({ onPress }: { onPress: (event: GestureResponderEvent) => void }) => {
+    const [pressed, setPressed] = useState<boolean>(false)
+    return <TouchableWithoutFeedback
+      onPressIn={() => setPressed(true)}
+      onPressOut={() => setPressed(false)}
+      onPress={onPress}
     >
-      {item.img()}
-    </View>
-  </TouchableWithoutFeedback>
+      <View style={pressed ? buttonStyles.pressed : buttonStyles.normal}><SketchImage src={item} /></View>
+    </TouchableWithoutFeedback>
+  }
 }
+
+const { bg, image, closeSize, close, encryptingBg } = elementCamera.layers
+
+const styles = StyleSheet.create({
+  container: {
+    zIndex: 1,
+    width: '100%',
+    height: '100%',
+    position: 'absolute',
+    display: 'flex',
+    justifyContent: 'space-between'
+  },
+  buttonBar: {
+    display: 'flex',
+    flexDirection: 'row',
+    height: bg.place.height - (elementCamera.place.height - image.place.height),
+    backgroundColor: bg.fill.color
+  },
+  encryptingOverlay: {
+    width: '100%',
+    height: '100%',
+    position: 'absolute',
+    backgroundColor: encryptingBg.fill.color
+  },
+  shutterButton: {
+    flexGrow: 1,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  close: {
+    position: 'absolute',
+    zIndex: 1,
+    left: closeSize.place.left,
+    top: closeSize.place.top,
+    width: closeSize.place.width,
+    height: closeSize.place.height,
+    paddingLeft: close.place.left - closeSize.place.left,
+    paddingTop: close.place.top - closeSize.place.top
+  },
+  topBar: {
+    alignItems: 'center',
+    alignSelf: 'stretch'
+  }
+})
+
+const MinusButton = createFlatButton({ item: elementCamera.layers.minus, pressed: elementCamera.layers.minusBg })
+const PlusButton = createFlatButton({ item: elementCamera.layers.plus, pressed: elementCamera.layers.minusBg })
+const FlipButton = createFlatButton({ item: elementCamera.layers.flip, pressed: elementCamera.layers.flipBg })
 
 export interface ICameraProps {
-  onPicture (capture: ImageFile): void
-  onClose (): void
+  onPicture: (capture: ImageFile) => void
+  onClose: () => void
 }
 
 export const Camera = ({ onPicture, onClose }: ICameraProps): JSX.Element => {
-  const { vw, vh } = useVUnits()
-  const [direction, setDirection] = useState(NativeCamera.Constants.Type.back)
   const [flashMode, setFlashMode] = useState<boolean>(NativeCamera.Constants.FlashMode.off)
+  const [direction, setDirection] = useState(NativeCamera.Constants.Type.back)
   const [zoom, setZoom] = useState<number>(0)
   const [isEncrypting, setEncrypting] = useState<boolean>(false)
-  const ref = useRef<NativeCamera>()
+  const ref = useRef<NativeCamera>() as MutableRefObject<NativeCamera>
 
   const flip = (): void => {
     setDirection(
@@ -92,13 +137,18 @@ export const Camera = ({ onPicture, onClose }: ICameraProps): JSX.Element => {
       return
     }
     (async (): Promise<void> => {
-      const capture = await ref.current.takePictureAsync({
+      const camera = ref.current
+      if (camera === undefined) {
+        throw new Error('Cant be: there is no camera!!1')
+      }
+      const capture = await camera.takePictureAsync({
         quality: 0.4,
         exif: true
       })
-      const blob = await importFile(capture.uri)
+      const blob = await importFile(capture.uri, true)
       setEncrypting(false)
       onPicture(new ImageFile({
+        name: capture.uri.substr(capture.uri.lastIndexOf('/') + 1),
         secretKeyBase64: bufferToString(blob.secretKey, 'base64'),
         width: capture.width,
         height: capture.height,
@@ -128,44 +178,40 @@ export const Camera = ({ onPicture, onClose }: ICameraProps): JSX.Element => {
     return setFlashMode(NativeCamera.Constants.FlashMode.on)
   }
 
-  const flash = flashMode === NativeCamera.Constants.FlashMode.on
-    ? Asset.iconCameraFlashAuto()
+  const flash: IImageAsset = flashMode === NativeCamera.Constants.FlashMode.on
+    ? ImageAsset.iconCameraFlashAuto
     : flashMode === NativeCamera.Constants.FlashMode.torch
-      ? Asset.iconCameraFlashOn()
-      : Asset.iconCameraFlashOff()
+      ? ImageAsset.iconCameraFlashOn
+      : ImageAsset.iconCameraFlashOff
 
-  const inset = useSafeArea()
-
-  return <View style={containerStyle}>
-    <CameraContainer style={{ width: vw(100), height: vh(100) }} zoom={zoom} type={direction} ref={ref} flashMode={flashMode} />
-    <View style={{ position: 'absolute', left: inset.left, top: inset.top, width: vw(100) - inset.left - inset.right, height: vh(100) - inset.top - inset.bottom }}>
-      <TouchableOpacity onPress={onClose}>
-        <View style={elementCamera.closeSize.place.style()}>
-          <elementCamera.close.Render />
-        </View>
-      </TouchableOpacity>
-      <flash.component
-        style={{
-          position: 'absolute',
-          left: vw(50) - elementCamera.flash.place.width / 2
-        }}
-        onPress={toggleFlash}
-      />
-    </View>
-    <View style={{ display: 'flex', flexDirection: 'row', width: vw(100), height: elementCamera.bg.place.height - (elementCamera.height - elementCamera.image.place.height), position: 'absolute', top: vh(100) - elementCamera.bg.place.height, backgroundColor: elementCamera.bg.fill.color }}>
-      <FlatButton item={elementCamera.minus} pressed={elementCamera.minusBg} onPress={zoomOut} />
-      <FlatButton item={elementCamera.plus} pressed={elementCamera.plusBg} onPress={zoomIn} />
-      <View style={{ flexGrow: 1, alignItems: 'center', justifyContent: 'center' }}>
-        <ShutterButton onPress={takePic} />
+  const window = useWindowDimensions()
+  const inset = useSafeAreaInsets()
+  return <>
+    <CameraContainer style={{ width: window.width, height: window.height }} zoom={zoom} type={direction} ref={ref} flashMode={flashMode} />
+    <View style={styles.container}>
+      <View style={StyleSheet.compose<ViewStyle>(styles.topBar, { marginTop: inset.top })}>
+        <SketchImage src={flash} onPress={toggleFlash} />
+        <TouchableOpacity onPress={onClose} style={styles.close}>
+          <View>
+            <SketchElement src={elementCamera.layers.close} />
+          </View>
+        </TouchableOpacity>
       </View>
-      <FlatButton item={elementCamera.flip} pressed={elementCamera.flipBg} onPress={flip} />
-    </View>
-    {
-      isEncrypting
-        ? <View style={{ width: '100%', height: '100%', position: 'absolute', backgroundColor: elementCamera.encryptingBg.fill.color, zIndex: 1 }}>
-          <elementCamera.encryptingText.Render horz='center' vert='center' />
+      <View style={styles.buttonBar}>
+        <MinusButton onPress={zoomOut} />
+        <PlusButton onPress={zoomIn} />
+        <View style={styles.shutterButton}>
+          <ShutterButton onPress={takePic} />
         </View>
-        : <></>
-    }
-  </View>
+        <FlipButton onPress={flip} />
+      </View>
+      {
+        isEncrypting
+          ? <View style={styles.encryptingOverlay}>
+            <SketchElement src={elementCamera.layers.encryptingText} />
+          </View>
+          : <></>
+      }
+    </View>
+  </>
 }

@@ -1,4 +1,4 @@
-import { useStateMachine, IStateManager, IStateMachine } from '../useStateMachine'
+import { useStateMachine, IStateManager, IStateMachine, IState } from '../useStateMachine'
 import { mount, ReactWrapper } from 'enzyme'
 import { act } from 'react-dom/test-utils'
 import React, { useContext } from 'react'
@@ -23,7 +23,8 @@ describe('StateManager', () => {
     }
   }
   const Ctx = React.createContext('init-1')
-  const Any = (props: { state: string, manager: IStateManager<string, unknown> }): JSX.Element => {
+  // eslint-disable-next-line react/no-unused-prop-types
+  const Any = (props: { state: IState<string, any>, manager: IStateManager<string, unknown> }): JSX.Element => {
     return <></>
   }
   const Main = (props: { ctx: string }): JSX.Element => {
@@ -76,7 +77,7 @@ describe('StateManager', () => {
       expect(manager.setState('beep', 'woops')).toBe(true)
     })
     wrapper.update()
-    expect(get(Any).prop('state')).toEqual({ state: 'beep', ops: 'woops' })
+    expect(get(Any).prop('state')).toEqual({ state: 'beep', options: 'woops' })
   })
   /*
   TODO: fix this test case

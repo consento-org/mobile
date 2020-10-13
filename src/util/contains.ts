@@ -5,7 +5,7 @@ export function contains <In> (iterable: Iterable<In>, match: (input: In) => boo
   const iterator = iterable[Symbol.iterator]()
   while (true) {
     const next = iterator.next()
-    if (next.done) {
+    if (next.done === true) {
       return false
     }
     if (match(next.value)) {

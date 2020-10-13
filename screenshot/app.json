@@ -5,7 +5,6 @@
     "name": "Consento",
     "slug": "consento",
     "privacy": "unlisted",
-    "sdkVersion": "36.0.0",
     "version": "1.0.0",
     "entryPoint": "./screenshot/index.js",
     "platforms": [

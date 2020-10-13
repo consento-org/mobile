@@ -1,90 +1,64 @@
-import React, { useContext } from 'react'
-import { View, ViewStyle } from 'react-native'
-import { VaultCard } from './components/VaultCard'
-import { TopNavigation } from './components/TopNavigation'
-import { Asset } from '../Asset'
-import { observer } from 'mobx-react'
-import { map } from '../util/map'
-import { Vault } from '../model/Vault'
-import { TNavigation } from './navigation'
-import { useVUnits } from '../styles/Component'
-import { elementCardVaultClose } from '../styles/component/elementCardVaultClose'
+import React, { useContext, useRef, useState } from 'react'
+import { StyleSheet, View, VirtualizedList } from 'react-native'
 import { ConsentoContext } from '../model/Consento'
-import { EmptyView } from './components/EmptyView'
-import { elementVaultsEmpty } from '../styles/component/elementVaultsEmpty'
 import { ScreenshotContext, useScreenshotEnabled } from '../util/screenshots'
-import { withNavigationFocus } from 'react-navigation'
+import { ImageAsset } from '../styles/design/ImageAsset'
+import { SketchImage } from '../styles/util/react/SketchImage'
+import { TopNavigation } from './components/TopNavigation'
+import { EmptyView } from './components/EmptyView'
+import { VaultCard, VAULT_STYLE } from './components/VaultCard'
+import { Vault } from '../model/Vault'
+import { MobxGrid } from './components/MobxGrid'
+import { useAutorun } from '../util/useAutorun'
+import { comparer } from 'mobx'
+import { elementVaultsEmpty } from '../styles/design/layer/elementVaultsEmpty'
+import { assertExists } from '../util/assertExists'
 
-const listStyle: ViewStyle = {
-  display: 'flex',
-  flexDirection: 'row',
-  flexWrap: 'wrap',
-  justifyContent: 'flex-start',
-  marginTop: 10,
-  marginBottom: 20
+const AddButton = ImageAsset.buttonAddHexagonal
+const styles = StyleSheet.create({
+  container: { flexGrow: 1 },
+  add: { position: 'absolute', right: 10, bottom: 10, zIndex: 1 }
+})
+
+function renderVault (vault: Vault): JSX.Element {
+  return <VaultCard key={`vault-card-${vault.$modelId}`} vault={vault} />
 }
 
-const AddButton = Asset.buttonAddHexagonal().component
-const HorzPadding = 10
-
-const FocussedVaultsScreen = observer(({ navigation }: { navigation: TNavigation }) => {
-  const { user: { vaults } } = useContext(ConsentoContext)
-  const screenshots = useContext(ScreenshotContext)
-  const { vw } = useVUnits()
-  const entryWidth = elementCardVaultClose.width
-  let space = vw(100)
-  let count = -1
-  do {
-    if (count === 0) {
-      space -= entryWidth
+export const VaultsScreen = (): JSX.Element => {
+  const consento = useContext(ConsentoContext)
+  assertExists(consento)
+  const { user: { vaults } } = consento
+  if (useScreenshotEnabled()) {
+    const screenshots = useContext(ScreenshotContext)
+    const { hasPending, hasLocked, isEmpty } = useAutorun(() => ({
+      isEmpty: vaults.size === 0,
+      hasLocked: vaults.items.includes((vault: Vault) => !vault.isOpen),
+      hasPending: vaults.items.includes((vault: Vault) => vault.isPending)
+    }), comparer.shallow)
+    if (isEmpty) {
+      screenshots.vaultsEmpty.takeSync(500)
     } else {
-      space -= entryWidth + HorzPadding
+      screenshots.vaultsFull.takeSync(500)
     }
-    count++
-  } while (space > 0)
-  const width = count * entryWidth + (count * 2 + 1) * HorzPadding
-
-  if (vaults.size === 0) {
-    screenshots.vaultsEmpty.takeSync(500)
-  }
-  if (vaults.size > 0) {
-    screenshots.vaultsFull.takeSync(500)
-  }
-  for (const vault of vaults) {
-    if (vault.isPending) {
+    if (hasPending) {
       screenshots.vaultsVaultOnePending.takeSync(500)
-      break
     }
-    if (!vault.isOpen) {
+    if (hasLocked) {
       screenshots.vaultsVaultOneLocked.takeSync(500)
-      break
     }
   }
-
-  return <View style={{ display: 'flex', height: '100%' }}>
+  const ref = useRef<VirtualizedList<any>>(null)
+  const [handlePress] = useState(() => () => {
+    const vault = new Vault({})
+    vaults.add(vault)
+    setTimeout(() => ref.current?.scrollToEnd(), 50 /* Quick delay to wait until the vault is added */)
+    // navigate('vault', { vault: vault.$modelId })
+  })
+  return <View style={styles.container}>
     <TopNavigation title='Vaults' />
-    <EmptyView prototype={elementVaultsEmpty} isEmpty={vaults.size === 0}>
-      <View style={{ ...listStyle, width, left: (vw(100) - width) / 2 }}>
-        {
-          map(vaults.values(), vault => <VaultCard key={vault.$modelId} vault={vault} />)
-        }
-      </View>
+    <SketchImage src={AddButton} style={styles.add} onPress={handlePress} />
+    <EmptyView empty={elementVaultsEmpty} isEmpty={useAutorun(() => vaults.size === 0)}>
+      <MobxGrid ref={ref} data={vaults} itemStyle={VAULT_STYLE} renderItem={renderVault} />
     </EmptyView>
-    <AddButton
-      style={{ position: 'absolute', right: 10, bottom: 10 }}
-      onPress={() => {
-        const vault = new Vault({})
-        vaults.add(vault)
-        navigation.navigate('vault', { vault: vault.$modelId })
-      }}
-    />
   </View>
-})
-
-export const VaultsScreen = withNavigationFocus(({ navigation, isFocused }: { navigation: TNavigation, isFocused: boolean }) => {
-  const isScreenshotEnabled = useScreenshotEnabled()
-  if (!isScreenshotEnabled || isFocused) {
-    return <FocussedVaultsScreen navigation={navigation} />
-  }
-  return <View />
-})
+}

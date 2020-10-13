@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import { Image, View, ImageStyle, ImageResizeMode, ImageURISource, Insets } from 'react-native'
+import { Image, ImageResizeMode, ImageStyle, ImageURISource, Insets, View } from 'react-native'
 import { readImageBlob } from '../../util/expoSecureBlobStore'
 import { toBuffer } from '@consento/crypto/util/buffer'
-import { elementSecureImage } from '../../styles/component/elementSecureImage'
+import { elementSecureImage } from '../../styles/design/layer/elementSecureImage'
+import { SketchElement } from '../../styles/util/react/SketchElement'
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 const noop = (): void => {}
@@ -57,7 +58,7 @@ export const SecureImage = ({ secretKey: input, style, resizeMode, loadingIndica
   if (source === undefined) {
     if (loadingIndicatorSource === undefined || loadingIndicatorSource === null) {
       return <View style={finalStyle}>
-        {elementSecureImage.decrypting.render({})}
+        <SketchElement src={elementSecureImage.layers.decrypting} />
       </View>
     }
     source = loadingIndicatorSource

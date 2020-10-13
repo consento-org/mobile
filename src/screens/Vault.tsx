@@ -1,107 +1,112 @@
 import React, { useContext, useEffect } from 'react'
-import { View, ViewStyle, Image } from 'react-native'
+import { View } from 'react-native'
 import { TopNavigation } from './components/TopNavigation'
-import { createTabBar } from './components/createTabBar'
-import { TNavigation } from './navigation'
-import { elementSealVaultActive } from '../styles/component/elementSealVaultActive'
-import { elementSealVaultIdle } from '../styles/component/elementSealVaultIdle'
-import { elementVaultsLoading } from '../styles/component/elementVaultsLoading'
-import { ConsentoButton } from './components/ConsentoButton'
 import { Logs } from './Logs'
-import { Waiting } from './components/Waiting'
-import { withNavigation } from 'react-navigation'
 import { observer } from 'mobx-react'
 import { VaultContext } from '../model/VaultContext'
 import { PopupMenu } from './components/PopupMenu'
 import { FileList } from './components/FileList'
 import { Locks } from './components/Locks'
+import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs'
+import { SketchElement } from '../styles/util/react/SketchElement'
+import { LockButton } from './components/LockButton'
+import { ContextMenu } from './components/ContextMenu'
+import { elementTabBarTabActive } from '../styles/design/layer/elementTabBarTabActive'
+import { elementTabBarTabResting } from '../styles/design/layer/elementTabBarTabResting'
 import { ConsentoContext } from '../model/Consento'
-import { ScreenshotContext } from '../util/screenshots'
+import { ScreenshotContext, useScreenshotEnabled } from '../util/screenshots'
 import { deleteWarning } from './components/deleteWarning'
+import { navigate } from '../util/navigate'
+import { assertExists } from '../util/assertExists'
+import { Waiting } from './components/Waiting'
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const animation = require('../../assets/animation/consento_symbol_animation.gif')
+const Tab = createMaterialTopTabNavigator()
 
-const lockStyle: ViewStyle = {
-  height: elementSealVaultActive.height,
-  backgroundColor: elementSealVaultActive.backgroundColor,
-  borderBottomColor: elementSealVaultActive.borderBottom.border.fill.color,
-  borderBottomWidth: elementSealVaultActive.borderBottom.border.thickness,
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center'
-}
-
-const VaultNavigator = createTabBar({
-  vaultData: {
-    label: 'Files',
-    screen: () => <FileList />
-  },
-  vaultLocks: {
-    label: 'Locks',
-    screen: () => <Locks />
-  },
-  vaultLog: {
-    label: 'Logs',
-    screen: () => <Logs />
+function labelOptions (label: string): any {
+  return {
+    tabBarLabel: ({ focused }: { focused: boolean }) =>
+      <SketchElement
+        src={focused ? elementTabBarTabActive.layers.label : elementTabBarTabResting.layers.label}
+        style={{ width: 120 /* TODO: constant is ugly hack needed to prevent wraping when text turns bold */ }}
+      >{label}</SketchElement>
   }
-})
-
-function LockButton (props: { onPress?: () => any }): JSX.Element {
-  return <View style={lockStyle}>
-    <ConsentoButton style={elementSealVaultActive.enabled.place.size()} styleDisabled={elementSealVaultIdle.disabled.place.size()} title='lock' onPress={props.onPress} />
-  </View>
 }
 
-export const VaultRouter = VaultNavigator.router
-export const Vault = withNavigation(observer(({ navigation }: { navigation: TNavigation }): JSX.Element => {
-  const { user, config } = useContext(ConsentoContext)
+const tabBarOptions = {
+  indicatorStyle: {
+    backgroundColor: elementTabBarTabActive.layers.bottomLine.svg?.stroke,
+    height: elementTabBarTabActive.layers.bottomLine.svg?.strokeWidth ?? 1
+  },
+  pressColor: elementTabBarTabResting.layers.effect.fill.color,
+  style: {
+    backgroundColor: elementTabBarTabResting.backgroundColor,
+    height: elementTabBarTabResting.place.height,
+    shadowOpacity: 0,
+    elevation: 0
+  }
+}
+
+export const Vault = observer((): JSX.Element => {
+  const consento = useContext(ConsentoContext)
+  assertExists(consento)
+  const { user, config } = consento
   const { vault } = useContext(VaultContext)
-  const screenshots = useContext(ScreenshotContext)
+  if (vault === null) {
+    throw new Error('not in vault context')
+  }
+  const back = ['main', 'vaults']
   useEffect(() => {
     if (!vault.isOpen && !vault.isLoading) {
-      vault.requestUnlock(config.expire * 1000)
+      console.log({ time: (config?.expire ?? 1) * 1000, expire: config?.expire })
+      setTimeout(() => vault.requestUnlock((config?.expire ?? 1) * 1000), 0)
     }
   }, [vault.isLoading])
   useEffect(() => {
     if (!vault.isOpen && !vault.isPending && !vault.isLoading) {
-      navigation.navigate('vaults')
+      navigate(back)
     }
   }, [vault.isPending, vault.isLoading])
-  const handleNameEdit = vault.isOpen ? newName => vault.setName(newName) : undefined
+  if (useScreenshotEnabled()) {
+    const screenshots = useContext(ScreenshotContext)
+    if (!vault.isOpen && !vault.isLoading) {
+      screenshots.vaultPending.takeSync(1000)
+    }
+  }
+  const handleNameEdit = vault.isOpen ? (newName: string) => vault.setName(newName) : undefined
   const handleDelete = (): void => {
     deleteWarning({
       onPress (): void {
+        navigate(back)
         user.vaults.delete(vault)
-        navigation.navigate('vaults')
       },
       itemName: 'Vault'
     })
   }
   const handleLock = vault.isClosable ? () => {
-    navigation.navigate('vaults')
-    vault.lock()
-      .catch(lockError => console.error(lockError))
+    navigate(back)
+    setImmediate(() => {
+      vault.lock()
+        .catch(lockError => console.error(lockError))
+    })
   } : undefined
-  if (!vault.isOpen && !vault.isLoading) {
-    screenshots.vaultPending.takeSync(1000)
-  }
-  return <PopupMenu>
-    <View style={{ position: 'absolute', width: '100%', height: '100%' }}>
-      <TopNavigation title={vault.name} titlePlaceholder={vault.humanId} back='vaults' onEdit={handleNameEdit} onDelete={handleDelete} />
-      {
-        vault.isOpen
-          ? [
-            <LockButton key='lock' onPress={handleLock} />,
-            <VaultNavigator key='vault' navigation={navigation} />
-          ]
-          : vault.isLoading
-            ? <View style={{ flexGrow: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-              <Image source={animation} style={elementVaultsLoading.placeholder.place.size({})} />
-              {elementVaultsLoading.loadingData.render({})}
-            </View>
-            : <Waiting vault={vault} />
-      }
-    </View>
-  </PopupMenu>
-}))
+  const handleBack = (): void => navigate(back)
+  return <PopupMenu><ContextMenu>
+    <VaultContext.Provider value={{ vault }}>
+      <View style={{ flexGrow: 1, display: 'flex' }}>
+        <TopNavigation title={vault.name ?? '-vault-name-missing-'} titlePlaceholder={vault.humanId} back={back} onEdit={handleNameEdit} onDelete={handleDelete} />
+        {
+          vault.isOpen
+            ? <>
+              <LockButton onPress={handleLock} />
+              <Tab.Navigator tabBarOptions={tabBarOptions}>
+                <Tab.Screen name='files' component={FileList} options={labelOptions('Files')} />
+                <Tab.Screen name='locks' component={Locks} options={labelOptions('Locks')} />
+                <Tab.Screen name='logs' component={Logs} options={labelOptions('Logs')} />
+              </Tab.Navigator>
+            </>
+            : <Waiting vault={vault} onClose={handleBack} />
+        }
+      </View>
+    </VaultContext.Provider>
+  </ContextMenu></PopupMenu>
+})

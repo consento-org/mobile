@@ -1,14 +1,11 @@
-import { computed, observable, autorun } from 'mobx'
-import { Model, model, tProp, types, prop, arraySet, ArraySet, modelAction, registerRootStore, unregisterRootStore } from 'mobx-keystone'
+import { computed, autorun, observable } from 'mobx'
+import { Model, model, tProp, types, prop, arraySet, ArraySet, modelAction } from 'mobx-keystone'
 import { createContext } from 'react'
-import { AsyncStorage, AppStateStatus, AppState } from 'react-native'
-import { setup, IAPI, INotifications, IConsentoCrypto, INotification } from '@consento/api'
-import { ExpoTransport } from '@consento/notification-server'
+import { AsyncStorage } from 'react-native'
+import { setup, IAPI, INotifications, IConsentoCrypto, INotification, EErrorCode, IReceiver } from '@consento/api'
+import { ExpoTransport, EClientStatus } from '@consento/notification-server'
 import isURL from 'is-url-superb'
 import { User, createDefaultUser } from './User'
-import { getExpoToken } from '../util/getExpoToken'
-import { Notifications } from 'expo'
-import { Notification } from 'expo/build/Notifications/Notifications.types'
 import { cryptoCore } from '../cryptoCore'
 import { systemRimraf } from '../util/systemRimraf'
 import { first } from '../util/first'
@@ -16,19 +13,23 @@ import { combinedDispose } from '../util/combinedDispose'
 import { vaultStore } from './VaultStore'
 import { IConsentoModel, CONSENTO, ISubscription, ISubscriptionMap } from './Consento.types'
 import { safeReaction } from '../util/safeReaction'
-import { bufferToString } from '@consento/crypto/util/buffer'
+import { subscribeEvent } from '../util/subscribeEvent'
+import { autoRegisterRootStore } from '../util/autoRegisterRootStore'
+import { map } from '../util/map'
 
-export const ConsentoContext = createContext<Consento>(null)
+export const ConsentoContext = createContext<Consento | null>(null)
 
-const DEFAULT_ADDRESS = '//notify.consento.org'
-const CONFIG_ITEM_KEY = '@consento/config'
+export const DEFAULT_ADDRESS = '//notify-2.consento.org'
+export const DEFAULT_EXPIRES = 600
+const LEGACY_CONFIG_ITEM_KEY = '@consento/config'
+const CONFIG_ITEM_KEY = '@consento/config/2'
 
-async function loadConfig (): Promise<any> {
-  return JSON.parse((await AsyncStorage.getItem(CONFIG_ITEM_KEY)) ?? '{}')
+async function loadConfig (location: string = CONFIG_ITEM_KEY): Promise<any> {
+  return JSON.parse((await AsyncStorage.getItem(location)) ?? '{}')
 }
 
-async function saveConfig (newConfig: IConfig): Promise<void> {
-  await AsyncStorage.setItem(CONFIG_ITEM_KEY, JSON.stringify(newConfig))
+async function saveConfig (newConfig: IConfig, location: string = CONFIG_ITEM_KEY): Promise<void> {
+  await AsyncStorage.setItem(location, JSON.stringify(newConfig))
 }
 
 interface IConfig {
@@ -36,18 +37,10 @@ interface IConfig {
   expire?: number
 }
 
-interface IHackAPI extends IAPI {
-  notificationTransport: ExpoTransport
-}
-
-interface IEventSubscription {
-  remove (): void
-}
-
 @model('consento/Config')
 export class Config extends Model({
   address: tProp(types.nonEmptyString, () => DEFAULT_ADDRESS),
-  expire: tProp(types.number, () => 600)
+  expire: tProp(types.number, () => DEFAULT_EXPIRES)
 }) implements IConfig {}
 
 function assertConfig (config: any): asserts config is IConfig {
@@ -65,45 +58,23 @@ function assertConfig (config: any): asserts config is IConfig {
   }
 }
 
-function createTransport (address: string): {
-  notificationTransport: ExpoTransport
-  destructTransport: () => void
-} {
-  if (/^\/\//.test(address)) {
-    address = `https:${address}`
+interface IOperationSubscription {
+  receiver: IReceiver
+  subscription: ISubscription
+}
+type IOperationSubscriptions = Record<string, IOperationSubscription>
+
+function fromUserSubscriptions (api: IAPI, subscriptions: ISubscriptionMap): IOperationSubscriptions {
+  // TODO: This is a bad idea, this needs to be optimizied, the amount of operations done here grows exponentially
+  const result: IOperationSubscriptions = {}
+  for (const subscription of Object.values(subscriptions)) {
+    const receiver = new api.crypto.Receiver(subscription.receiver)
+    result[receiver.idBase64] = { receiver, subscription }
   }
-  const notificationTransport = new ExpoTransport({
-    address,
-    getToken: getExpoToken
-  })
-  notificationTransport.on('error', (error) => {
-    console.log({ transportError: error, address })
-  })
-  let cancel: () => void
-  const stateChange = (state: AppStateStatus): void => {
-    if (state !== 'background') {
-      if (cancel === undefined) {
-        cancel = notificationTransport.connect()
-      }
-    } else {
-      if (cancel !== undefined) {
-        cancel()
-        cancel = undefined
-      }
-    }
-  }
-  AppState.addEventListener('change', stateChange)
-  stateChange(AppState.currentState)
-  return {
-    notificationTransport,
-    destructTransport: () => {
-      AppState.removeEventListener('change', stateChange)
-      stateChange('inactive')
-    }
-  }
+  return result
 }
 
-function diffSubscriptions (stored: ISubscriptionMap, current: ISubscriptionMap): { newSubscriptions: ISubscription[], goneSubscriptions: ISubscription[] } {
+function diffSubscriptions (stored: IOperationSubscriptions, current: IOperationSubscriptions): { newSubscriptions: IOperationSubscription[], goneSubscriptions: IOperationSubscription[] } {
   const newSubscriptions = []
   const goneReceiveKeys = new Set(Object.keys(stored))
   for (const receiveKey in current) {
@@ -117,7 +88,7 @@ function diffSubscriptions (stored: ISubscriptionMap, current: ISubscriptionMap)
     // Replace the internal handler with the current subscription, not need to inform the subscription system
     stored[receiveKey] = subscription
   }
-  const goneSubscriptions = Array.from(goneReceiveKeys).map(receiveKey => {
+  const goneSubscriptions = map(goneReceiveKeys.values(), receiveKey => {
     const subscription = stored[receiveKey]
     // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
     delete stored[receiveKey]
@@ -131,44 +102,51 @@ function diffSubscriptions (stored: ISubscriptionMap, current: ISubscriptionMap)
 
 @model(CONSENTO)
 export class Consento extends Model({
-  users: prop<ArraySet<User>>(() => arraySet()),
-  appStart: prop(),
-  config: prop<Config>(() => null)
+  users: prop<ArraySet<User>>(() => arraySet([createDefaultUser()])),
+  legacyConfig: prop<ArraySet<string>>(() => arraySet()),
+  config: prop<Config | null>(null),
+  configLoaded: prop(false)
 }) implements IConsentoModel {
-  _apiReady = observable.box(Date.now())
-  _api: IHackAPI
+  _api: IAPI<ExpoTransport> | undefined
+  _loadConfigError = observable.box<Error | undefined>()
+  _configTask: Promise<void> | undefined
+  _transportState = observable.box<EClientStatus>(EClientStatus.STARTUP)
 
   onInit (): void {
     this.deleteEverything = this.deleteEverything.bind(this)
     this.updateConfig = this.updateConfig.bind(this)
-    loadConfig()
-      .then(config => this._setConfig(config))
-      .catch(error => {
-        this.updateConfig({})
-        console.log({ loadConfigError: error })
-      })
+
+    this._configTask = loadConfig()
+      .then(
+        config => {
+          this._setConfig(config)
+        },
+        error => {
+          this.updateConfig({})
+          this._loadConfigError.set(error)
+        }
+      )
+    loadConfig(LEGACY_CONFIG_ITEM_KEY)
+      .then(
+        () => this.legacyConfig.add('1'),
+        () => {}
+      )
   }
 
-  assertReady (): void {
-    if (!this.ready) {
-      throw new Error('API not ready!')
-    }
-  }
-
-  @computed get api (): IAPI {
-    this._apiReady.get()
-    return this._api
+  get api (): IAPI {
+    return this._api as IAPI // set in onInit
   }
 
   @modelAction _setConfig (config: any): void {
     assertConfig(config)
     this.config = new Config(config)
+    this.configLoaded = true
   }
 
   updateConfig (config: IConfig): void {
-    this._setApi(undefined)
     this._setConfig(config)
-    saveConfig(config)
+    this._configTask = (this._configTask as Promise<void>) // set in onInit
+      .then(async (): Promise<void> => await saveConfig(config))
       .then(
         () => console.log('config saved'),
         error => console.log({ saveConfigError: error })
@@ -188,68 +166,108 @@ export class Consento extends Model({
   }
 
   @computed get ready (): boolean {
-    if (this.api === undefined) {
-      return false
-    }
-    if (this.user === undefined) {
-      return false
-    }
-    return this.user.loaded
+    return this.configLoaded && this.user.loaded
   }
 
-  @modelAction _setApi (api: IHackAPI): void {
-    this.users.clear()
-    this._api = api
-    this._apiReady.set(Date.now())
-    if (this._api !== undefined) {
-      this.users.add(createDefaultUser())
+  @computed get transportReady (): boolean {
+    switch (this._transportState.get()) {
+      case EClientStatus.DESTROYED:
+      case EClientStatus.NOADDRESS:
+      case EClientStatus.STARTUP:
+      case EClientStatus.ERROR:
+        return false
     }
+    return true
+  }
+
+  get transportError (): Error | undefined {
+    const api = this._api
+    if (api === undefined) {
+      return new Error('No api')
+    }
+    return api.notifications.transport.error
+  }
+
+  get loadConfigError (): Error | undefined {
+    return this._loadConfigError.get() ?? this.user.loadError
   }
 
   deleteEverything (): void {
-    const api = this._api
-    this._setApi(undefined)
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    systemRimraf().finally(() => this._setApi(api))
+    systemRimraf().finally(() => {
+      this.updateConfig({})
+    })
+  }
+
+  @modelAction _updateTransportState (): void {
+    this._transportState.set(this._api?.notifications.transport.state ?? EClientStatus.ERROR)
+  }
+
+  get transportState (): EClientStatus {
+    return this._transportState.get()
   }
 
   onAttachedToRootStore (): () => void {
-    registerRootStore(vaultStore)
+    this._api = setup({
+      cryptoCore,
+      notificationTransport: control => new ExpoTransport({ control })
+    })
+    const { transport } = this._api.notifications
     return combinedDispose(
-      () => unregisterRootStore(vaultStore),
+      autorun(() => {
+        console.log(`TransportState: ${this.transportState} ${this.transportError?.toString() ?? ''}`)
+      }),
+      () => {
+        transport
+          .destroy()
+          .catch(error => {
+            console.log('cant be destroyed')
+            console.error({ error })
+          })
+        this._api = undefined
+      },
+      autoRegisterRootStore(vaultStore),
+      subscribeEvent(transport, 'change', () => this._updateTransportState(), true),
+      autorun(
+        () => {
+          if (!this.configLoaded) return
+          let address = this.config?.address ?? DEFAULT_ADDRESS
+          if (/^\/\//.test(address)) {
+            address = `https:${address}`
+          }
+          console.log(`Setting address: ${address}`)
+          transport.address = address
+        }
+      ),
       safeReaction(
         () => ({ ready: this.ready, user: this.user }),
         ({ ready, user }) => {
           if (!ready) return
-          const subscriptions = {
-            ...user.subscriptions
-          }
-          const processor = (message: INotification, encryptedMessage?: any): void => {
+          const api = this._api as IAPI // set in onInit
+          const subscriptions: IOperationSubscriptions = fromUserSubscriptions(api, user.subscriptions)
+          const processor = async (message: INotification, encryptedMessage?: any): Promise<boolean> => {
             if (message.type === 'success') {
               const subscription = subscriptions[message.channelIdBase64]
               if (subscription === undefined) {
                 console.log(`Received notification for ${message.channelIdBase64} but there was no subscriber ${String(encryptedMessage)}?!`)
-                return
+                return false
               }
               console.log(`Received notification: ${message.channelIdBase64}`)
-              subscription.action(message, this.api)
+              subscription.subscription.action(message, this.api)
             } else {
-              console.log({ errorNotification: message })
+              if (message.code === EErrorCode.transportError) {
+                console.error(message.error)
+              }
             }
+            return true
           }
-          const api = this._api
           api.notifications.processors.add(processor)
           const receivers = Object.values(subscriptions).map(subscription => new api.crypto.Receiver(subscription.receiver))
-          console.log(`Resetting:\n  ${receivers.map(receiver => bufferToString(receiver.id, 'base64')).join('\n  ')}`)
-          let expoSubscription: IEventSubscription
+          console.log(`Resetting:\n  ${receivers.map(receiver => receiver.idBase64).join('\n  ')}`)
           api.notifications
             .reset(receivers)
             .then(
-              () => {
-                expoSubscription = Notifications.addListener((notification: Notification): void => {
-                  api.notificationTransport.handleNotification(notification)
-                })
-              },
+              () => {},
               notificationResetError => {
                 console.log('Error resetting the notifications')
                 console.log({ notificationResetError })
@@ -257,60 +275,37 @@ export class Consento extends Model({
             )
           return combinedDispose(
             () => {
-              if (expoSubscription !== undefined) expoSubscription.remove()
               api.notifications.processors.delete(processor)
             },
             autorun(() => {
-              const { newSubscriptions, goneSubscriptions } = diffSubscriptions(subscriptions, user.subscriptions)
+              const { newSubscriptions, goneSubscriptions } = diffSubscriptions(subscriptions, fromUserSubscriptions(api, user.subscriptions))
               if (newSubscriptions.length > 0) {
-                const receivers = newSubscriptions.map(subscription => new api.crypto.Receiver(subscription.receiver))
-                console.log(`Subscribing:\n  ${receivers.map(receiver => bufferToString(receiver.id, 'base64')).join('\n  ')}`)
+                const receivers = newSubscriptions.map(({ receiver }) => receiver)
+                console.log(`Subscribing:\n  ${receivers.map(receiver => receiver.idBase64).join('\n  ')}`)
                 this.api.notifications
                   .subscribe(receivers)
                   .catch(subscribeError => {
-                    for (const subscription of newSubscriptions) {
+                    for (const receiver of receivers) {
                       // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-                      delete subscriptions[subscription.receiver.receiveKey]
+                      delete subscriptions[receiver.idBase64]
                     }
                     console.log({ subscribeError })
                   })
               }
               if (goneSubscriptions.length > 0) {
-                const receivers = goneSubscriptions.map(subscription => new api.crypto.Receiver(subscription.receiver))
-                console.log(`Unsubscribing:\n  ${receivers.map(receiver => bufferToString(receiver.id, 'base64')).join('\n  ')}`)
+                const receivers = goneSubscriptions.map(({ receiver }) => receiver)
+                console.log(`Unsubscribing:\n  ${receivers.map(receiver => receiver.idBase64).join('\n  ')}`)
                 this.api.notifications
                   .unsubscribe(receivers)
                   .catch(unsubscribeError => {
-                    for (const subscription of goneSubscriptions) {
-                      subscriptions[subscription.receiver.receiveKey] = subscription
+                    for (const op of goneSubscriptions) {
+                      subscriptions[op.receiver.idBase64] = op
                     }
                     console.log({ unsubscribeError })
                   })
               }
             })
           )
-        },
-        { fireImmediately: true }
-      ),
-      safeReaction(
-        () => ({ address: this.config?.address, expire: this.config?.expire }), // We need to add expire for the config to reload ~^_^~
-        ({ address }) => {
-          if (address === undefined || address === null) {
-            return
-          }
-          const { notificationTransport, destructTransport } = createTransport(address)
-          const api = setup({
-            cryptoCore,
-            notificationTransport
-          })
-          this._setApi({
-            ...api,
-            notificationTransport
-          })
-          return () => {
-            this._setApi(undefined)
-            destructTransport()
-          }
         },
         { fireImmediately: true }
       )

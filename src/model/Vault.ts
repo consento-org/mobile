@@ -4,20 +4,21 @@ import { Receiver, Sender, Connection } from './Connection'
 import { ISuccessNotification, IAPI } from '@consento/api'
 import { ISubscription, IConfirmLockeeMessage, IRequestLockeeMessage, MessageType, Message, requireAPI, hasAPI, ISubscriptionMap, IFinalizeLockeeMessage, IRequestUnlockMessage, IRevokeLockeeMessage, ILogEntry } from './Consento.types'
 import { VaultLockee, VaultData, File, IVaultLockeeConfirmation, TVaultRevokeReason } from './VaultData'
-import { bufferToString, Buffer } from '@consento/crypto/util/buffer'
+import { bufferToString, Buffer } from '@consento/api/util'
 import { expoVaultSecrets } from '../util/expoVaultSecrets'
 import { computed, when } from 'mobx'
 import { Relation } from './Relation'
 import { vaultStore } from './VaultStore'
 import sss from '@consento/shamirs-secret-sharing'
 import { mapSubscriptions } from './mapSubscriptions'
-import { find } from '../util/find'
+import { assertFind, find } from '../util/find'
 import { last } from '../util/last'
 import { now } from './now'
 import { map } from '../util/map'
-import randomBytes from '@consento/sync-randombytes'
+import randomBytes from 'get-random-values-polypony'
 import { humanModelId } from '../util/humanModelId'
 import { generateId } from '../util/generateId'
+import { reduce } from '../util/reduce'
 
 export enum TVaultState {
   open = 'open',
@@ -35,9 +36,9 @@ function mergeLog (...logs: ILogEntry[][]): ILogEntry[] {
   )
   const result = []
   while (doneCount < logs.length) {
-    let oldestLogNo: number
-    let oldestIndex: number
-    let oldest: ILogEntry
+    let oldestLogNo: number | undefined
+    let oldestIndex: number | undefined
+    let oldest: ILogEntry | undefined
     for (let logNo = 0; logNo < indices.length; logNo++) {
       if (done[logNo]) {
         continue
@@ -54,7 +55,7 @@ function mergeLog (...logs: ILogEntry[][]): ILogEntry[] {
         oldestIndex = index
       }
     }
-    if (oldestIndex === undefined) {
+    if (oldestIndex === undefined || oldestLogNo === undefined || oldest === undefined) {
       throw new Error('We should always have one entry!')
     }
     const nextIndex = oldestIndex + 1
@@ -72,7 +73,7 @@ function mergeLog (...logs: ILogEntry[][]): ILogEntry[] {
 export class MessageLogEntry extends Model({
   text: prop<string>(),
   time: prop<number>(() => now()),
-  meta: prop<{}>(() => null)
+  meta: prop<any | null>(() => null)
 }) implements ILogEntry {
   get key (): string {
     return this.$modelId
@@ -97,16 +98,16 @@ export class VaultOpenRequest extends ExtendedModel(RequestBase, {
 
 export type VaultAccessEntry = typeof VaultOpenRequest | VaultClose | VaultOpen
 
-function findParentVault (item: BaseModel<any, any>): Vault {
+function findParentVault (item: BaseModel<any, any>): Vault | undefined {
   return findParent(
     item,
-    (parent: BaseModel<any, any>): parent is Vault => parent.$modelType === Vault.$modelType
+    parent => (parent as BaseModel<any, any>).$modelType === Vault.$modelType
   )
 }
 
-function findVaultLockee (item: BaseModel<any, any>, lockeeId: string): VaultLockee {
+function findVaultLockee (item: BaseModel<any, any>, lockeeId: string): VaultLockee | undefined {
   const vault = findParentVault(item)
-  return find(vault?.data.lockees, (lockee): lockee is VaultLockee => lockee.$modelId === lockeeId)
+  return find(vault?.data?.lockees, (lockee): lockee is VaultLockee => lockee.$modelId === lockeeId)
 }
 
 @model('consento/Vault/Lock')
@@ -116,7 +117,7 @@ export class Lock extends ExtendedModel(Connection, {
   lockeeId: tProp(types.string)
 }) {
   @computed get vaultLockee (): VaultLockee {
-    return findVaultLockee(this, this.lockeeId)
+    return findVaultLockee(this, this.lockeeId) as VaultLockee
   }
 }
 
@@ -127,7 +128,7 @@ export class PendingLock extends Model({
   lockId: tProp(types.string)
 }) {
   @computed get vaultLockee (): VaultLockee {
-    return findVaultLockee(this, this.lockeeId)
+    return findVaultLockee(this, this.lockeeId) as VaultLockee
   }
 }
 
@@ -200,6 +201,16 @@ export class Vault extends Model({
     )
   }
 
+  @computed get usedRelationIds (): Set<string> {
+    return reduce(
+      this.data?.lockees.values(), (result, vaultLockee) => {
+        result.add(vaultLockee.relationId)
+        return result
+      },
+      new Set()
+    )
+  }
+
   onInit (): void {
     when(
       () => this.isOpen && hasAPI(this),
@@ -263,7 +274,7 @@ export class Vault extends Model({
   }
 
   @computed get secretKeyBase64 (): string {
-    return expoVaultSecrets.secretsBase64.get(this.dataKeyHex)
+    return expoVaultSecrets.secretsBase64.get(this.dataKeyHex) as string /* TODO: is there a chance this might be null | undefined */
   }
 
   async addLockee (relation: Relation): Promise<void> {
@@ -303,13 +314,13 @@ export class Vault extends Model({
   }
 
   @modelAction _removePendingLockee (lockee: VaultLockee, pendingLock: PendingLock, reason: TVaultRevokeReason): void {
-    if (this.data.revokeLockee(lockee, reason)) {
+    if (this.data?.revokeLockee(lockee, reason) ?? false) {
       this.pendingLocks.delete(pendingLock)
     }
   }
 
   @modelAction _addPendingLockee (lockee: VaultLockee, pendingLock: PendingLock): void {
-    if (this.data.addLockee(lockee)) {
+    if (this.data?.addLockee(lockee) ?? false) {
       this.pendingLocks.add(pendingLock)
     }
   }
@@ -330,7 +341,7 @@ export class Vault extends Model({
       return
     }
     const { crypto, notifications } = api
-    let confirmation: IVaultLockeeConfirmation
+    let confirmation: IVaultLockeeConfirmation | undefined
     try {
       // TODO: Here the logic flow is messed up.
       //       there is some possible inconsistency where the vaultLockee is confirmed
@@ -358,18 +369,18 @@ export class Vault extends Model({
       }))
       this._updateLocks()
     } catch (err) {
-      this.data.revokeLockee(vaultLockee, TVaultRevokeReason.error)
+      this.data?.revokeLockee(vaultLockee, TVaultRevokeReason.error)
       console.log({ err })
       console.log(`Warning: Couldn't confirm unlockee ${vaultLockee.$modelId} properly.`)
     }
   }
 
   async revokeLockee (lockee: VaultLockee, relation?: Relation): Promise<void> {
-    if (!this.data.revokeLockee(lockee, TVaultRevokeReason.revoked)) {
+    if (!(this.data?.revokeLockee(lockee, TVaultRevokeReason.revoked) ?? false)) {
       return
     }
-    this.pendingLocks.delete(find(this.pendingLocks, (pendingLock): pendingLock is PendingLock => pendingLock.lockId === lockee.lockId))
-    this.locks.delete(find(this.locks, (lock): lock is Lock => lock.lockId === lockee.lockId))
+    this.pendingLocks.delete(assertFind(this.pendingLocks, (pendingLock): pendingLock is PendingLock => pendingLock.lockId === lockee.lockId, 'Pending Lock not found'))
+    this.locks.delete(assertFind(this.locks, (lock): lock is Lock => lock.lockId === lockee.lockId, 'Lock not found'))
     this._updateLocks()
     const { notifications, crypto } = requireAPI(this)
     const sender = lockee.sender ?? relation?.connection.sender ?? null
@@ -385,19 +396,23 @@ export class Vault extends Model({
   _updateLocks (): void {
     (async (): Promise<void> => {
       const persistOnDevice = this.locks.size === 0
-      return expoVaultSecrets.toggleDevicePersistence(this.dataKeyHex, persistOnDevice)
+      return await expoVaultSecrets.toggleDevicePersistence(this.dataKeyHex, persistOnDevice)
     })().catch(error => console.log({ error }))
   }
 
-  findFile (modelId: string): File {
+  findFile (modelId: string): File | undefined {
     return this.data?.findFile(modelId)
   }
 
   newFilename (): string {
-    return this.data?.newFilename()
+    const data = this.data
+    if (data === undefined) {
+      throw new Error('locked')
+    }
+    return data.newFilename()
   }
 
-  @computed get data (): VaultData {
+  @computed get data (): VaultData | undefined {
     return vaultStore.vaults.get(this.dataKeyHex)
   }
 
@@ -419,7 +434,7 @@ export class Vault extends Model({
     }
   }
 
-  @computed get accessState (): VaultAccessEntry {
+  @computed get accessState (): VaultAccessEntry | undefined {
     if (this.isOpen) {
       return
     }
@@ -454,7 +469,7 @@ export class Vault extends Model({
     return mergeLog(
       this.operationLog,
       this.accessLogAsLog,
-      this.data.log
+      this.data?.log ?? []
     ).reverse()
   }
 
@@ -510,10 +525,11 @@ export class Vault extends Model({
       }
     }
     if (!this.isOpen) {
-      return // Nothing to see/nothing to do.
+      return true// Nothing to see/nothing to do.
     }
     this._addAccessEntry(new VaultClose({}))
-    return expoVaultSecrets.delete(this.dataKeyHex)
+    console.log({ deleting: this.dataKeyHex })
+    return await expoVaultSecrets.delete(this.dataKeyHex)
   }
 
   @modelAction _addAccessEntry (entry: VaultAccessEntry): void {

@@ -5,8 +5,8 @@ import { BaseModel, findParent } from 'mobx-keystone'
 export interface IRelationEntry {
   readonly relationId: string
   readonly humanId: string
-  readonly name: string
-  readonly avatarId: string
+  readonly name: string | null
+  readonly avatarId: string | null
 }
 
 export interface ILogEntry {
@@ -26,14 +26,18 @@ export interface ISubscriptionMap {
 
 export const CONSENTO = 'consento'
 
+function isConsento (input: any): boolean {
+  return input.$modelType === CONSENTO
+}
+
 export function hasAPI (item: BaseModel<any, any>): boolean {
-  const api = findParent(item, isConsento)?.api
+  const api = findParent<IConsentoModel>(item, isConsento)?.api
   return api !== undefined
 }
 
 // TODO: requireAPI is possibly a horrible hack that should be removed...
 export function requireAPI (item: BaseModel<any, any>): IAPI {
-  const api = findParent(item, isConsento)?.api
+  const api = findParent<IConsentoModel>(item, isConsento)?.api
   if (api === undefined) {
     throw new Error('API required, but not in API context')
   }
@@ -42,10 +46,6 @@ export function requireAPI (item: BaseModel<any, any>): IAPI {
 
 export interface IConsentoModel extends BaseModel<any, any> {
   api: IAPI
-}
-
-export function isConsento (input: BaseModel<any, any>): input is IConsentoModel {
-  return input.$modelType === CONSENTO
 }
 
 export enum MessageType {

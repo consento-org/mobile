@@ -1,9 +1,9 @@
 export interface IListNode <T> {
   node: T
-  next: IListNode<T>
+  next: IListNode<T> | null
 }
 
-export function createCircularList <T> (entries: T[]): IListNode<T> {
+export function createCircularList <T> (entries: T[]): IListNode<T> | null {
   if (entries.length === 0) {
     return null
   }

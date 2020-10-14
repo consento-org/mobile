@@ -73,7 +73,7 @@ export class TextFile extends Model({
   }
 
   async loadText (): Promise<string> {
-    if (this.secretKeyBase64 === null) {
+    if (this.secretKeyBase64 === null || this.secretKeyBase64 === '') {
       return ''
     }
     try {

@@ -111,7 +111,6 @@ class FormField<T> implements IFormField<T> {
   constructor (convert: IStringConvert<T>, triggerUpdate: () => void, validate?: (value: string) => boolean | string, save?: (newValue: T) => void | Promise<void>) {
     this._triggerUpdate = triggerUpdate
     this._validate = validate
-    this._triggerUpdate = triggerUpdate
     this._convert = convert
     this.save = save
     this.validate = this.validate.bind(this)
@@ -131,6 +130,7 @@ class FormField<T> implements IFormField<T> {
     const valOrPromise = isFnInitator(initiator) ? initiator() : initiator
     if (isPromiseLike(valOrPromise)) {
       if (valOrPromise === this._initiatorPromise) {
+        console.log('P: same promise...')
         return
       }
       this.loaded = false
@@ -142,7 +142,10 @@ class FormField<T> implements IFormField<T> {
           }
           this._finishInitial(newInitial, true)
         },
-        error => console.error(error)
+        error => {
+          console.log('P: Error!')
+          console.error(error)
+        }
       )
       if (this._firstInitFinished) {
         this._triggerUpdate()
@@ -337,14 +340,15 @@ export function useForm (
         return this.useField<string | null>(key, initial, STRING_CONVERT, validate, save)
       },
       useField <T> (key: string, initial: TInitiator<T>, convert: IStringConvert<T>, validate?: (value: string) => boolean | string, save?: (value: T) => void | Promise<void>): IFormField<T> {
-        const [field, setField] = useState<FormField<T>>(() => {
+        const setLastChange = useState(Date.now())[1]
+        const field = useState<FormField<T>>(() => {
           const field = new FormField<T>(convert, () => {
             triggerUpdate()
-            setField(field)
+            setLastChange(Date.now())
           }, validate, save)
           field.setInitial(initial)
           return field
-        })
+        })[0]
         useEffect(() => {
           if (fields[key] !== undefined) {
             throw new Error(`Form field [${key}] already exists.`)

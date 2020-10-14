@@ -1,7 +1,7 @@
 import React, { useContext, useState } from 'react'
 import { Text, Alert, GestureResponderEvent, StyleSheet } from 'react-native'
 import { observer } from 'mobx-react'
-import { EmptyView } from './EmptyView'
+import { createEmptyView } from './EmptyView'
 import { VaultContext } from '../../model/VaultContext'
 import { BottomButtonView } from './BottomButtonView'
 import { RelationListEntry, IRelationListEntryProps, LIST_ENTRY_HEIGHT } from './RelationListEntry'
@@ -44,6 +44,8 @@ const styles = StyleSheet.create({
   item: { height: LIST_ENTRY_HEIGHT }
 })
 
+const LocksEmptyView = createEmptyView(elementLocksEmpty)
+
 const SelectedLockeeList = observer(({ onAdd }: { onAdd?: (event: GestureResponderEvent) => void }): JSX.Element => {
   const consento = useContext(ConsentoContext)
   assertExists(consento, 'not in user context')
@@ -61,7 +63,7 @@ const SelectedLockeeList = observer(({ onAdd }: { onAdd?: (event: GestureRespond
         : screenshots.vaultLocksPending.takeSync(500)
       : screenshots.vaultLocksNoLock.takeSync(500)
   }
-  return <EmptyView empty={elementLocksEmpty} onAdd={onAdd}>{
+  return <LocksEmptyView onAdd={onAdd}>{
     lockees !== undefined && lockees.size > 0
       ? <BottomButtonView src={elementRelationSelectListDisplay} onPress={onAdd}>
         {
@@ -77,7 +79,7 @@ const SelectedLockeeList = observer(({ onAdd }: { onAdd?: (event: GestureRespond
         }
       </BottomButtonView>
       : undefined
-  }</EmptyView>
+  }</LocksEmptyView>
 })
 
 const SelectEntry = ({ entry, onSelect }: ISelectEntryProps): JSX.Element => {
@@ -163,13 +165,15 @@ const LockeeList = observer((): JSX.Element => {
   return <SelectLockees onSelect={handleSelectConfirmation} />
 })
 
+const NoLocksEmptyView = createEmptyView(elementLocksNoLockee)
+
 export const Locks = observer((): JSX.Element => {
   const consento = useContext(ConsentoContext)
   assertExists(consento, 'not in user context')
   const { user } = consento
   const screenshots = useContext(ScreenshotContext)
   const handleAdd = (): void => navigate('newRelation')
-  return <EmptyView empty={elementLocksNoLockee} onAdd={handleAdd} isEmpty={user.relations.size === 0} onEmpty={screenshots.vaultLocksNoRelation.handle(500)}>
+  return <NoLocksEmptyView onAdd={handleAdd} isEmpty={user.relations.size === 0} onEmpty={screenshots.vaultLocksNoRelation.handle(500)}>
     <LockeeList />
-  </EmptyView>
+  </NoLocksEmptyView>
 })

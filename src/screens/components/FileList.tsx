@@ -2,7 +2,7 @@ import React, { useContext } from 'react'
 import { View, Alert, GestureResponderEvent, StyleSheet, ViewStyle } from 'react-native'
 import { observer } from 'mobx-react'
 import { ContextMenuContext } from './ContextMenu'
-import { EmptyView } from './EmptyView'
+import { createEmptyView } from './EmptyView'
 import { PopupContext, IPopupMenuEntry, DIVIDER, IPopupMenuItem } from './PopupMenu'
 import { VaultContext } from '../../model/VaultContext'
 import { ImageFile, FileType, TextFile, File } from '../../model/VaultData'
@@ -207,6 +207,8 @@ const Section = function <T extends File> ({ name, items }: ISectionProps<T>): J
   </View>
 }
 
+const EmptyView = createEmptyView(elementVaultEmpty)
+
 export const FileList = observer((): JSX.Element => {
   const { vault } = useContext(VaultContext)
   if (vault === null) {
@@ -227,7 +229,7 @@ export const FileList = observer((): JSX.Element => {
     screenshots.vaultFilesPopup.takeSync(500)
     open({ items: addActions, context: vault }, event)
   }
-  return <EmptyView empty={elementVaultEmpty} onAdd={handleAdd}>
+  return <EmptyView onAdd={handleAdd}>
     {
       files.length > 0
         ? <BottomButtonView src={elementFileList} containerStyle={styles.container} onPress={handleAdd}>

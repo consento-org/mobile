@@ -2,7 +2,7 @@ import React, { useContext } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { observer } from 'mobx-react'
 import { TopNavigation } from './components/TopNavigation'
-import { EmptyView } from './components/EmptyView'
+import { createEmptyView } from './components/EmptyView'
 import { LIST_ENTRY_HEIGHT, RelationListEntry } from './components/RelationListEntry'
 import { IRelationEntry } from '../model/Consento.types'
 import { ConsentoContext } from '../model/Consento'
@@ -30,6 +30,8 @@ const handleAdd = (): void => navigate('newRelation', { timestamp: Date.now() })
 const renderRelation = (relation: Relation): JSX.Element =>
   <RelationListEntry type='item' key={relation.relationId} entry={relation} onPress={handlePress} />
 
+const EmptyView = createEmptyView(elementRelationsEmpty)
+
 export const RelationsScreen = observer(() => {
   const consento = useContext(ConsentoContext)
   assertExists(consento)
@@ -43,7 +45,7 @@ export const RelationsScreen = observer(() => {
   }
   return <View style={styles.container}>
     <TopNavigation title='Relations' />
-    <EmptyView empty={elementRelationsEmpty} isEmpty={relations.size === 0}>
+    <EmptyView isEmpty={relations.size === 0}>
       <MobxList
         data={relations}
         sort={compareNames}

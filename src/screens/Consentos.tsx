@@ -1,7 +1,7 @@
 import React, { useContext, useLayoutEffect } from 'react'
 import { ScrollView, View, ViewStyle } from 'react-native'
 import { observer } from 'mobx-react'
-import { EmptyView } from './components/EmptyView'
+import { createEmptyView } from './components/EmptyView'
 import { TopNavigation } from './components/TopNavigation'
 import { IAnyConsento, ConsentoBecomeLockee, ConsentoUnlockVault } from '../model/Consentos'
 import { elementConsentosEmpty } from '../styles/design/layer/elementConsentosEmpty'
@@ -33,6 +33,8 @@ const listStyle: ViewStyle = {
   marginTop: 10,
   marginBottom: 20
 }
+
+const EmptyView = createEmptyView(elementConsentosEmpty)
 
 export const ConsentosScreen = observer((): JSX.Element => {
   const consento = useContext(ConsentoContext)
@@ -83,7 +85,7 @@ export const ConsentosScreen = observer((): JSX.Element => {
   }
   return <View style={{ flex: 1 }}>
     <TopNavigation title='Consentos' />
-    <EmptyView empty={elementConsentosEmpty} isEmpty={visibleConsentos.length === 0}>
+    <EmptyView isEmpty={visibleConsentos.length === 0}>
       <ScrollView contentContainerStyle={listStyle}>
         {
           visibleConsentos.map(consento => <Consento consento={consento} key={consento.$modelId} />)

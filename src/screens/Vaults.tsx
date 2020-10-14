@@ -5,7 +5,7 @@ import { ScreenshotContext, useScreenshotEnabled } from '../util/screenshots'
 import { ImageAsset } from '../styles/design/ImageAsset'
 import { SketchImage } from '../styles/util/react/SketchImage'
 import { TopNavigation } from './components/TopNavigation'
-import { EmptyView } from './components/EmptyView'
+import { createEmptyView } from './components/EmptyView'
 import { VaultCard, VAULT_STYLE } from './components/VaultCard'
 import { Vault } from '../model/Vault'
 import { MobxGrid } from './components/MobxGrid'
@@ -23,6 +23,8 @@ const styles = StyleSheet.create({
 function renderVault (vault: Vault): JSX.Element {
   return <VaultCard key={`vault-card-${vault.$modelId}`} vault={vault} />
 }
+
+const EmptyView = createEmptyView(elementVaultsEmpty)
 
 export const VaultsScreen = (): JSX.Element => {
   const consento = useContext(ConsentoContext)
@@ -57,7 +59,7 @@ export const VaultsScreen = (): JSX.Element => {
   return <View style={styles.container}>
     <TopNavigation title='Vaults' />
     <SketchImage src={AddButton} style={styles.add} onPress={handlePress} />
-    <EmptyView empty={elementVaultsEmpty} isEmpty={useAutorun(() => vaults.size === 0)}>
+    <EmptyView isEmpty={useAutorun(() => vaults.size === 0)}>
       <MobxGrid ref={ref} data={vaults} itemStyle={VAULT_STYLE} renderItem={renderVault} />
     </EmptyView>
   </View>

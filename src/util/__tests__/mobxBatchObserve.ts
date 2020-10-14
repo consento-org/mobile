@@ -218,6 +218,7 @@ describe('advanced async', () => {
   it('it will use timeout starting from the end of batch not when the change is triggered', async () => {
     const map = observable.map()
     const batches: IBatches = []
+    await time(1000)
     const dispose = mobxBatchObserveMapAsync(map, async (batch) => {
       batches.push(batch)
       await time(110)

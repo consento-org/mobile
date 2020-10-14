@@ -5,6 +5,9 @@ on:
     branches:
       - master
       - next
+  pull_request:
+    branches:
+      - '**'
 
 jobs:
   publish:
@@ -52,3 +55,10 @@ jobs:
         /bin/bash --noprofile --norc ./.github/workflows/expo-build-number.sh d
         npx expo build:android -t app-bundle --non-interactive --release-channel next
         npx expo build:ios -t archive --release-channel next
+
+    - name: Build 
+      if: "!endsWith(github.ref, '/next') && !endsWith(github.ref, '/master')"
+      run: |
+        /bin/bash --noprofile --norc ./.github/workflows/expo-build-number.sh d
+        npx expo build:android -t app-bundle --non-interactive --release-channel pr
+        npx expo build:ios -t archive --release-channel pr

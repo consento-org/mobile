@@ -14,15 +14,30 @@
 # It will also set the versionCode for Android to the number of commits in the branch.
 #
 
-VERSION_CODE=`git fetch && git rev-list --count origin/$(git rev-parse --abbrev-ref HEAD)`
+echo "> fetching"
+git fetch
+
+echo "---"
+HEAD_REF=`git rev-parse --abbrev-ref HEAD`
+if [[ "$HEAD_REF" == 'HEAD' ]]; then
+  HEAD_REF="origin/${GITHUB_HEAD_REF}"
+else
+  HEAD_REF="origin/${HEAD_REF}"
+fi
+echo "> HEAD_REF=${HEAD_REF}"
+VERSION_CODE=`git rev-list --count ${HEAD_REF}`
+echo "> VERSION_CODE=${VERSION_CODE}"
 CURRENT=`npx json -f app.json expo.version`
+echo "> CURRENT=${CURRENT}"
 
 if [ -z $1 ]; then
   BUILD=0
 else
   BUILD=1
   while IFS= read -r COMMIT; do
+    echo "> Getting version for commit: ${COMMIT}"
     COMMIT_VERSION=`git show ${COMMIT}:app.json | npx json "expo.version"`
+    echo "> COMMIT_VERSION=${COMMIT_VERSION}"
     if [ $COMMIT_VERSION != $CURRENT ]; then
       break
     fi
@@ -31,7 +46,7 @@ else
 fi
 
 updateAppJson () {
-  echo $1
+  echo "> Updating app.json: ${1}"
   npx json -I -f app.json -e "this.$1" > /dev/null 2>&1
 }
 

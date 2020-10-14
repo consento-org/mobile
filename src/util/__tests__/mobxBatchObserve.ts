@@ -220,38 +220,38 @@ describe('advanced async', () => {
     const batches: IBatches = []
     const dispose = mobxBatchObserveMapAsync(map, async (batch) => {
       batches.push(batch)
-      await time(11)
-    }, { delay: 8 })
+      await time(110)
+    }, { delay: 80 })
     map.set('a', 1)
-    await time(15)
+    await time(150)
     /**
-     * first trigger 8ms + duration of first run 11 ms => 19ms
+     * first trigger 80ms + duration of first run 110 ms => 190ms
      * now 15ms in, the implementation could take either route:
      *
-     * a) it could start a 8ms timeout triggering the next collection at 23ms
-     * b) it could mark it as dirty and start the next collection right after 19ms
-     * c) It could start a new timeout after the batch is finished 27ms
+     * a) it could start a 8ms timeout triggering the next collection at 230ms
+     * b) it could mark it as dirty and start the next collection right after 190ms
+     * c) It could start a new timeout after the batch is finished 270ms
      */
     map.set('b', 2)
-    await time(6)
+    await time(60)
     /**
-     * now 21ms in c...
+     * now 210ms in c...
      *
      * a) will be part of the second batch
-     * b) will be part of the third batch, the third batch starting at ms 30
+     * b) will be part of the third batch, the third batch starting at ms 300
      * c) will be part of the second batch
      */
     map.set('c', 3)
-    await time(5)
+    await time(50)
     /**
-     * now 26ms in d...
+     * now 260ms in d...
      *
-     * a) will be part of the third batch, triggering next collection at ms 34
+     * a) will be part of the third batch, triggering next collection at ms 340
      * b) will be part of the third batch
      * c) will be part of the second batch
      */
     map.set('d', 4)
-    await time(30)
+    await time(300)
     await dispose()
     const optionA = [
       { add: toMap({ a: 1 }) },

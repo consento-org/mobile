@@ -31,14 +31,16 @@ import { ImageEditor } from './ImageEditor'
 import { TextEditor } from './TextEditor'
 import { TextBox } from '../styles/util/TextBox'
 import { Camera } from './Camera'
+import { useIsFocused } from '@react-navigation/native'
 import { useAutorun } from '../util/useAutorun'
 
 const Stack = createStackNavigator()
 const Tabs = createBottomTabNavigator()
 
-const MainTaps = (): JSX.Element => {
+const MainTabs = (): JSX.Element => {
   return <Tabs.Navigator
     initialRouteName='vaults'
+    lazy
     screenOptions={{
       unmountOnBlur: true
     }}
@@ -86,23 +88,19 @@ export const Screens = (): JSX.Element => {
       headerShown: false,
       animationEnabled: !isScreenshotEnabled
     }}>
-    <Stack.Screen name='main'>{props => {
-      /* eslint-disable react/prop-types */
-      const navigation: StackNavigationProp<any> = props.navigation
-      if (!navigation.isFocused()) return <></>
-      return <MainTaps />
+    <Stack.Screen name='main'>{() => {
+      if (!useIsFocused()) return <></>
+      return <MainTabs />
     }}</Stack.Screen>
     <Stack.Screen name='config' component={Config} />
     <Stack.Screen name='newRelation'>{props => {
-      /* eslint-disable react/prop-types */
-      const navigation: StackNavigationProp<any> = props.navigation
-      if (!navigation.isFocused()) return <></>
+      if (!useIsFocused()) return <></>
       return <NewRelation />
     }}</Stack.Screen>
     <Stack.Screen name='vault'>{props => {
       /* eslint-disable react/prop-types */
       const navigation: StackNavigationProp<any> = props.navigation
-      if (!navigation.isFocused()) return <></>
+      if (!useIsFocused()) return <></>
       const route = props.route
       const vaultKey = (route.params as any)?.vault
       const vault = user.findVault(vaultKey)
@@ -144,9 +142,7 @@ export const Screens = (): JSX.Element => {
       return <></>
     }}</Stack.Screen>
     <Stack.Screen name='camera'>{({ route }) => {
-      console.log({ params: route.params })
       const { onPicture, onClose } = (route.params as any) ?? {}
-      console.log({ onPicture, onClose })
       return <Camera onPicture={onPicture} onClose={onClose} />
     }}</Stack.Screen>
   </Stack.Navigator>

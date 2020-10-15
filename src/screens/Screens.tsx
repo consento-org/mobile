@@ -65,7 +65,7 @@ const MainTabs = (): JSX.Element => {
       }} />
     <Tabs.Screen
       name='consentos' component={ConsentosScreen} options={{
-        tabBarIcon: ({ focused }: { focused: boolean }) => <ConsentosIcon focused={focused} />,
+        tabBarIcon: ConsentosIcon,
         tabBarLabel: FocusLabel(elementBottomNavConsentosActive, elementBottomNavConsentosResting)
       }} />
     <Tabs.Screen

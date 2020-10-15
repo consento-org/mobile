@@ -192,11 +192,15 @@ export class Consento extends Model({
     return this._loadConfigError.get() ?? this.user.loadError
   }
 
-  deleteEverything (): void {
+  async deleteEverything (): Promise<void> {
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    systemRimraf().finally(() => {
+    try {
+      await systemRimraf()
+    } finally {
+      this.users.add(createDefaultUser())
+      this.users.delete(this.user)
       this.updateConfig({})
-    })
+    }
   }
 
   @modelAction _updateTransportState (): void {

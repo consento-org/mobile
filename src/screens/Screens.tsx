@@ -1,5 +1,4 @@
-import React, { forwardRef, Ref, useContext } from 'react'
-import { observer } from 'mobx-react'
+import React, { useContext } from 'react'
 import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { elementBottomNav } from '../styles/design/layer/elementBottomNav'
@@ -32,6 +31,7 @@ import { ImageEditor } from './ImageEditor'
 import { TextEditor } from './TextEditor'
 import { TextBox } from '../styles/util/TextBox'
 import { Camera } from './Camera'
+import { useAutorun } from '../util/useAutorun'
 
 const Stack = createStackNavigator()
 const Tabs = createBottomTabNavigator()
@@ -74,11 +74,11 @@ const MainTaps = (): JSX.Element => {
   </Tabs.Navigator>
 }
 
-export const Screens = observer(forwardRef((_, ref: Ref<any>): JSX.Element => {
+export const Screens = (): JSX.Element => {
   const consento = useContext(ConsentoContext)
   assertExists(consento)
-  const { user } = consento
   const isScreenshotEnabled = useScreenshotEnabled()
+  const user = useAutorun(() => consento.user, (a, b) => a.$modelId !== b.$modelId)
   return <Stack.Navigator
     initialRouteName='main'
     mode='modal'
@@ -150,23 +150,24 @@ export const Screens = observer(forwardRef((_, ref: Ref<any>): JSX.Element => {
       return <Camera onPicture={onPicture} onClose={onClose} />
     }}</Stack.Screen>
   </Stack.Navigator>
-}))
+}
 
 const FocusIcon = (focusedSrc: IImageAsset, regularSrc: IImageAsset) => {
   return ({ focused }: { focused: boolean }) => <SketchImage src={focused ? focusedSrc : regularSrc} />
 }
 
-const ConsentosIcon = observer(({ focused }: { focused: boolean }) => {
+const ConsentosIcon = ({ focused }: { focused: boolean }): JSX.Element => {
   const consento = useContext(ConsentoContext)
-  assertExists(consento)
-  const { user } = consento
-  const hasNewNotifications = user.newConsentosCount > 0
+  const hasNewNotifications = useAutorun(() => {
+    const count = consento?.user.newConsentosCount
+    return count !== undefined && count > 0
+  })
   return <SketchImage src={focused
     ? ImageAsset.iconConsentoActive
     : hasNewNotifications
       ? ImageAsset.iconConsentoNotificationNew
       : ImageAsset.iconConsentoIdle} />
-})
+}
 
 const FocusLabel = (focusedStyle: ILayer<{ title: TextBox }>, regularStyle: ILayer<{ title: TextBox }>): (focused: { focused: boolean }) => JSX.Element => {
   return ({ focused }: { focused: boolean }): JSX.Element => {

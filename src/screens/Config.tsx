@@ -91,13 +91,19 @@ export const Config = observer((): JSX.Element => {
     Alert.alert('WARNING!!!', 'Do you really want to delete all data!\nThis can not be restored!', [
       {
         text: 'Yes! I want to delete everything!',
-        onPress: deleteEverything
+        onPress: () => {
+          deleteEverything()
+            .then(
+              handleBack,
+              error => console.error({ error })
+            )
+        }
       },
       { text: 'No, abort!', onPress: () => setBarrier(false) }
     ])
   }
 
-  const handleBack = (): void => leave(() => navigate('vaults') /* TODO: navigate back to where you came from :) */)
+  const handleBack = (): void => leave(() => navigate(['main', 'vaults']) /* TODO: navigate back to where you came from :) */)
 
   return <View style={styles.screen} onLayout={screenshots.config.handle(200)}>
     <TopNavigation title='Consento' back={handleBack} />

@@ -94,13 +94,14 @@ const RelationAvailable = observer(({ user, relation }: { user: User, relation: 
       }
     }
   }
+  const back = ['main', 'relations']
   const hasAvatar = exists(avatarId.value)
   const handleAvatarPress = (): void => avatarId.setValue(randomAvatarId())
   const handleClearAvatar = (): void => avatarId.setValue(null)
   const handleDelete = (): void => deleteWarning({
     onPress (): void {
       user.relations.delete(relation)
-      navigate('relations')
+      navigate(back)
     },
     itemName: 'Relation'
   })

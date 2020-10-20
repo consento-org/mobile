@@ -78,7 +78,7 @@ const VaultAvailable = observer(({ user, vault }: { user: User, vault: VaultMode
   }, [vault.isLoading])
   useEffect(() => {
     if (!vault.isOpen && !vault.isPending && !vault.isLoading) {
-      navigate(back)
+      handleBack()
     }
   }, [vault.isPending, vault.isLoading])
   if (useScreenshotEnabled()) {
@@ -91,20 +91,20 @@ const VaultAvailable = observer(({ user, vault }: { user: User, vault: VaultMode
   const handleDelete = (): void => {
     deleteWarning({
       onPress (): void {
-        navigate(back)
+        handleBack()
         user.vaults.delete(vault)
       },
       itemName: 'Vault'
     })
   }
   const handleLock = vault.isClosable ? () => {
-    navigate(back)
+    handleBack()
     setImmediate(() => {
       vault.lock()
         .catch(lockError => console.error(lockError))
     })
   } : undefined
-  const handleBack = (): void => navigate(back)
+  const handleBack = (): void => navigate(['main', 'vaults'])
   return <VaultContext.Provider value={{ vault }}><PopupMenu><ContextMenu>
     <View style={styles.container}>
       <TopNavigation title={vault.name} titlePlaceholder={vault.humanId} back={handleBack} onEdit={handleNameEdit} onDelete={handleDelete} />

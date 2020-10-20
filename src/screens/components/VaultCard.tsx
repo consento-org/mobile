@@ -31,17 +31,6 @@ type IVaultPrototype = ILayer<{
   icon: ImagePlacement
 }>
 
-function getPrototype (state: TVaultState): IVaultPrototype {
-  if (state === TVaultState.loading) {
-    return elementCardVaultLoading
-  } else if (state === TVaultState.open) {
-    return elementCardVaultOpen
-  } else if (state === TVaultState.pending) {
-    return elementCardVaultPending
-  }
-  return elementCardVaultClose
-}
-
 interface IStyles {
   title: TextStyle
   icon: ImageStyle
@@ -50,12 +39,24 @@ interface IStyles {
   status: TextStyle
 }
 
-const stylesByProto = new WeakMap<PropType<IVaultPrototype, 'layers'>, IStyles>()
-function getProtoStyles (layers: PropType<IVaultPrototype, 'layers'>): IStyles {
-  let styles = stylesByProto.get(layers)
-  if (styles === undefined) {
-    const { icon, title, background, lastAccess, status } = layers
-    styles = StyleSheet.create({
+interface IStateInfo {
+  layers: PropType<IVaultPrototype, 'layers'>
+  styles: IStyles
+}
+
+const styleByState: Record<TVaultState, IStateInfo> = {
+  [TVaultState.loading]: createVaultStyle(elementCardVaultLoading),
+  [TVaultState.open]: createVaultStyle(elementCardVaultOpen),
+  [TVaultState.pending]: createVaultStyle(elementCardVaultPending),
+  [TVaultState.locked]: createVaultStyle(elementCardVaultClose)
+}
+
+function createVaultStyle (proto: IVaultPrototype): IStateInfo {
+  const { layers } = proto
+  const { icon, title, background, lastAccess, status } = layers
+  return {
+    layers,
+    styles: StyleSheet.create({
       icon: {
         position: 'absolute',
         top: icon.place.top,
@@ -70,8 +71,7 @@ function getProtoStyles (layers: PropType<IVaultPrototype, 'layers'>): IStyles {
       background: {
         position: 'absolute',
         top: background.place.top,
-        left: background.place.left,
-        width: background.place.width
+        left: background.place.left
       },
       lastAccess: {
         position: 'absolute',
@@ -86,15 +86,12 @@ function getProtoStyles (layers: PropType<IVaultPrototype, 'layers'>): IStyles {
         width: status.place.width
       }
     })
-    stylesByProto.set(layers, styles)
   }
-  return styles
 }
 
 export const VaultCard = observer(({ vault }: { vault: VaultModel }) => {
-  const { layers } = getPrototype(vault.state)
   const onPress = (): void => navigate('vault', { vault: vault.$modelId })
-  const styles = getProtoStyles(layers)
+  const { styles, layers } = styleByState[vault.state]
   const hasName = vault.name !== ''
   return <TouchableOpacity style={VAULT_STYLE} onPress={onPress} activeOpacity={0.55} disabled={vault.isLoading}>
     <SketchElement src={layers.background} style={styles.background} />

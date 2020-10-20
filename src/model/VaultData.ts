@@ -33,7 +33,7 @@ export class ImageFile extends Model({
   width: tProp(types.number),
   height: tProp(types.number),
   size: tProp(types.number, () => -1),
-  exif: prop(() => objectMap())
+  exif: prop<Record<string, any>>(() => objectMap())
 }) implements IFile {
   get type (): FileType {
     return FileType.image

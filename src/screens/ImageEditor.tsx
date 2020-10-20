@@ -12,7 +12,7 @@ export interface IImageEditorProps {
 export const ImageEditor = ({ image, vault }: IImageEditorProps): JSX.Element => {
   return <Editor file={image} vault={vault}>
     <SecureImage
-      secretKey={image}
+      image={image}
       resizeMode='contain'
       style={{
         width: '100%',

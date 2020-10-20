@@ -1,4 +1,5 @@
 import React from 'react'
+import { StyleSheet } from 'react-native'
 import { Editor } from './components/Editor'
 import { ImageFile } from '../model/VaultData'
 import { SecureImage } from './components/SecureImage'
@@ -9,15 +10,21 @@ export interface IImageEditorProps {
   vault: Vault
 }
 
+const styles = StyleSheet.create({
+  image: {
+    flexGrow: 1,
+    alignSelf: 'stretch',
+    height: 'auto',
+    width: 'auto'
+  }
+})
+
 export const ImageEditor = ({ image, vault }: IImageEditorProps): JSX.Element => {
   return <Editor file={image} vault={vault}>
     <SecureImage
       image={image}
       resizeMode='contain'
-      style={{
-        width: '100%',
-        height: '100%'
-      }}
+      style={styles.image}
     />
   </Editor>
 }

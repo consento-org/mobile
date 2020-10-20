@@ -12,6 +12,10 @@ import { CameraContainer } from './components/CameraContainer'
 import { SketchElement } from '../styles/util/react/SketchElement'
 import { importFile } from '../util/expoSecureBlobStore'
 import { bufferToString } from '@consento/api/util'
+import { useUser } from '../model/Consento'
+import { exists } from '../styles/util/lang'
+import { navigate } from '../util/navigate'
+import { ErrorCode, ErrorScreen } from './ErrorScreen'
 
 const ShutterButton = ({ onPress }: { onPress: () => any }): JSX.Element => {
   const [pressed, setPressed] = useState<boolean>(false)
@@ -60,6 +64,10 @@ function createFlatButton ({ item, pressed: poly }: {
 const { bg, image, closeSize, close, encryptingBg } = elementCamera.layers
 
 const styles = StyleSheet.create({
+  bg: {
+    backgroundColor: '#000',
+    flexGrow: 1
+  },
   container: {
     zIndex: 1,
     width: '100%',
@@ -78,7 +86,9 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     position: 'absolute',
-    backgroundColor: encryptingBg.fill.color
+    backgroundColor: encryptingBg.fill.color,
+    justifyContent: 'center',
+    alignItems: 'center'
   },
   shutterButton: {
     flexGrow: 1,
@@ -110,7 +120,20 @@ export interface ICameraProps {
   onClose: () => void
 }
 
-export const Camera = ({ onPicture, onClose }: ICameraProps): JSX.Element => {
+function fillZero (num: number): string {
+  const str = num.toString(10)
+  if (str.length >= 2) {
+    return str
+  }
+  return `0${str}`
+}
+
+export const Camera = ({ vaultId }: { vaultId: string }): JSX.Element => {
+  const user = useUser()
+  const vault = user.findVault(vaultId)
+  if (!exists(vault)) {
+    return <ErrorScreen code={ErrorCode.noVault} />
+  }
   const [flashMode, setFlashMode] = useState<boolean>(NativeCamera.Constants.FlashMode.off)
   const [direction, setDirection] = useState(NativeCamera.Constants.Type.back)
   const [zoom, setZoom] = useState<number>(0)
@@ -147,13 +170,19 @@ export const Camera = ({ onPicture, onClose }: ICameraProps): JSX.Element => {
       })
       const blob = await importFile(capture.uri, true)
       setEncrypting(false)
-      onPicture(new ImageFile({
-        name: capture.uri.substr(capture.uri.lastIndexOf('/') + 1),
+      const now = new Date()
+      const file = new ImageFile({
+        name: `${now.getFullYear()}${fillZero(now.getMonth() + 1)}${fillZero(now.getDate() + 1)}_${capture.uri.substr(capture.uri.lastIndexOf('/') + 1, 6)}.jpg`,
         secretKeyBase64: bufferToString(blob.secretKey, 'base64'),
         width: capture.width,
         height: capture.height,
         exif: capture.exif
-      }))
+      })
+      vault.data?.addFile(file)
+      navigate('editor', {
+        vault: vault.$modelId,
+        file: file.$modelId
+      })
     })().catch(err => {
       setEncrypting(false)
       console.error(err)
@@ -186,7 +215,10 @@ export const Camera = ({ onPicture, onClose }: ICameraProps): JSX.Element => {
 
   const window = useWindowDimensions()
   const inset = useSafeAreaInsets()
-  return <>
+  const onClose = (): void => navigate('vault', {
+    valut: vault.$modelId
+  })
+  return <View style={styles.bg}>
     <CameraContainer style={{ width: window.width, height: window.height }} zoom={zoom} type={direction} ref={ref} flashMode={flashMode} />
     <View style={styles.container}>
       <View style={StyleSheet.compose<ViewStyle>(styles.topBar, { marginTop: inset.top })}>
@@ -213,5 +245,5 @@ export const Camera = ({ onPicture, onClose }: ICameraProps): JSX.Element => {
           : <></>
       }
     </View>
-  </>
+  </View>
 }

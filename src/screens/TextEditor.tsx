@@ -6,6 +6,7 @@ import { Vault } from '../model/Vault'
 import { FormContext } from '../util/useForm'
 import { assertExists } from '../util/assertExists'
 import { elementTextEditor } from '../styles/design/layer/elementTextEditor'
+import { ScrollView } from 'react-native-gesture-handler'
 
 export interface ITextEditorProps {
   textFile: TextFile
@@ -47,5 +48,7 @@ const Input = ({ file }: IInputProps): JSX.Element => {
 }
 
 export const TextEditor = ({ textFile, vault }: ITextEditorProps): JSX.Element => {
-  return <Editor file={textFile} vault={vault}><Input file={textFile} /></Editor>
+  return <Editor file={textFile} vault={vault}>
+    <ScrollView><Input file={textFile} /></ScrollView>
+  </Editor>
 }

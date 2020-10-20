@@ -1,5 +1,5 @@
-import React, { useContext } from 'react'
-import { View, TouchableOpacity, StyleSheet, ScrollView } from 'react-native'
+import React from 'react'
+import { View, TouchableOpacity, StyleSheet } from 'react-native'
 import { File, FileType } from '../../model/VaultData'
 import { useForm } from '../../util/useForm'
 import { Vault } from '../../model/Vault'
@@ -53,14 +53,7 @@ const styles = StyleSheet.create({
     ...styleTitle,
     color: Color.red
   },
-  titleValid: styleTitle,
-  children: {
-    flexGrow: 1
-  },
-  childrenContainer: {
-    display: 'flex',
-    flexGrow: 1
-  }
+  titleValid: styleTitle
 })
 
 export interface IEditorProps {
@@ -118,11 +111,11 @@ export const Editor = ({ file, vault, children }: IEditorProps): JSX.Element => 
         </View>
         <SketchTextBoxInput
           src={title}
-          onChangeText={text => { filename.handleValue(text); console.log('handle') }}
+          onChangeText={filename.handleValue}
           style={filename.isInvalid ? styles.titleInvalid : styles.titleValid}>{filename.initial ?? undefined}</SketchTextBoxInput>
         {/* TODO: <SketchElement src={size} /> */}
       </View>
-      <ScrollView style={styles.children} contentContainerStyle={styles.childrenContainer}>{children}</ScrollView>
+      {children}
     </View>
   </Form>
 }

@@ -103,7 +103,7 @@ export const navigate: INavigate = <TParams = any> (route: string | string[] | I
   }
   const r = route
   setImmediate(() => {
-    navigationRef.current?.navigate(r, params)
+    navigationRef.current?.navigate(r, params ?? {})
   })
 }
 

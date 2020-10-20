@@ -7,7 +7,7 @@ import { Vault as VaultModel } from '../model/Vault'
 import { PopupMenu } from './components/PopupMenu'
 import { FileList } from './components/FileList'
 import { Locks } from './components/Locks'
-import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs'
+import { createMaterialTopTabNavigator, MaterialTopTabBarOptions, MaterialTopTabNavigationOptions } from '@react-navigation/material-top-tabs'
 import { SketchElement } from '../styles/util/react/SketchElement'
 import { LockButton } from './components/LockButton'
 import { ContextMenu } from './components/ContextMenu'
@@ -26,7 +26,7 @@ import { useIsFocused } from '@react-navigation/native'
 
 const Tab = createMaterialTopTabNavigator()
 
-function labelOptions (label: string): any {
+function labelOptions (label: string): MaterialTopTabNavigationOptions {
   return {
     tabBarLabel: ({ focused }: { focused: boolean }) =>
       <SketchElement
@@ -36,7 +36,7 @@ function labelOptions (label: string): any {
   }
 }
 
-const tabBarOptions = {
+const tabBarOptions: MaterialTopTabBarOptions = {
   indicatorStyle: {
     backgroundColor: elementTabBarTabActive.layers.bottomLine.svg?.stroke,
     height: elementTabBarTabActive.layers.bottomLine.svg?.strokeWidth ?? 1
@@ -73,7 +73,6 @@ const VaultAvailable = observer(({ user, vault }: { user: User, vault: VaultMode
   const { config } = useConsento()
   useEffect(() => {
     if (!vault.isOpen && !vault.isLoading) {
-      console.log({ time: (config?.expire ?? 1) * 1000, expire: config?.expire })
       setTimeout(() => vault.requestUnlock((config?.expire ?? 1) * 1000), 0)
     }
   }, [vault.isLoading])

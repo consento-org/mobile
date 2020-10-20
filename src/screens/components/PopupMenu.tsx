@@ -140,7 +140,7 @@ interface IPopupMenuDisplayProps {
 
 export const PopupMenuDisplay = ({ items, onItemSelect, onCancel }: IPopupMenuDisplayProps): JSX.Element => {
   return <View style={styles.container}>
-    <Pressable onPress={() => { console.log('hi'); onCancel() }} style={styles.bg}>
+    <Pressable onPress={onCancel} style={styles.bg}>
       <View />
     </Pressable>
     <View style={styles.menu}>

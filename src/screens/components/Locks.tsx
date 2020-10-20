@@ -73,7 +73,7 @@ const SelectedLockeeList = observer(({ onAdd }: { onAdd?: (event: GestureRespond
               data={lockees}
               style={style}
               itemStyle={styles.item}
-              sort={compareNames}
+              sort={{ run: compareNames, key: 'compareNames' }}
               renderItem={renderAddedLockee}
             />
         }
@@ -119,7 +119,7 @@ const SelectLockees = ({ onSelect: handleSelectConfirmation }: { onSelect: (rela
           data={availableRelations}
           style={style}
           itemStyle={styles.item}
-          sort={compareNames}
+          sort={{ run: compareNames, key: 'compareNames' }}
           renderItem={relation => <SelectEntry key={relation.$modelId} entry={relation} onSelect={handleEntrySelect} />}
         />
     }

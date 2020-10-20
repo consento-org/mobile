@@ -271,12 +271,15 @@ export class User extends Model({
     if (lockees === undefined || lockees.size === 0) {
       return
     }
-    return createView(lockees, { map: vaultLockee => new Lockee(vaultLockee, this.findRelation(vaultLockee.relationId)) })
+    return createView(lockees, { map: { run: vaultLockee => new Lockee(vaultLockee, this.findRelation(vaultLockee.relationId)), key: 'vaultLockeeToLockee' } })
   }
 
   availableRelations (vault: Vault): IArrayView<Relation> {
     return createView(this.relations, {
-      filter: relation => !vault.usedRelationIds.has(relation.$modelId)
+      filter: {
+        run: relation => !vault.usedRelationIds.has(relation.$modelId),
+        key: 'filterUsedRelations'
+      }
     })
   }
 

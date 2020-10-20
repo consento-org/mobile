@@ -1,5 +1,5 @@
 import React, { forwardRef, useEffect, useState } from 'react'
-import { Dimensions, ScaledSize, StyleSheet, View, VirtualizedList } from 'react-native'
+import { Dimensions, ScaledSize, StyleSheet, View, ViewStyle, VirtualizedList } from 'react-native'
 import { createView, IArrayView, IFilter, IMap, ISort, ISupportedArray } from '../../util/ArraySetView'
 import { useAutorun } from '../../util/useAutorun'
 
@@ -22,6 +22,7 @@ export interface IMobxGridProps<TSource, TFinal = TSource> {
   start?: number
   limit?: number
   renderItem: (item: TFinal) => JSX.Element
+  style?: ViewStyle
   itemStyle: IGridItemStyle
   listKey?: (row: number, columns: number) => string
   keyExtractor?: (item: TFinal, index: number) => string
@@ -32,6 +33,10 @@ export interface IMobxGridProps<TSource, TFinal = TSource> {
 const styles = StyleSheet.create({
   list: {
     height: 0 /* React-navigation fix - TODO check if new version fixes this or file bug */
+  },
+  row: {
+    alignSelf: 'center',
+    flexDirection: 'row'
   }
 })
 
@@ -45,48 +50,49 @@ interface IGrid {
   renderRow: (input: { index: number, item: unknown }) => JSX.Element
 }
 
-function calcGrid (style: IGridItemStyle, getOrCreateElement: (index: number) => React.ReactNode, container: { width: number, height: number }): IGrid {
-  const columns = container.width / style.width | 0
-  const rows = container.height / style.height | 0
-  const marginHorizontal = ((style.marginLeft ?? style.marginHorizontal ?? 0) + (style.marginRight ?? style.marginHorizontal ?? 0))
-  const marginVertical = ((style.marginTop ?? style.marginVertical ?? 0) + (style.marginBottom ?? style.marginVertical ?? 0))
-  const height = style.height + marginVertical
-  const width = columns * (style.width + marginHorizontal)
-  const itemStyle = StyleSheet.create({
-    item: {
-      alignSelf: 'center',
-      flexDirection: 'row',
-      width,
-      height
+function calcGrid (itemStyle: IGridItemStyle, getOrCreateElement: (index: number) => React.ReactNode, container: { width: number, height: number }): IGrid {
+  const marginHorizontal = ((itemStyle.marginLeft ?? itemStyle.marginHorizontal ?? 0) + (itemStyle.marginRight ?? itemStyle.marginHorizontal ?? 0))
+  const marginVertical = ((itemStyle.marginTop ?? itemStyle.marginVertical ?? 0) + (itemStyle.marginBottom ?? itemStyle.marginVertical ?? 0))
+  const itemHeight = itemStyle.height + marginVertical
+  const itemWidth = itemStyle.width + marginHorizontal
+  const columns = (container.width / itemWidth) | 0
+  const rows = (container.height / itemHeight) | 0
+  const rowWidth = columns * itemWidth
+  const rowStyle = StyleSheet.create({
+    row: {
+      ...styles.row,
+      width: rowWidth,
+      height: itemHeight
     }
-  }).item
+  }).row
   return {
     columns,
     rows,
     getItem: (_: any, index: number): number => index * columns /* start */,
-    getItemLayout: (_, index: number) => ({ length: height, offset: index * height, index }),
+    getItemLayout: (_, index: number) => ({ length: itemHeight, offset: index * itemHeight, index }),
     renderRow: input => {
       const start = input.item as number
       const list = []
       for (let offset = 0; offset < columns; offset++) {
         list.push(getOrCreateElement(start + offset))
       }
-      return <View key={`start-${start}`} style={itemStyle}>{list}</View>
+      return <View key={`start-${start}`} style={rowStyle}>{list}</View>
     }
   }
 }
 
-function useGrid <TFinal> (style: IGridItemStyle, view: IArrayView<TFinal>, renderItem: (item: TFinal) => JSX.Element): IGrid {
+function useGrid <TFinal> (itemStyle: IGridItemStyle, view: IArrayView<TFinal>, renderItem: (item: TFinal) => JSX.Element): IGrid {
   const [getOrCreateElement] = useState(() => {
     const cache: { [index: number]: React.ReactNode } = {}
     const renderIndex = ({ index }: { index: number }): JSX.Element => {
       const lookup = useAutorun(() => {
+        view.key.get()
         if (index >= view.size) {
-          return -1
+          return undefined
         }
         return view.item(index)
       })
-      if (lookup === -1) {
+      if (lookup === undefined) {
         return <></>
       }
       // It is important that the index lookup is here. This way renderItem will be only called if the
@@ -102,10 +108,10 @@ function useGrid <TFinal> (style: IGridItemStyle, view: IArrayView<TFinal>, rend
       return node
     }
   })
-  let [grid, setGrid] = useState(() => calcGrid(style, getOrCreateElement, Dimensions.get('window')))
+  let [grid, setGrid] = useState(() => calcGrid(itemStyle, getOrCreateElement, Dimensions.get('window')))
   useEffect(() => {
     const handler = ({ window }: { window: ScaledSize }): any => {
-      const newGrid = calcGrid(style, getOrCreateElement, window)
+      const newGrid = calcGrid(itemStyle, getOrCreateElement, window)
       if (newGrid.columns !== grid.columns || newGrid.rows !== grid.rows) {
         grid = newGrid
         setGrid(newGrid)
@@ -117,23 +123,33 @@ function useGrid <TFinal> (style: IGridItemStyle, view: IArrayView<TFinal>, rend
   return grid
 }
 
-export type IMobxGrid = <TSource, TFinal = TSource>(props: IMobxGridProps<TSource, TFinal> & { ref?: React.Ref<VirtualizedList<any>> }) => JSX.Element | null
-export const MobxGrid: IMobxGrid = forwardRef<VirtualizedList<any>, IMobxGridProps<any, any>>(function <TSource, TFinal = TSource> (props: IMobxGridProps<TSource, TFinal>, ref: any): JSX.Element | null {
-  const { data, filter, sort, map, start, limit, itemStyle, renderItem, keyExtractor, centerContent } = props
-  const view = createView<TSource, TFinal>(data, { filter, sort, map, start, limit })
-  const { columns, getItem, getItemLayout, renderRow } = useGrid(itemStyle, view, renderItem)
-  const numItems = useAutorun(() => view.size)
-  const itemCount = Math.ceil(numItems / columns)
-  return <VirtualizedList
-    ref={ref}
-    data={[]}
-    extraData={itemCount}
-    getItemCount={() => itemCount}
-    style={styles.list}
-    keyExtractor={(keyExtractor ?? defaultKeyExtractor) as () => string}
-    renderItem={renderRow}
-    {...{
-      getItem, getItemLayout, centerContent
-    }}
-  />
-} as any) as unknown as IMobxGrid
+type KeyedMobxGridProps = { view: IArrayView<any> } & Pick<IMobxGridProps<any, any>, 'keyExtractor' | 'itemStyle' | 'renderItem' | 'centerContent' | 'style'>
+const KeyedMobxGrid = forwardRef<VirtualizedList<any>, KeyedMobxGridProps>(
+  ({ view, style, keyExtractor, itemStyle, renderItem, centerContent }: KeyedMobxGridProps, ref) => {
+    const { columns, getItem, getItemLayout, renderRow } = useGrid(itemStyle, view, renderItem)
+    const numItems = useAutorun(() => view.size)
+    const itemCount = Math.ceil(numItems / columns)
+    return <VirtualizedList
+      ref={ref}
+      data={[]}
+      extraData={`${itemCount}`}
+      getItemCount={() => itemCount}
+      style={style !== undefined ? StyleSheet.compose<ViewStyle>(styles.list, style) : styles.list}
+      keyExtractor={(keyExtractor ?? defaultKeyExtractor) as () => string}
+      renderItem={renderRow}
+      {...{
+        getItem, getItemLayout, centerContent
+      }}
+    />
+  }
+)
+
+export type IMobxGrid = <TSource, TFinal = TSource>(props: IMobxGridProps<TSource, TFinal> & { ref?: React.Ref<VirtualizedList<any>> }) => JSX.Element
+export const MobxGrid: IMobxGrid = forwardRef<VirtualizedList<any>, IMobxGridProps<any, any>>(
+  (props: IMobxGridProps<any, any>, ref: any) => {
+    const { data, style, filter, sort, map, start, limit, itemStyle, renderItem, keyExtractor, centerContent } = props
+    const view = createView<any, any>(data, { filter, sort, map, start, limit })
+    const key = useAutorun(() => view.key.get(), undefined, [data])
+    return <KeyedMobxGrid {...{ view, style, key, ref, itemStyle, renderItem, keyExtractor, centerContent }} />
+  }
+) as unknown as IMobxGrid

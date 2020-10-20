@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { ArraySetView, createView, deriveView, ObservableArrayView } from '../ArraySetView'
 import { ArraySet } from 'mobx-keystone'
-import { action, autorun, observable } from 'mobx'
+import { autorun, observable } from 'mobx'
 import { combinedDispose } from '../combinedDispose'
 
-const sort = (a: string, b: string): 0 | 1 | -1 => a < b ? 1 : -1
-const filter = (input: string): boolean => input !== 'b'
+const sort = { run: (a: string, b: string): 0 | 1 | -1 => a < b ? 1 : -1, key: 'string-sort' }
+const filter = { run: (input: string): boolean => input !== 'b', key: 'notB' }
 
 describe('simple view on an array', () => {
   it('properly applies a filter', () => {
@@ -195,22 +195,24 @@ describe('updating an array', () => {
     }
   })
 })
+const toFirstChar = { run: (input: string): number => input.charCodeAt(0), key: 'toFirstChar' }
+const toHex = { run: (input: number): string => input.toString(16), key: 'hex' }
 describe('mapping', () => {
   it('allows for basic mapping of output', () => {
     const arr = observable.array(['a', 'c'])
-    const view = createView(arr, { map: input => input.charCodeAt(0) })
+    const view = createView(arr, { map: toFirstChar })
     expect(Array.from(view)).toEqual([97, 99])
   })
   it('filter will be applied before mapping', () => {
     const arr = observable.array(['a', 'b', 'c'])
-    const view = createView(arr, { filter, map: input => input.charCodeAt(0) })
+    const view = createView(arr, { filter, map: toFirstChar })
     expect(Array.from(view)).toEqual([97, 99])
   })
 })
 describe('derivation', () => {
   it('allows derived mapping', () => {
-    const arr = observable.array(['a', 'c'])
-    const view = deriveView(createView(arr, { map: input => input.charCodeAt(0) }), { map: input => input.toString(16) })
+    const arr = observable.array(['alabama', 'country'])
+    const view = deriveView(createView(arr, { map: toFirstChar }), { map: toHex })
     expect(Array.from(view)).toEqual(['61', '63'])
   })
 })

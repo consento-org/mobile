@@ -48,7 +48,7 @@ export const RelationsScreen = observer(() => {
     <EmptyView isEmpty={relations.size === 0}>
       <MobxList
         data={relations}
-        sort={compareNames}
+        sort={{ run: compareNames, key: 'compareNames' }}
         style={styles.list}
         itemStyle={styles.item}
         renderItem={renderRelation}

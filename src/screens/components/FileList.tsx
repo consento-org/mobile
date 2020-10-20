@@ -124,7 +124,10 @@ const styles = StyleSheet.create({
   } as ViewStyle,
   listLabel: {
     flexGrow: 1,
-    marginLeft: itemProto.layers.label.place.left
+    flexShrink: 1,
+    marginLeft: itemProto.layers.label.place.left,
+    height: itemProto.place.height,
+    overflow: 'hidden'
   },
   sectionItem: {
     position: 'relative',

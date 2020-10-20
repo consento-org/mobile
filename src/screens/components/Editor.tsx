@@ -79,7 +79,7 @@ export const Editor = ({ file, vault, children }: IEditorProps): JSX.Element => 
     file.name,
     (newName: string | null): boolean => {
       if (newName === null) return false
-      if (newName === file.name) return false
+      if (newName === file.name) return true
       return vault.data?.isUnusedFilename(newName) ?? false
     },
     (newName: string | null): void => vault.data?.setFilename(file, newName ?? '' /* Note: it will never be '', as the validator makes sure that won't be the case */)

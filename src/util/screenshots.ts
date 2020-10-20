@@ -1,61 +1,42 @@
-import { createContext, useState, useContext } from 'react'
+import { useState } from 'react'
 import { captureScreen, releaseCapture } from 'react-native-view-shot'
-import { exists } from '../styles/util/lang'
+import Constants from 'expo-constants'
 
-enum Screens {
-  loading = 'loading',
-  config = 'config',
-  vaultsFull = 'vaultsFull',
-  vaultFilesEmpty = 'vaultFilesEmpty',
-  vaultLocksNoRelation = 'vaultLocksNoRelation',
-  relationsEmpty = 'relationsEmpty',
-  relationEmpty = 'relationEmpty',
-  relationFull = 'relationFull',
-  relationsOne = 'relationsOne',
-  relationsTwo = 'relationsTwo',
-  vaultFilesPopup = 'vaultFilesPopup',
-  vaultTextEditor = 'vaultTextEditor',
-  vaultImageEditor = 'vaultImageEditor',
-  vaultFilesFull = 'vaultFilesFull',
-  vaultLocksNoLock = 'vaultLocksNoLock',
-  vaultLocksNoSelection = 'vaultLocksNoSelection',
-  vaultLocksSelection = 'vaultLocksSelection',
-  vaultLocksPending = 'vaultLocksPending',
-  vaultLocksConfirmed = 'vaultLocksConfirmed',
-  vaultsVaultOneLocked = 'vaultsVaultOneLocked',
-  vaultPending = 'vaultPending',
-  vaultsVaultOnePending = 'vaultsVaultOnePending',
-  vaultFilesTextContext = 'vaultFilesTextContext',
-  vaultFilesImageContext = 'vaultFilesImageContext',
-  vaultLog = 'vaultLog',
-  consentosEmpty = 'consentosEmpty',
-  consentosBecomeUnlockeePending = 'consentosBecomeUnlockeePending',
-  consentosBecomeUnlockeeRevoked = 'consentosBecomeUnlockeeRevoked',
-  consentosBecomeUnlockeeDenied = 'consentosBecomeUnlockeeDenied',
-  consentosBecomeUnlockeeConfirming = 'consentosBecomeUnlockeeConfirming',
-  consentosBecomeUnlockeeAccepted = 'consentosBecomeUnlockeeAccepted',
-  consentosUnlockPending = 'consentosUnlockPending',
-  consentosUnlockDenied = 'consentosUnlockDenied',
-  consentosUnlockAccepted = 'consentosUnlockAccepted',
-  consentosUnlockExpired = 'consentosUnlockExpired',
-  vaultsEmpty = 'vaultsEmpty'
-}
+/***
+ * This is only active if a screenshot server url is given when starting the expo process.
+ * Which is the case when you run `npm run screenshot`.
+ *
+ * This is NOT ACTIVE IN PRODUCTION!
+ *
+ * For more: see CONTRIBUTING.md section "Screenshots"
+ */
+const SCREENSHOT_SERVER_URL: string | undefined = Constants.manifest.extra.SCREENSHOT_SERVER_URL
 
 export interface IScreenshot {
-  use: () => { done: boolean, take: (delay?: number) => void }
-  take: (delay?: number) => Promise<void>
+  name: string
+  instructions: string
+  isDone: () => boolean
+  use: () => {
+    done: boolean
+    takeSync: (delay?: number, condition?: boolean) => void
+    take: (delay?: number, condition?: boolean) => Promise<void>
+  }
   handle: (delay?: number) => () => undefined
+  take: (delay?: number, condition?: boolean) => Promise<void>
   takeSync: (delay?: number, condition?: boolean) => undefined
 }
 
-export type IScreenshots = Record<Screens, IScreenshot>
-
 async function requestDeviceId (serverUrl: string): Promise<string> {
+  await wait(10)
   const res = await fetch(`${serverUrl}/device`, {
+    method: 'POST',
     headers: {
-      // @ts-expect-error
-      'installation-id': Expo.Constants.installationId as string
-    }
+      'Content-Type': 'multipart/form-data; charset=UTF-8'
+    },
+    body: JSON.stringify({
+      installationId: Constants.installationId,
+      screenshots: Object.keys(screenshots) // Transmitted to delete the screenshots when starting.
+    })
   })
   return await res.text()
 }
@@ -71,130 +52,147 @@ function wait (delay: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, delay))
 }
 
-async function storeScreenshot (uri: string, serverUrl: string, name: string): Promise<void> {
+async function storeScreenshot (serverUrl: string, name: string): Promise<void> {
+  const uri = await captureScreen({})
   const formData = new FormData()
   formData.append('file', { uri, name: `${name}.png`, type: 'image/png' } as any)
-  await fetch(`${serverUrl}/post`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'multipart/form-data; charset=UTF-8'
-    },
-    body: formData
-  })
-  await releaseCapture(uri)
-}
-
-async function initServer (serverUrl: string): Promise<{ deviceId: string, files: string[] }> {
-  return {
-    deviceId: await requestDeviceId(serverUrl),
-    files: await requestList(serverUrl)
-  }
-}
-
-interface IScreenshotSystem {
-  take: (name: string, delay: number) => Promise<void>
-  isDone: (name: string) => boolean
-}
-
-function createSystem (serverUrl?: string): IScreenshotSystem {
-  if (!exists(serverUrl) || serverUrl === '') {
-    return {
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
-      take: async (): Promise<void> => {},
-      isDone: () => true
-    }
-  }
-  const init = initServer(serverUrl)
-  const takenScreenshots = new Map<string, Promise<void>>()
-  const doneScreenshots = new Set<string>()
-  init
-    .then(
-      ({ files }) => {
-        for (const file of files) {
-          if (file in Screens) {
-            doneScreenshots.add(file)
-          }
-        }
+  try {
+    await fetch(`${serverUrl}/post`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'multipart/form-data; charset=UTF-8'
       },
-      initError => console.log({ initError })
-    )
+      body: formData
+    })
+  } finally {
+    await releaseCapture(uri)
+  }
+}
+
+function createStartupStrategy (serverUrl: string): IScreenshotStrategy {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const init = (async () => {
+    return {
+      deviceId: await requestDeviceId(serverUrl),
+      doneScreenshots: new Set(await requestList(serverUrl))
+    }
+  })()
   return {
     async take (name: string, delay: number): Promise<void> {
-      const { deviceId } = await init
-      if (deviceId === 'device-0') {
+      const { deviceId, doneScreenshots } = await init
+      if (await deviceId === 'device-0') {
         if (delay > 0) {
           await wait(delay)
         }
-        let screenshot = takenScreenshots.get(name)
-        if (screenshot === undefined) {
-          const uri = await captureScreen({})
-          screenshot = storeScreenshot(uri, serverUrl, name).then(
-            () => {
-              doneScreenshots.add(name)
-              const missing = Object.keys(Screens).filter(name => !doneScreenshots.has(name))
-              if (missing.length > 0) {
-                console.log(`${missing.length.toString()} Missing Screenshots. Next: → ${missing[0]}`)
-              }
-            },
-            (storeError) => {
-              console.log({ storeError })
-              takenScreenshots.delete(name)
-              doneScreenshots.delete(name)
-            }
-          )
-          takenScreenshots.set(name, screenshot)
+        if (!doneScreenshots.has(name)) {
+          await storeScreenshot(serverUrl, name)
+          const missing = Object.values(screenshots).filter(screenshot => !(screenshot.isDone() || doneScreenshots.has(screenshot.name)))
+          if (missing.length > 0) {
+            console.log(`Screenshot ${name} taken. ${missing.length} Missing Screenshots. Next: → ${missing[0].name}\n      ${missing[0].instructions}`)
+          } else {
+            console.log(`Screenshot ${name} taken. All screenshots done. Good job!`)
+          }
         }
-        return await screenshot
       }
-    },
-    isDone: (name: string): boolean => doneScreenshots.has(name)
+    }
   }
 }
 
-function createScreenshot (name: string, system: IScreenshotSystem): IScreenshot {
-  const takeSync = (delay?: number, condition?: boolean): undefined => {
-    if (condition === false) {
-      return undefined
+interface IScreenshotStrategy {
+  take: (name: string, delay: number) => Promise<void>
+}
+
+export const isScreenshotEnabled = SCREENSHOT_SERVER_URL !== undefined
+
+const skipStrategy: IScreenshotStrategy = {
+  // eslint-disable-next-line @typescript-eslint/promise-function-async
+  take: () => Promise.resolve()
+}
+
+const strategy = SCREENSHOT_SERVER_URL === undefined ? skipStrategy : createStartupStrategy(SCREENSHOT_SERVER_URL)
+
+function createScreenShot (name: string, instructions: string): IScreenshot {
+  let isDone: boolean = !isScreenshotEnabled
+  const take = async (delay?: number, condition?: boolean): Promise<void> => {
+    if (condition === false || isDone) {
+      return
     }
-    system.take(name, delay ?? 0)
+    isDone = true
+    try {
+      await strategy.take(name, delay ?? 0)
+    } catch (err) {
+      isDone = false
+      throw err
+    }
+  }
+  const takeSync = (delay?: number, condition?: boolean): undefined => {
+    take(delay, condition)
       .catch(screenshotError => console.log({ screenshotError }))
     return undefined
   }
   return {
-    take: async (delay: number = 0): Promise<void> => await system.take(name, delay),
+    name,
+    instructions,
+    isDone: () => isDone,
+    take,
     takeSync,
     handle: (delay: number = 0): (() => undefined) => {
       return (): undefined => takeSync(delay)
     },
     use () {
-      const [done, setDone] = useState<boolean>(system.isDone(name))
+      const [done, setDone] = useState<boolean>(isDone)
       return {
         done,
-        take: (delay: number = 0) => {
+        takeSync: (delay?: number, condition?: boolean) => {
           // eslint-disable-next-line @typescript-eslint/no-floating-promises
-          system.take(name, delay).finally(() => setDone(true))
+          take(delay, condition).finally(() => setDone(isDone))
+        },
+        take: async (delay?: number, condition?: boolean): Promise<void> => {
+          try {
+            await take(delay, condition)
+          } finally {
+            setDone(isDone)
+          }
         }
       }
     }
   }
 }
 
-export function createScreenshots (serverUrl?: string): IScreenshots {
-  const system = createSystem(serverUrl)
-  return Object.keys(Screens)
-    .reduce(
-      (allShots: { [key: string]: IScreenshot }, key) => {
-        allShots[key] = createScreenshot(key, system)
-        return allShots
-      },
-      {}
-    ) as any
+export const screenshots = {
+  vaultsFull: createScreenShot('vaultsFull', '<taken during startup>'),
+  config: createScreenShot('config', 'Open the config screen with the top-left consento icon.'),
+  vaultFilesEmpty: createScreenShot('vaultFilesEmpty', 'Go back to the vaults screen. Click on the "My Contracts" vault.'),
+  vaultLocksNoRelation: createScreenShot('vaultLocksNoRelation', 'Click on the "Locks" tab in the vault.'),
+  consentosEmpty: createScreenShot('consentosEmpty', 'Go back to the Main screen and go the Consentos tab.'),
+  relationsEmpty: createScreenShot('relationsEmpty', 'Go to the Relations tab.'),
+  relationEmpty: createScreenShot('relationEmpty', 'Add a new relation and use your second device to create a relation'),
+  relationFull: createScreenShot('relationFull', 'Enter the name "Friend" and create an avatar. Save the relation'),
+  relationsOne: createScreenShot('relationsOne', 'Return back to the relations screen'),
+  relationsTwo: createScreenShot('relationsTwo', 'Add another, unnamed relation without avatar with your second device. And then go back to the relations list.'),
+  vaultFilesPopup: createScreenShot('vaultFilesPopup', 'Go back to the vaults screen, choose the "My Contracts" vault and press "ADD" in the bottom'),
+  vaultTextEditor: createScreenShot('vaultTextEditor', 'Add a text file, enter "My secret text" as title and enter "This is a secret text." as message. Then save the text.'),
+  vaultImageEditor: createScreenShot('vaultImageEditor', 'Return to the files screen. Add an image file, take a picture of the printed ./screenshot/fake-top-secret-document.pdf and save the image.'),
+  vaultFilesFull: createScreenShot('vaultFilesFull', 'Return the files dialog.'),
+  vaultLocksNoLock: createScreenShot('vaultLocksNoLock', 'Click on the "Locks" tab in the vault. '),
+  vaultLocksNoSelection: createScreenShot('vaultLocksNoSelection', 'Use "ADD" to add an relationship.'),
+  vaultLocksSelection: createScreenShot('vaultLocksSelection', 'Select the "Friend" relationship.'),
+  vaultLocksPending: createScreenShot('vaultLocksPending', ''),
+  vaultLocksConfirmed: createScreenShot('vaultLocksConfirmed', ''),
+  vaultsVaultOneLocked: createScreenShot('vaultsVaultOneLocked', ''),
+  vaultPending: createScreenShot('vaultPending', ''),
+  vaultsVaultOnePending: createScreenShot('vaultsVaultOnePending', ''),
+  vaultFilesTextContext: createScreenShot('vaultFilesTextContext', ''),
+  vaultFilesImageContext: createScreenShot('vaultFilesImageContext', ''),
+  vaultLog: createScreenShot('vaultLog', ''),
+  consentosBecomeUnlockeePending: createScreenShot('consentosBecomeUnlockeePending', ''),
+  consentosBecomeUnlockeeRevoked: createScreenShot('consentosBecomeUnlockeeRevoked', ''),
+  consentosBecomeUnlockeeDenied: createScreenShot('consentosBecomeUnlockeeDenied', ''),
+  consentosBecomeUnlockeeConfirming: createScreenShot('consentosBecomeUnlockeeConfirming', ''),
+  consentosBecomeUnlockeeAccepted: createScreenShot('consentosBecomeUnlockeeAccepted', ''),
+  consentosUnlockPending: createScreenShot('consentosUnlockPending', ''),
+  consentosUnlockDenied: createScreenShot('consentosUnlockDenied', ''),
+  consentosUnlockAccepted: createScreenShot('consentosUnlockAccepted', ''),
+  consentosUnlockExpired: createScreenShot('consentosUnlockExpired', ''),
+  vaultsEmpty: createScreenShot('vaultsEmpty', '')
 }
-
-export function useScreenshotEnabled (): boolean {
-  const screenshots = useContext(ScreenshotContext)
-  return screenshots !== NO_SCREEN_SHOTS
-}
-
-export const NO_SCREEN_SHOTS = createScreenshots()
-export const ScreenshotContext = createContext<IScreenshots>(NO_SCREEN_SHOTS)

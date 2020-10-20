@@ -7,20 +7,11 @@ import { loadFonts } from './src/styles/design/Font'
 import { NavigationContainer, navigationRef } from './src/util/navigate'
 import * as ScreenOrientation from 'expo-screen-orientation'
 
-import { createScreenshots, ScreenshotContext } from './src/util/screenshots'
 import useConsento from './src/useConsento'
 import { Screens } from './src/screens/Screens'
 import { ConsentoContext } from './src/model/Consento'
 import { exists } from './src/styles/util/lang'
 import { DarkBar } from './src/screens/components/DarkBar'
-
-export const Screenshot = (address: string): (() => JSX.Element) => {
-  const screenshots = createScreenshots(address)
-  return () =>
-    <ScreenshotContext.Provider value={screenshots}>
-      <App />
-    </ScreenshotContext.Provider>
-}
 
 async function loadApp (): Promise<void> {
   await Promise.all([

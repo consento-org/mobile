@@ -8,7 +8,7 @@ import { BottomButtonView } from './components/BottomButtonView'
 import { useForm, FLOAT_CONVERT } from '../util/useForm'
 import { ConsentoButton } from './components/ConsentoButton'
 import { ConsentoContext, DEFAULT_ADDRESS, DEFAULT_EXPIRES } from '../model/Consento'
-import { ScreenshotContext } from '../util/screenshots'
+import { screenshots } from '../util/screenshots'
 import { navigate } from '../util/navigate'
 import { elementConfig } from '../styles/design/layer/elementConfig'
 import { Credits } from './components/Credits'
@@ -68,7 +68,6 @@ const styles = StyleSheet.create({
 
 export const Config = observer((): JSX.Element => {
   const [resetBarrier, setBarrier] = useState(true)
-  const screenshots = useContext(ScreenshotContext)
   const consento = useContext(ConsentoContext)
   assertExists(consento)
   const { config, updateConfig, deleteEverything } = consento

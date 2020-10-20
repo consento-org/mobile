@@ -1,4 +1,4 @@
-import React, { useContext } from 'react'
+import React from 'react'
 import { View, TouchableOpacity, StyleSheet } from 'react-native'
 import { observer } from 'mobx-react'
 import { useUser } from '../model/Consento'
@@ -8,7 +8,7 @@ import { BottomButtonView } from './components/BottomButtonView'
 import { InputField } from './components/InputField'
 import { Avatar, randomAvatarId } from './components/Avatar'
 import { deleteWarning } from './components/deleteWarning'
-import { ScreenshotContext, useScreenshotEnabled } from '../util/screenshots'
+import { isScreenshotEnabled, screenshots } from '../util/screenshots'
 import { useForm } from '../util/useForm'
 import { navigate } from '../util/navigate'
 import { SketchElement } from '../styles/util/react/SketchElement'
@@ -83,13 +83,12 @@ const RelationAvailable = observer(({ user, relation }: { user: User, relation: 
   )
   const name = useStringField('name', relation.name)
   const avatarId = useStringField('avatarId', relation.avatarId)
-  if (useScreenshotEnabled()) {
-    const screenshots = useContext(ScreenshotContext)
+  if (isScreenshotEnabled) {
     if (!isDirty) {
-      if (relation.name !== '' && relation.avatarId !== null) {
+      if (relation.name !== null && relation.avatarId !== null) {
         screenshots.relationFull.takeSync(500)
       }
-      if (relation.name === '' && relation.avatarId === null) {
+      if (relation.name === null && relation.avatarId === null) {
         screenshots.relationEmpty.takeSync(500)
       }
     }

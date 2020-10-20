@@ -8,7 +8,7 @@ import { VaultContext } from '../../model/VaultContext'
 import { ImageFile, FileType, TextFile, File } from '../../model/VaultData'
 import { filter } from '../../util/filter'
 import { Vault } from '../../model/Vault'
-import { ScreenshotContext } from '../../util/screenshots'
+import { screenshots } from '../../util/screenshots'
 import { shareBlob, copyToClipboard, exportBlob, safeFileName } from '../../util/expoSecureBlobStore'
 import { deleteWarning } from './deleteWarning'
 import { navigate } from '../../util/navigate'
@@ -161,7 +161,6 @@ const FileListItem = observer(function <T extends File> ({ item }: IFileListItem
   if (vault === null) {
     throw new Error('not in a vault context')
   }
-  const screenshots = useContext(ScreenshotContext)
   const handleMenu = (event: GestureResponderEvent): void => {
     if (item.type === FileType.image) {
       screenshots.vaultFilesImageContext.takeSync(200)
@@ -203,7 +202,6 @@ export const FileList = observer((): JSX.Element => {
   if (vault === null) {
     throw new Error('Missing vault in context!')
   }
-  const screenshots = useContext(ScreenshotContext)
   const files = vault.data?.files ?? []
   const textFiles = filter(files, (item): item is TextFile => item.type === FileType.text)
   const imageFiles = filter(files, (item): item is ImageFile => item.type === FileType.image)

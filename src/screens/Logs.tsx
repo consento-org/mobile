@@ -4,7 +4,7 @@ import { useHumanSince } from '../util/useHumanSince'
 import { ILogEntry } from '../model/Consento.types'
 import { observer } from 'mobx-react'
 import { VaultContext } from '../model/VaultContext'
-import { ScreenshotContext } from '../util/screenshots'
+import { screenshots } from '../util/screenshots'
 import { elementLogLine } from '../styles/design/layer/elementLogLine'
 import { SketchElement } from '../styles/util/react/SketchElement'
 
@@ -44,7 +44,6 @@ export const Logs = observer((): JSX.Element => {
   if (vault === null) {
     throw new Error('not in vault context')
   }
-  const screenshots = useContext(ScreenshotContext)
   screenshots.vaultLog.takeSync(500)
   return <FlatList style={styles.list} renderItem={renderItem} data={vault.log} />
 })

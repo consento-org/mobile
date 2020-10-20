@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 const { createServer } = require('http')
 const { createWriteStream, stat, unlinkSync } = require('fs')
-const { readdir } = require('fs').promises
+const { readdir, unlink } = require('fs').promises
 const { Transform } = require('stream')
 const { spawn } = require('child_process')
+const jsonBody = require('body/json')
 const { networkInterfaces } = require('os')
 const Nicer = require('Nicer')
 
@@ -19,39 +20,6 @@ function getBoundary (req) {
 
   ([, boundary] = boundary)
   return boundary
-}
-
-function setupApp (serverUrl) {
-  const { writeFileSync, readFileSync } = require('fs')
-  const app = require('../app.json')
-
-  app.name = 'consento-screenshot'
-  app.expo.entryPoint = './screenshot/index.js'
-
-  const newJSON = JSON.stringify(app, null, 2)
-  const appPath = `${__dirname}/app.json`
-
-  const currentJSON = readFileSync(appPath)
-
-  if (currentJSON !== newJSON) {
-    writeFileSync(appPath, newJSON)
-    console.log('Updated ./screenshot/app.json')
-  }
-
-  const indexPath = `${__dirname}/index.js`
-  const templatePath = `${__dirname}/index.template.js`
-  const template = readFileSync(templatePath, 'utf8')
-  let currentIndex
-  try {
-    currentIndex = readFileSync(indexPath, 'utf8')
-  } catch (err) {}
-
-  const newIndex = template.replace('$$serverUrl', serverUrl)
-
-  if (newIndex !== currentIndex) {
-    writeFileSync(indexPath, newIndex)
-    console.log('Updated ./screenshot/index.js')
-  }
 }
 
 function getFileInfo (header) {
@@ -120,14 +88,40 @@ async function processScreenshot (req) {
 const devices = []
 
 async function processDevice (req) {
-  const deviceId = req.headers['installation-id']
-  if (deviceId === null || deviceId === undefined) {
-    throw Object.assign(new Error('Missing installation-id header'), { httpStatus: 400 })
+  const body = await new Promise((resolve, reject) => jsonBody(req, (error, result) => error
+    ? reject(Object.assign(new Error('Cant parse JSON body'), { httpStatus: 400 }))
+    : resolve(result)
+  ))
+  const { installationId, screenshots } = body
+  if (installationId === null || installationId === undefined) {
+    throw Object.assign(new Error('Missing installationId json property'), { httpStatus: 400 })
   }
-  let index = devices.indexOf(deviceId)
+  if (!Array.isArray(screenshots)) {
+    throw Object.assign(new Error('Screenshots property is not Array'), { httpStatus: 400 })
+  }
+  let index = devices.indexOf(installationId)
   if (index === -1) {
     index = devices.length
-    devices.push(deviceId)
+    devices.push(installationId)
+    if (index === 0) {
+      if (process.argv.includes('--clear')) {
+        console.log(`Clearing: ${screenshots.join(', ')}`)
+        for (const screenshot of screenshots) {
+          if (typeof screenshot !== 'string') {
+            throw new Error(`Unexpected screenshot: ${screenshot}`)
+          }
+          try {
+            await unlink(`${__dirname}/recorded/${screenshot}.png`)
+          } catch (err) {
+            if (err.code !== 'ENOENT') {
+              console.log(`Cant delete ${screenshot}.png`)
+              console.error(err)
+            }
+          }
+        }
+      }
+      console.log(`Main Device decided, Installation ID: ${installationId}`)
+    }
   }
   return `device-${index}`
 }
@@ -171,10 +165,15 @@ const server = createServer((req, res) => {
 const conn = server.listen(5432, () => {
   const serverUrl = `http://${networkInterfaces().en0.find(network => network.family === 'IPv4').address}:${conn.address().port}`
   console.log(`Listening to ${serverUrl}`)
-  setupApp(serverUrl)
   try {
-    const child = spawn('npx', ['expo', 'start', '--config', 'screenshot/app.json'], {
-      cwd: `${__dirname}/..`
+    const cmd = ['npx', 'expo', 'start']
+    console.log(`${cmd.join(' ')}`)
+    const child = spawn(cmd[0], cmd.slice(1), {
+      cwd: `${__dirname}/..`,
+      env: {
+        ...process.env,
+        SCREENSHOT_SERVER_URL: serverUrl
+      }
     })
     child.stdout.pipe(process.stdout, { end: false })
     child.stderr.pipe(process.stderr, { end: false })

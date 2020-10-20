@@ -7,7 +7,7 @@ import { IAnyConsento, ConsentoBecomeLockee, ConsentoUnlockVault } from '../mode
 import { elementConsentosEmpty } from '../styles/design/layer/elementConsentosEmpty'
 import { ConsentoContext } from '../model/Consento'
 import { filter } from '../util/filter'
-import { ScreenshotContext, useScreenshotEnabled } from '../util/screenshots'
+import { isScreenshotEnabled, screenshots } from '../util/screenshots'
 import { TRequestState } from '../model/RequestBase'
 import { ConsentoBecomeLockeeView } from './components/ConsentoBecomeLockeeView'
 import { ConsentoUnlockVaultView } from './components/ConsentoUnlockVaultView'
@@ -40,8 +40,6 @@ export const ConsentosScreen = observer((): JSX.Element => {
   const consento = useContext(ConsentoContext)
   assertExists(consento)
   const { user } = consento
-  const screenshots = useContext(ScreenshotContext)
-  const isScreenshotEnabled = useScreenshotEnabled()
   const { consentos } = user
   const visibleConsentos = filter(
     consentos.values(),

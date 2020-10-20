@@ -4,7 +4,7 @@ import { File, FileType } from '../../model/VaultData'
 import { useForm } from '../../util/useForm'
 import { Vault } from '../../model/Vault'
 import { DarkBar } from './DarkBar'
-import { ScreenshotContext } from '../../util/screenshots'
+import { screenshots } from '../../util/screenshots'
 import { elementTextEditor } from '../../styles/design/layer/elementTextEditor'
 import { navigate } from '../../util/navigate'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -64,7 +64,6 @@ export interface IEditorProps {
 }
 
 export const Editor = ({ file, vault, children }: IEditorProps): JSX.Element => {
-  const screenshots = useContext(ScreenshotContext)
   const insets = useSafeAreaInsets()
   const { Form, useStringField, save: handleSave, leave, isDirty, error } = useForm(
     undefined,

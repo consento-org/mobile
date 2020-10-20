@@ -10,7 +10,7 @@ import { ConsentoContext } from '../../model/Consento'
 import { Lockee } from '../../model/User'
 import { IRelationEntry } from '../../model/Consento.types'
 import { navigate } from '../../util/navigate'
-import { ScreenshotContext, useScreenshotEnabled } from '../../util/screenshots'
+import { isScreenshotEnabled, screenshots } from '../../util/screenshots'
 import { elementLocksNoLockee } from '../../styles/design/layer/elementLocksNoLockee'
 import { elementLocksEmpty } from '../../styles/design/layer/elementLocksEmpty'
 import { elementRelationSelectListAdd } from '../../styles/design/layer/elementRelationSelectListAdd'
@@ -53,8 +53,7 @@ const SelectedLockeeList = observer(({ onAdd }: { onAdd?: (event: GestureRespond
   const { vault } = useContext(VaultContext)
   assertExists(vault, 'not in vault context')
   const lockees = user.getLockees(vault)
-  if (useScreenshotEnabled()) {
-    const screenshots = useContext(ScreenshotContext)
+  if (isScreenshotEnabled) {
     const isEmpty = (lockees?.size ?? 0) > 0
     const hasOneConfirmed = find(lockees ?? [], (lockee): lockee is Lockee => lockee.vaultLockee.isConfirmed) !== undefined
     isEmpty
@@ -100,7 +99,6 @@ const SelectLockees = ({ onSelect: handleSelectConfirmation }: { onSelect: (rela
   const { vault } = useContext(VaultContext)
   assertExists(vault, 'not in vault context')
   const availableRelations = user.availableRelations(vault)
-  const screenshots = useContext(ScreenshotContext)
   screenshots.vaultLocksNoSelection.takeSync(200)
   const handleEntrySelect = (relation: Relation, selected: boolean): void => {
     if (selected) {
@@ -171,7 +169,6 @@ export const Locks = observer((): JSX.Element => {
   const consento = useContext(ConsentoContext)
   assertExists(consento, 'not in user context')
   const { user } = consento
-  const screenshots = useContext(ScreenshotContext)
   const handleAdd = (): void => navigate('newRelation')
   return <NoLocksEmptyView onAdd={handleAdd} isEmpty={user.relations.size === 0} onEmpty={screenshots.vaultLocksNoRelation.handle(500)}>
     <LockeeList />

@@ -6,7 +6,7 @@ import { createEmptyView } from './components/EmptyView'
 import { LIST_ENTRY_HEIGHT, RelationListEntry } from './components/RelationListEntry'
 import { IRelationEntry } from '../model/Consento.types'
 import { ConsentoContext } from '../model/Consento'
-import { ScreenshotContext, useScreenshotEnabled } from '../util/screenshots'
+import { isScreenshotEnabled, screenshots } from '../util/screenshots'
 import { navigate } from '../util/navigate'
 import { elementRelationsEmpty } from '../styles/design/layer/elementRelationsEmpty'
 import { MobxList } from './components/MobxList'
@@ -16,6 +16,7 @@ import { SketchElement } from '../styles/util/react/SketchElement'
 import { Color } from '../styles/design/Color'
 import { Relation } from '../model/Relation'
 import { assertExists } from '../util/assertExists'
+import { useIsFocused } from '@react-navigation/native'
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
@@ -37,8 +38,7 @@ export const RelationsScreen = observer(() => {
   assertExists(consento)
   const { user } = consento
   const relations = user.relations
-  if (useScreenshotEnabled()) {
-    const screenshots = useContext(ScreenshotContext)
+  if (isScreenshotEnabled && useIsFocused()) {
     if (relations.size === 0) screenshots.relationsEmpty.takeSync(300)
     if (relations.size === 1) screenshots.relationsOne.takeSync(300)
     if (relations.size === 2) screenshots.relationsTwo.takeSync(300)

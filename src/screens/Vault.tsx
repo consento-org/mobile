@@ -1,5 +1,5 @@
-import React, { useContext, useEffect } from 'react'
-import { View } from 'react-native'
+import React, { useEffect } from 'react'
+import { StyleSheet, View } from 'react-native'
 import { TopNavigation } from './components/TopNavigation'
 import { Logs } from './Logs'
 import { observer } from 'mobx-react'
@@ -13,8 +13,8 @@ import { LockButton } from './components/LockButton'
 import { ContextMenu } from './components/ContextMenu'
 import { elementTabBarTabActive } from '../styles/design/layer/elementTabBarTabActive'
 import { elementTabBarTabResting } from '../styles/design/layer/elementTabBarTabResting'
-import { ScreenshotContext, useScreenshotEnabled } from '../util/screenshots'
 import { useConsento, useUser } from '../model/Consento'
+import { isScreenshotEnabled, screenshots } from '../util/screenshots'
 import { deleteWarning } from './components/deleteWarning'
 import { navigate } from '../util/navigate'
 import { Waiting } from './components/Waiting'
@@ -81,8 +81,7 @@ const VaultAvailable = observer(({ user, vault }: { user: User, vault: VaultMode
       handleBack()
     }
   }, [vault.isPending, vault.isLoading])
-  if (useScreenshotEnabled()) {
-    const screenshots = useContext(ScreenshotContext)
+  if (isScreenshotEnabled && useIsFocused()) {
     if (!vault.isOpen && !vault.isLoading) {
       screenshots.vaultPending.takeSync(1000)
     }

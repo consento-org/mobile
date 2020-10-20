@@ -1,7 +1,7 @@
-import React, { useContext, useRef, useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { StyleSheet, View, VirtualizedList } from 'react-native'
-import { ConsentoContext } from '../model/Consento'
-import { ScreenshotContext, useScreenshotEnabled } from '../util/screenshots'
+import { screenshots, isScreenshotEnabled } from '../util/screenshots'
+import { useUser } from '../model/Consento'
 import { ImageAsset } from '../styles/design/ImageAsset'
 import { SketchImage } from '../styles/util/react/SketchImage'
 import { TopNavigation } from './components/TopNavigation'
@@ -12,7 +12,7 @@ import { MobxGrid } from './components/MobxGrid'
 import { useAutorun } from '../util/useAutorun'
 import { comparer } from 'mobx'
 import { elementVaultsEmpty } from '../styles/design/layer/elementVaultsEmpty'
-import { assertExists } from '../util/assertExists'
+import { observer } from 'mobx-react'
 import { Color } from '../styles/design/Color'
 
 const AddButton = ImageAsset.buttonAddHexagonal
@@ -30,6 +30,7 @@ const EmptyView = createEmptyView(elementVaultsEmpty)
 
 export const VaultsScreen = observer((): JSX.Element => {
   const { vaults } = useUser()
+  if (isScreenshotEnabled) {
     const { hasPending, hasLocked, isEmpty } = useAutorun(() => ({
       isEmpty: vaults.size === 0,
       hasLocked: vaults.items.includes((vault: Vault) => !vault.isOpen),

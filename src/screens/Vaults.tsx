@@ -26,12 +26,8 @@ function renderVault (vault: Vault): JSX.Element {
 
 const EmptyView = createEmptyView(elementVaultsEmpty)
 
-export const VaultsScreen = (): JSX.Element => {
-  const consento = useContext(ConsentoContext)
-  assertExists(consento)
-  const { user: { vaults } } = consento
-  if (useScreenshotEnabled()) {
-    const screenshots = useContext(ScreenshotContext)
+export const VaultsScreen = observer((): JSX.Element => {
+  const { vaults } = useUser()
     const { hasPending, hasLocked, isEmpty } = useAutorun(() => ({
       isEmpty: vaults.size === 0,
       hasLocked: vaults.items.includes((vault: Vault) => !vault.isOpen),
@@ -63,4 +59,4 @@ export const VaultsScreen = (): JSX.Element => {
       <MobxGrid ref={ref} data={vaults} itemStyle={VAULT_STYLE} renderItem={renderVault} />
     </EmptyView>
   </View>
-}
+})

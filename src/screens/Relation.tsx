@@ -1,8 +1,8 @@
 import React, { useContext } from 'react'
 import { View, TouchableOpacity, StyleSheet } from 'react-native'
 import { observer } from 'mobx-react'
-import { RelationContext } from '../model/RelationContext'
-import { ConsentoContext } from '../model/Consento'
+import { useUser } from '../model/Consento'
+import { Relation as RelationModel } from '../model/Relation'
 import { TopNavigation } from './components/TopNavigation'
 import { BottomButtonView } from './components/BottomButtonView'
 import { InputField } from './components/InputField'
@@ -14,7 +14,8 @@ import { navigate } from '../util/navigate'
 import { SketchElement } from '../styles/util/react/SketchElement'
 import { exists } from '../styles/util/lang'
 import { elementRelationName } from '../styles/design/layer/elementRelationName'
-import { assertExists } from '../util/assertExists'
+import { User } from '../model/User'
+import { ErrorScreen, ErrorCode } from './ErrorScreen'
 
 const { avatar, relationName } = elementRelationName.layers
 
@@ -64,12 +65,16 @@ const styles = StyleSheet.create({
   }
 })
 
-export const Relation = observer((): JSX.Element => {
-  const { relation } = useContext(RelationContext)
-  assertExists(relation)
-  const consento = useContext(ConsentoContext)
-  assertExists(consento)
-  const { user } = consento
+export const Relation = observer(({ relationId }: { relationId: string }): JSX.Element => {
+  const user = useUser()
+  const relation = user.findRelation(relationId)
+  if (!exists(relation)) {
+    return <ErrorScreen code={ErrorCode.noRelation} />
+  }
+  return <RelationAvailable relation={relation} user={user} />
+})
+
+const RelationAvailable = observer(({ user, relation }: { user: User, relation: RelationModel }) => {
   const { leave, save, useStringField, isDirty } = useForm(
     fields => {
       relation.setName(fields.name)

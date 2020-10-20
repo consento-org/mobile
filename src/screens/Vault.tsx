@@ -3,7 +3,7 @@ import { View } from 'react-native'
 import { TopNavigation } from './components/TopNavigation'
 import { Logs } from './Logs'
 import { observer } from 'mobx-react'
-import { VaultContext } from '../model/VaultContext'
+import { Vault as VaultModel } from '../model/Vault'
 import { PopupMenu } from './components/PopupMenu'
 import { FileList } from './components/FileList'
 import { Locks } from './components/Locks'
@@ -13,12 +13,16 @@ import { LockButton } from './components/LockButton'
 import { ContextMenu } from './components/ContextMenu'
 import { elementTabBarTabActive } from '../styles/design/layer/elementTabBarTabActive'
 import { elementTabBarTabResting } from '../styles/design/layer/elementTabBarTabResting'
-import { ConsentoContext } from '../model/Consento'
 import { ScreenshotContext, useScreenshotEnabled } from '../util/screenshots'
+import { useConsento, useUser } from '../model/Consento'
 import { deleteWarning } from './components/deleteWarning'
 import { navigate } from '../util/navigate'
-import { assertExists } from '../util/assertExists'
 import { Waiting } from './components/Waiting'
+import { exists } from '../styles/util/lang'
+import { ErrorCode, ErrorScreen } from './ErrorScreen'
+import { User } from '../model/User'
+import { VaultContext } from '../model/VaultContext'
+import { useIsFocused } from '@react-navigation/native'
 
 const Tab = createMaterialTopTabNavigator()
 
@@ -46,15 +50,27 @@ const tabBarOptions = {
   }
 }
 
-export const Vault = observer((): JSX.Element => {
-  const consento = useContext(ConsentoContext)
-  assertExists(consento)
-  const { user, config } = consento
-  const { vault } = useContext(VaultContext)
-  if (vault === null) {
-    throw new Error('not in vault context')
+const labels = {
+  files: labelOptions('Files'),
+  locks: labelOptions('Locks'),
+  logs: labelOptions('Logs')
+}
+
+const styles = StyleSheet.create({
+  container: { flexGrow: 1, display: 'flex' }
+})
+
+export const Vault = observer(({ vaultId }: { vaultId: string }): JSX.Element => {
+  const user = useUser()
+  const vault = user.findVault(vaultId)
+  if (!exists(vault)) {
+    return <ErrorScreen code={ErrorCode.noVault} />
   }
-  const back = ['main', 'vaults']
+  return <VaultAvailable vault={vault} user={user} />
+})
+
+const VaultAvailable = observer(({ user, vault }: { user: User, vault: VaultModel }): JSX.Element => {
+  const { config } = useConsento()
   useEffect(() => {
     if (!vault.isOpen && !vault.isLoading) {
       console.log({ time: (config?.expire ?? 1) * 1000, expire: config?.expire })
@@ -90,23 +106,21 @@ export const Vault = observer((): JSX.Element => {
     })
   } : undefined
   const handleBack = (): void => navigate(back)
-  return <PopupMenu><ContextMenu>
-    <VaultContext.Provider value={{ vault }}>
-      <View style={{ flexGrow: 1, display: 'flex' }}>
-        <TopNavigation title={vault.name ?? '-vault-name-missing-'} titlePlaceholder={vault.humanId} back={back} onEdit={handleNameEdit} onDelete={handleDelete} />
-        {
-          vault.isOpen
-            ? <>
-              <LockButton onPress={handleLock} />
-              <Tab.Navigator tabBarOptions={tabBarOptions}>
-                <Tab.Screen name='files' component={FileList} options={labelOptions('Files')} />
-                <Tab.Screen name='locks' component={Locks} options={labelOptions('Locks')} />
-                <Tab.Screen name='logs' component={Logs} options={labelOptions('Logs')} />
-              </Tab.Navigator>
-            </>
-            : <Waiting vault={vault} onClose={handleBack} />
-        }
-      </View>
-    </VaultContext.Provider>
-  </ContextMenu></PopupMenu>
+  return <VaultContext.Provider value={{ vault }}><PopupMenu><ContextMenu>
+    <View style={styles.container}>
+      <TopNavigation title={vault.name} titlePlaceholder={vault.humanId} back={handleBack} onEdit={handleNameEdit} onDelete={handleDelete} />
+      {
+        vault.isOpen
+          ? <>
+            <LockButton onPress={handleLock} />
+            <Tab.Navigator tabBarOptions={tabBarOptions} lazy removeClippedSubviews>
+              <Tab.Screen name='files' component={FileList} options={labels.files} />
+              <Tab.Screen name='locks' component={Locks} options={labels.locks} />
+              <Tab.Screen name='logs' component={Logs} options={labels.logs} />
+            </Tab.Navigator>
+          </>
+          : <Waiting vault={vault} onClose={handleBack} />
+      }
+    </View>
+  </ContextMenu></PopupMenu></VaultContext.Provider>
 })

@@ -95,21 +95,7 @@ const imageActions: Array<IPopupMenuEntry<IFileContext>> = [
 const addActions: Array<IPopupMenuEntry<Vault>> = [
   {
     name: elementPopUpMenu.layers.takePicture.text,
-    action: vault =>
-      navigate('camera', {
-        onPicture (input: ImageFile): void {
-          vault.data?.addFile(input)
-          navigate('editor', {
-            vault: vault.$modelId,
-            file: input.$modelId
-          })
-        },
-        onClose () {
-          navigate('vault', {
-            valut: vault.$modelId
-          })
-        }
-      })
+    action: vault => navigate('camera', { vault: vault.$modelId })
   },
   {
     name: elementPopUpMenu.layers.createText.text,

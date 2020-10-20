@@ -1,5 +1,5 @@
 import React, { useContext } from 'react'
-import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
+import { createStackNavigator } from '@react-navigation/stack'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { elementBottomNav } from '../styles/design/layer/elementBottomNav'
 import { IImageAsset, ILayer, ViewBorders } from '../styles/util/types'
@@ -8,7 +8,6 @@ import { ImageAsset } from '../styles/design/ImageAsset'
 import { SketchTextBoxView } from '../styles/util/react/SketchTextBox'
 import { VaultsScreen } from './Vaults'
 import { ConsentoContext } from '../model/Consento'
-import { VaultContext } from '../model/VaultContext'
 import { elementBottomNavVaultActive } from '../styles/design/layer/elementBottomNavVaultActive'
 import { elementBottomNavVaultResting } from '../styles/design/layer/elementBottomNavVaultResting'
 import { elementBottomNavRelationsActive } from '../styles/design/layer/elementBottomNavRelationsActive'
@@ -16,23 +15,17 @@ import { elementBottomNavRelationsResting } from '../styles/design/layer/element
 import { elementBottomNavConsentosActive } from '../styles/design/layer/elementBottomNavConsentosActive'
 import { elementBottomNavConsentosResting } from '../styles/design/layer/elementBottomNavConsentosResting'
 import { Vault } from './Vault'
-import { Vault as VaultModel } from '../model/Vault'
 import { RelationsScreen } from './Relations'
-import { RelationContext } from '../model/RelationContext'
-import { Relation } from './Relation'
-import { Relation as RelationModel } from '../model/Relation'
 import { Config } from './Config'
 import { NewRelation } from './NewRelation'
 import { ConsentosScreen } from './Consentos'
-import { assertExists } from '../util/assertExists'
-import { useScreenshotEnabled } from '../util/screenshots'
-import { isImageFile, isTextFile } from '../model/VaultData'
-import { ImageEditor } from './ImageEditor'
-import { TextEditor } from './TextEditor'
+import { isScreenshotEnabled } from '../util/screenshots'
 import { TextBox } from '../styles/util/TextBox'
 import { Camera } from './Camera'
-import { useIsFocused } from '@react-navigation/native'
+import { RouteProp } from '@react-navigation/native'
 import { useAutorun } from '../util/useAutorun'
+import { Relation } from './Relation'
+import { FileEditor } from './FileEditor'
 
 const Stack = createStackNavigator()
 const Tabs = createBottomTabNavigator()
@@ -76,11 +69,27 @@ const MainTabs = (): JSX.Element => {
   </Tabs.Navigator>
 }
 
+const RelationRoute = ({ route }: { route: RouteProp<Record<string, object | undefined>, 'relation'> }): JSX.Element => {
+  const relationId = (route.params as any)?.relation
+  return <Relation relationId={relationId} />
+}
+
+const VaultRoute = ({ route }: { route: RouteProp<Record<string, object | undefined>, 'vault'> }): JSX.Element => {
+  const vaultId = (route.params as any)?.vault
+  return <Vault vaultId={vaultId} />
+}
+
+const EditorRoute = ({ route }: { route: RouteProp<Record<string, object | undefined>, 'editor'> }): JSX.Element => {
+  const { vault, file } = (route.params as any) ?? {}
+  return <FileEditor vaultId={vault} fileId={file} />
+}
+
+const CameraRoute = ({ route }: { route: RouteProp<Record<string, object | undefined>, 'camera'> }): JSX.Element => {
+  const { vault } = (route.params as any) ?? {}
+  return <Camera vaultId={vault} />
+}
+
 export const Screens = (): JSX.Element => {
-  const consento = useContext(ConsentoContext)
-  assertExists(consento)
-  const isScreenshotEnabled = useScreenshotEnabled()
-  const user = useAutorun(() => consento.user, (a, b) => a.$modelId !== b.$modelId)
   return <Stack.Navigator
     initialRouteName='main'
     mode='modal'
@@ -88,63 +97,13 @@ export const Screens = (): JSX.Element => {
       headerShown: false,
       animationEnabled: !isScreenshotEnabled
     }}>
-    <Stack.Screen name='main'>{() => {
-      if (!useIsFocused()) return <></>
-      return <MainTabs />
-    }}</Stack.Screen>
+    <Stack.Screen name='main' component={MainTabs} />
     <Stack.Screen name='config' component={Config} />
-    <Stack.Screen name='newRelation'>{props => {
-      if (!useIsFocused()) return <></>
-      return <NewRelation />
-    }}</Stack.Screen>
-    <Stack.Screen name='vault'>{props => {
-      /* eslint-disable react/prop-types */
-      const navigation: StackNavigationProp<any> = props.navigation
-      if (!useIsFocused()) return <></>
-      const route = props.route
-      const vaultKey = (route.params as any)?.vault
-      const vault = user.findVault(vaultKey)
-      if (!(vault instanceof VaultModel)) {
-        navigation.navigate('') // TODO: Return 404 alert message?
-        return <></>
-      }
-      return <VaultContext.Provider value={{ vault }}>
-        <Vault />
-      </VaultContext.Provider>
-    }}</Stack.Screen>
-    <Stack.Screen name='relation'>{({ navigation, route }) => {
-      const relationKey = (route.params as any)?.relation
-      const relation = user.findRelation(relationKey)
-      if (!(relation instanceof RelationModel)) {
-        navigation.navigate('') // TODO: Return 404 alert message?
-        return <></>
-      }
-      return <RelationContext.Provider value={{ relation }}>
-        <Relation />
-      </RelationContext.Provider>
-    }}</Stack.Screen>
-    <Stack.Screen name='editor'>{({ navigation, route }) => {
-      const vaultKey = (route.params as any)?.vault
-      const vault = user.findVault(vaultKey)
-      if (!(vault instanceof VaultModel)) {
-        navigation.navigate('') // TODO: Return 404 alert message?
-        return <></>
-      }
-      const fileKey = (route.params as any)?.file
-      const file = vault.findFile(fileKey)
-      if (isImageFile(file)) {
-        return <ImageEditor image={file} vault={vault} />
-      }
-      if (isTextFile(file)) {
-        return <TextEditor textFile={file} vault={vault} />
-      }
-      navigation.navigate('') // TODO: Return 404 alert message?
-      return <></>
-    }}</Stack.Screen>
-    <Stack.Screen name='camera'>{({ route }) => {
-      const { onPicture, onClose } = (route.params as any) ?? {}
-      return <Camera onPicture={onPicture} onClose={onClose} />
-    }}</Stack.Screen>
+    <Stack.Screen name='newRelation' component={NewRelation} />
+    <Stack.Screen name='vault' component={VaultRoute} />
+    <Stack.Screen name='relation' component={RelationRoute} />
+    <Stack.Screen name='editor' component={EditorRoute} />
+    <Stack.Screen name='camera' component={CameraRoute} />
   </Stack.Navigator>
 }
 

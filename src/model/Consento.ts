@@ -1,6 +1,6 @@
 import { computed, autorun, observable } from 'mobx'
 import { Model, model, tProp, types, prop, arraySet, ArraySet, modelAction } from 'mobx-keystone'
-import { createContext } from 'react'
+import { createContext, useContext } from 'react'
 import { AsyncStorage } from 'react-native'
 import { setup, IAPI, INotifications, IConsentoCrypto, INotification, EErrorCode, IReceiver } from '@consento/api'
 import { ExpoTransport, EClientStatus } from '@consento/notification-server'
@@ -16,6 +16,8 @@ import { safeReaction } from '../util/safeReaction'
 import { subscribeEvent } from '../util/subscribeEvent'
 import { autoRegisterRootStore } from '../util/autoRegisterRootStore'
 import { map } from '../util/map'
+import { exists } from '../styles/util/lang'
+import { useAutorun } from '../util/useAutorun'
 
 export const ConsentoContext = createContext<Consento | null>(null)
 
@@ -315,4 +317,17 @@ export class Consento extends Model({
       )
     )
   }
+}
+
+export function useConsento (): Consento {
+  const consento = useContext(ConsentoContext)
+  if (!exists(consento)) {
+    throw new Error('Not in a consento context.')
+  }
+  return consento
+}
+
+export function useUser (): User {
+  const consento = useConsento()
+  return useAutorun(() => consento.user, (a, b) => a.$modelId === b.$modelId)
 }

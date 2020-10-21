@@ -33,8 +33,8 @@ export const VaultsScreen = observer((): JSX.Element => {
   if (isScreenshotEnabled) {
     const { hasPending, hasLocked, isEmpty } = useAutorun(() => ({
       isEmpty: vaults.size === 0,
-      hasLocked: vaults.items.includes((vault: Vault) => !vault.isOpen),
-      hasPending: vaults.items.includes((vault: Vault) => vault.isPending)
+      hasLocked: vaults.items.filter((vault: Vault) => !vault.isOpen && !vault.isPending).length > 0,
+      hasPending: vaults.items.filter((vault: Vault) => vault.isPending).length > 0
     }), comparer.shallow)
     if (isEmpty) {
       screenshots.vaultsEmpty.takeSync(500)

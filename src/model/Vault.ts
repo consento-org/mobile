@@ -19,6 +19,7 @@ import randomBytes from 'get-random-values-polypony'
 import { humanModelId } from '../util/humanModelId'
 import { generateId } from '../util/generateId'
 import { reduce } from '../util/reduce'
+import { exists } from '../styles/util/lang'
 
 export enum TVaultState {
   open = 'open',
@@ -376,12 +377,25 @@ export class Vault extends Model({
   }
 
   async revokeLockee (lockee: VaultLockee, relation?: Relation): Promise<void> {
-    if (!(this.data?.revokeLockee(lockee, TVaultRevokeReason.revoked) ?? false)) {
+    const data = this.data
+    if (!exists(data)) {
+      console.warn('Can not revoke lockee of closed vault')
       return
     }
-    this.pendingLocks.delete(assertFind(this.pendingLocks, (pendingLock): pendingLock is PendingLock => pendingLock.lockId === lockee.lockId, 'Pending Lock not found'))
-    this.locks.delete(assertFind(this.locks, (lock): lock is Lock => lock.lockId === lockee.lockId, 'Lock not found'))
-    this._updateLocks()
+    const revoked = data.revokeLockee(lockee, TVaultRevokeReason.revoked)
+    const pendingLock = find(this.pendingLocks, (pendingLock): pendingLock is PendingLock => pendingLock.lockId === lockee.lockId)
+    const lock = find(this.locks, (lock): lock is Lock => lock.lockId === lockee.lockId)
+    if (pendingLock !== undefined) {
+      this.pendingLocks.delete(pendingLock)
+    }
+    if (lock !== undefined) {
+      this.locks.delete(lock)
+      this._updateLocks()
+    }
+    if (pendingLock === undefined && lock === undefined && !revoked) {
+      console.warn('Neither pendingLock nor lock given when trying to remove lock.')
+      return
+    }
     const { notifications, crypto } = requireAPI(this)
     const sender = lockee.sender ?? relation?.connection.sender ?? null
     if (sender === null) {
@@ -528,7 +542,6 @@ export class Vault extends Model({
       return true// Nothing to see/nothing to do.
     }
     this._addAccessEntry(new VaultClose({}))
-    console.log({ deleting: this.dataKeyHex })
     return await expoVaultSecrets.delete(this.dataKeyHex)
   }
 
@@ -587,7 +600,7 @@ export class Vault extends Model({
         return TVaultState.pending
       }
     }
-    if (this.locks.size > 0) {
+    if (this.isClosable) {
       return TVaultState.locked
     }
     return TVaultState.loading

@@ -8,7 +8,7 @@ import { VaultContext } from '../../model/VaultContext'
 import { ImageFile, FileType, TextFile, File } from '../../model/VaultData'
 import { filter } from '../../util/filter'
 import { Vault } from '../../model/Vault'
-import { screenshots } from '../../util/screenshots'
+import { isScreenshotEnabled, screenshots } from '../../util/screenshots'
 import { shareBlob, copyToClipboard, exportBlob, safeFileName } from '../../util/expoSecureBlobStore'
 import { deleteWarning } from './deleteWarning'
 import { navigate } from '../../util/navigate'
@@ -17,6 +17,7 @@ import { elementPopUpMenu } from '../../styles/design/layer/elementPopUpMenu'
 import { elementFileList } from '../../styles/design/layer/elementFileList'
 import { SketchElement } from '../../styles/util/react/SketchElement'
 import { BottomButtonView } from './BottomButtonView'
+import { useIsFocused } from '@react-navigation/native'
 
 export interface ISectionProps <T extends File> {
   name: string
@@ -206,11 +207,13 @@ export const FileList = observer((): JSX.Element => {
   const textFiles = filter(files, (item): item is TextFile => item.type === FileType.text)
   const imageFiles = filter(files, (item): item is ImageFile => item.type === FileType.image)
   const { open } = useContext(PopupContext)
-  if (files.length === 0) {
-    screenshots.vaultFilesEmpty.takeSync(500)
-  }
-  if (textFiles.length > 0 && imageFiles.length > 0) {
-    screenshots.vaultFilesFull.takeSync(500)
+  if (isScreenshotEnabled && useIsFocused()) {
+    if (files.length === 0) {
+      screenshots.vaultFilesEmpty.takeSync(500)
+    }
+    if (textFiles.length > 0 && imageFiles.length > 0) {
+      screenshots.vaultFilesFull.takeSync(500)
+    }
   }
   const handleAdd = (event: GestureResponderEvent): void => {
     screenshots.vaultFilesPopup.takeSync(500)

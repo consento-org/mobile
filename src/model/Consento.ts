@@ -216,7 +216,7 @@ export class Consento extends Model({
   onAttachedToRootStore (): () => void {
     this._api = setup({
       cryptoCore,
-      notificationTransport: control => new ExpoTransport({ control })
+      notificationTransport: control => new ExpoTransport({ control, pingsUntilTimeout: 20 })
     })
     const { transport } = this._api.notifications
     return combinedDispose(

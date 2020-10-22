@@ -13,6 +13,7 @@ import { screen09ScanQRCode } from '../styles/design/layer/screen09ScanQRCode'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { SketchElement } from '../styles/util/react/SketchElement'
 import { assertExists } from '../util/assertExists'
+import { useIsFocused } from '@react-navigation/native'
 
 const barContainer: ViewStyle = {
   position: 'absolute',
@@ -60,6 +61,10 @@ export const NewRelation = (): JSX.Element => {
     }
   })
   const [receivedLink, setReceivedLink] = useState<string | null>(null)
+
+  if (!useIsFocused()) {
+    return <></>
+  }
 
   const isHorz = window.width > window.height
   const isVert = !isHorz

@@ -66,16 +66,15 @@ export const Vault = observer(({ vaultId }: { vaultId: string }): JSX.Element =>
   if (!exists(vault)) {
     return <ErrorScreen code={ErrorCode.noVault} />
   }
+  const { config } = useConsento()
+  if (!vault.isOpen && !vault.isLoading && !vault.isPending) {
+    setTimeout(() => vault.requestUnlock((config?.expire ?? 1) * 1000), 0)
+    return <></>
+  }
   return <VaultAvailable vault={vault} user={user} />
 })
 
 const VaultAvailable = observer(({ user, vault }: { user: User, vault: VaultModel }): JSX.Element => {
-  const { config } = useConsento()
-  useEffect(() => {
-    if (!vault.isOpen && !vault.isLoading) {
-      setTimeout(() => vault.requestUnlock((config?.expire ?? 1) * 1000), 0)
-    }
-  }, [vault.isLoading])
   useEffect(() => {
     if (!vault.isOpen && !vault.isPending && !vault.isLoading) {
       handleBack()

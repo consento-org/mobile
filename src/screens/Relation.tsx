@@ -16,6 +16,7 @@ import { exists } from '../styles/util/lang'
 import { elementRelationName } from '../styles/design/layer/elementRelationName'
 import { User } from '../model/User'
 import { ErrorScreen, ErrorCode } from './ErrorScreen'
+import { useIsFocused } from '@react-navigation/native'
 
 const { avatar, relationName } = elementRelationName.layers
 
@@ -83,7 +84,7 @@ const RelationAvailable = observer(({ user, relation }: { user: User, relation: 
   )
   const name = useStringField('name', relation.name)
   const avatarId = useStringField('avatarId', relation.avatarId)
-  if (isScreenshotEnabled) {
+  if (isScreenshotEnabled && useIsFocused()) {
     if (!isDirty) {
       if (relation.name !== null && relation.avatarId !== null) {
         screenshots.relationFull.takeSync(500)

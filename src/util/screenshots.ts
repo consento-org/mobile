@@ -90,7 +90,7 @@ function createStartupStrategy (serverUrl: string): IScreenshotStrategy {
           if (missing.length > 0) {
             console.log(`Screenshot ${name} taken. ${missing.length} Missing Screenshots. Next: → ${missing[0].name}\n      ${missing[0].instructions}`)
           } else {
-            console.log(`Screenshot ${name} taken. All screenshots done. Good job!`)
+            console.log(`Screenshot ${name} taken. All screenshots done. Good job! Now run '$ npx expo-optimize' in the CLI.`)
           }
         }
       }
@@ -185,14 +185,14 @@ export const screenshots = {
   vaultFilesTextContext: createScreenShot('vaultFilesTextContext', 'Click on the "..." button in the text file line.'),
   vaultFilesImageContext: createScreenShot('vaultFilesImageContext', 'Click outside (dark area) of the context menu to close it. Then click on "..." beside the image.'),
   vaultLog: createScreenShot('vaultLog', 'Click outside (dark area) of th context menu to close it. Go to "Logs" of "My Contracts"'),
-  consentosBecomeUnlockeePending: createScreenShot('consentosBecomeUnlockeePending', 'On the other device, add the first relationship.'),
-  consentosBecomeUnlockeeRevoked: createScreenShot('consentosBecomeUnlockeeRevoked', ''),
-  consentosBecomeUnlockeeDenied: createScreenShot('consentosBecomeUnlockeeDenied', ''),
-  consentosBecomeUnlockeeConfirming: createScreenShot('consentosBecomeUnlockeeConfirming', ''),
-  consentosBecomeUnlockeeAccepted: createScreenShot('consentosBecomeUnlockeeAccepted', ''),
-  consentosUnlockPending: createScreenShot('consentosUnlockPending', ''),
-  consentosUnlockDenied: createScreenShot('consentosUnlockDenied', ''),
-  consentosUnlockAccepted: createScreenShot('consentosUnlockAccepted', ''),
-  consentosUnlockExpired: createScreenShot('consentosUnlockExpired', ''),
-  vaultsEmpty: createScreenShot('vaultsEmpty', '')
+  consentosBecomeUnlockeePending: createScreenShot('consentosBecomeUnlockeePending', 'On the other device, go to the My Contracts vault and add the Friend relationship. On the main device go to Consentos.'),
+  consentosBecomeUnlockeeRevoked: createScreenShot('consentosBecomeUnlockeeRevoked', 'Deny becoming a lockee.'),
+  consentosBecomeUnlockeeDenied: createScreenShot('consentosBecomeUnlockeeDenied', 'Wait for it ...'),
+  consentosBecomeUnlockeeConfirming: createScreenShot('consentosBecomeUnlockeeConfirming', 'Delete the Consento and on the other device, add the Friend relationship again as lock.'),
+  consentosBecomeUnlockeeAccepted: createScreenShot('consentosBecomeUnlockeeAccepted', 'Wait for it ...'),
+  consentosUnlockPending: createScreenShot('consentosUnlockPending', 'Delete the Consento on the main device. On the other device LOCK the vault and click on it again to unlock.'),
+  consentosUnlockDenied: createScreenShot('consentosUnlockDenied', 'Deny unlocking.'),
+  consentosUnlockAccepted: createScreenShot('consentosUnlockAccepted', 'Delete the Consento on the main device. On the other device wait until you can unlock again. Unlock again.'),
+  consentosUnlockExpired: createScreenShot('consentosUnlockExpired', 'Delete the Consento on the main device. On the other device wait until you can unlock again. Unlock again. Then accept on the main device.'),
+  vaultsEmpty: createScreenShot('vaultsEmpty', 'Delete all vaults.')
 }

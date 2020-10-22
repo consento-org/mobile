@@ -56,7 +56,7 @@ export const Waiting = observer(({ vault, onClose }: { vault: Vault, onClose?: (
   const offset = Math.max(1 - vault.expiresIn / vault.keepAlive, 0)
   const [closeCalled, setCloseCalled] = useState<boolean>(false)
 
-  if (offset === 0 && !closeCalled) {
+  if (offset === 1 && !closeCalled) {
     setCloseCalled(true)
     if (exists(onClose)) onClose()
   }

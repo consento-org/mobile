@@ -155,6 +155,7 @@ _Preparations:_
 
 - You need two devices. Preferably the main device being an android device with a 1080 × 2340 screen resolution, to maintain the size.
 - The main device needs to be reset _(you can do that in the config screen, pressing reset twice)_.
+- _(recommended)_ Setup the expire time on your second device to a quick 45seconds.
 - Stop any other expo processes that you may have started.
 - Print the `./screenshot/fake-top-secret-document.pdf` which will be needed to take screenshots for the image editor.
 

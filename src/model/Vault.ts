@@ -11,7 +11,7 @@ import { Relation } from './Relation'
 import { vaultStore } from './VaultStore'
 import sss from '@consento/shamirs-secret-sharing'
 import { mapSubscriptions } from './mapSubscriptions'
-import { assertFind, find } from '../util/find'
+import { find } from '../util/find'
 import { last } from '../util/last'
 import { now } from './now'
 import { map } from '../util/map'
@@ -192,6 +192,7 @@ export class Vault extends Model({
       this.locks,
       lock => lock.receiver,
       (lock, notification) => {
+        console.log('Received lock message.')
         const message = notification.body as Message
         if (message.type === MessageType.unlock) {
           const secret = sss.combine([Buffer.from(lock.shareHex, 'hex'), Buffer.from(message.shareHex, 'hex')])
@@ -307,7 +308,11 @@ export class Vault extends Model({
     })
     this._addPendingLockee(lockee, pendingLock)
     try {
-      await notifications.send(new crypto.Sender(senderJSON), requestLockeeMessage(lockId, this, handshake.firstMessage, theirShare, this.displayName))
+      console.log(`Sent requestLockeee message: ${
+        (
+          await notifications.send(new crypto.Sender(senderJSON), requestLockeeMessage(lockId, this, handshake.firstMessage, theirShare, this.displayName))
+        ).join(', ')
+      }`)
     } catch (error) {
       this._removePendingLockee(lockee, pendingLock, TVaultRevokeReason.error)
       throw error
@@ -471,7 +476,7 @@ export class Vault extends Model({
     Promise.all(
       map(this.locks.values(), async (lock): Promise<void> => {
         const sender = new api.crypto.Sender(lock.sender)
-        await api.notifications.send(sender, requestUnlockMessage(request.time, request.keepAlive))
+        console.log(`Sent unlock message: ${(await api.notifications.send(sender, requestUnlockMessage(request.time, request.keepAlive))).join(', ')}`)
       })
     ).catch(lockSendError => console.log({ lockSendError }))
   }

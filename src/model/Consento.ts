@@ -269,13 +269,14 @@ export class Consento extends Model({
           }
           api.notifications.processors.add(processor)
           const receivers = Object.values(subscriptions).map(subscription => new api.crypto.Receiver(subscription.receiver))
-          console.log(`Resetting:\n  ${receivers.map(receiver => receiver.idBase64).join('\n  ')}`)
           api.notifications
             .reset(receivers)
             .then(
-              () => {},
+              success =>
+                console.log(`Resetting the notifications:${receivers.map((receiver, index) => `\n  ${receiver.idBase64} [${(success[index] ?? false).toString()}]`).join('')}`)
+              ,
               notificationResetError => {
-                console.log('Error resetting the notifications')
+                console.log(`Error resetting the notifications:${receivers.map(receiver => `\n  ${receiver.idBase64}`).join('')}`)
                 console.log({ notificationResetError })
               }
             )
@@ -284,31 +285,42 @@ export class Consento extends Model({
               api.notifications.processors.delete(processor)
             },
             autorun(() => {
+              console.log('Updating subscriptions')
               const { newSubscriptions, goneSubscriptions } = diffSubscriptions(subscriptions, fromUserSubscriptions(api, user.subscriptions))
               if (newSubscriptions.length > 0) {
                 const receivers = newSubscriptions.map(({ receiver }) => receiver)
-                console.log(`Subscribing:\n  ${receivers.map(receiver => receiver.idBase64).join('\n  ')}`)
                 this.api.notifications
                   .subscribe(receivers)
-                  .catch(subscribeError => {
-                    for (const receiver of receivers) {
-                      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-                      delete subscriptions[receiver.idBase64]
+                  .then(
+                    success =>
+                      console.log(`Subscribed:${receivers.map((receiver, index) => `\n  ${receiver.idBase64} [${(success[index] ?? false).toString()}]`).join()}`)
+                    ,
+                    subscribeError => {
+                      for (const receiver of receivers) {
+                        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+                        delete subscriptions[receiver.idBase64]
+                      }
+                      console.log(`Couldn't subscribe:${receivers.map(receiver => `\n  ${receiver.idBase64}`).join()}`)
+                      console.log({ subscribeError })
                     }
-                    console.log({ subscribeError })
-                  })
+                  )
               }
               if (goneSubscriptions.length > 0) {
                 const receivers = goneSubscriptions.map(({ receiver }) => receiver)
-                console.log(`Unsubscribing:\n  ${receivers.map(receiver => receiver.idBase64).join('\n  ')}`)
                 this.api.notifications
                   .unsubscribe(receivers)
-                  .catch(unsubscribeError => {
-                    for (const op of goneSubscriptions) {
-                      subscriptions[op.receiver.idBase64] = op
+                  .then(
+                    success =>
+                      console.log(`Unsubscribed:${receivers.map((receiver, index) => `\n  ${receiver.idBase64} [${(success[index] ?? false).toString()}]`).join()}`)
+                    ,
+                    unsubscribeError => {
+                      for (const op of goneSubscriptions) {
+                        subscriptions[op.receiver.idBase64] = op
+                      }
+                      console.log(`Couldn't unsubscribe:${receivers.map(receiver => `\n  ${receiver.idBase64}`).join()}`)
+                      console.log({ unsubscribeError })
                     }
-                    console.log({ unsubscribeError })
-                  })
+                  )
               }
             })
           )

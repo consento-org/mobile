@@ -119,7 +119,7 @@ export class ConsentoBecomeLockee extends Model({
       return () => {
         ;(async () => {
           this._setAccept(true)
-          await api.notifications.send(accept.sender, confirmLockeeMessage(lockId, accept.acceptMessage))
+          console.log(`Sent confirm Lockee message: ${(await api.notifications.send(accept.sender, confirmLockeeMessage(lockId, accept.acceptMessage))).join(', ')}`)
         })().catch(acceptError => {
           this._setAccept(false)
           console.log({ acceptError })
@@ -250,10 +250,10 @@ export class ConsentoUnlockVault extends ExtendedModel(RequestBase, {
     return () => {
       ;(async (): Promise<void> => {
         this.acceptAndConfirm()
-        await api.notifications.send(
+        console.log(`Submitted unlock: ${(await api.notifications.send(
           new api.crypto.Sender(sender),
           unlockMessage(shareHex)
-        )
+        )).join(', ')}`)
       })()
         .catch(err => console.error(err))
     }

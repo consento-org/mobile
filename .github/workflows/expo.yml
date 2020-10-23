@@ -72,4 +72,4 @@ jobs:
         EXPO_VERSIONCODE: ${{ steps.version.outputs.versionCode }}
       run: |
         npx expo build:android -t app-bundle --non-interactive --release-channel pr --config ./app.config.ts
-        npx expo build:ios -t archive --release-channel pr --config ./app.config.ts
+      # Note: We do not build ios bundles for PR's as these need to be signed and we don't want PR's to be signed.

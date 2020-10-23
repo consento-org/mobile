@@ -42,23 +42,34 @@ jobs:
     - name: Login into Expo
       run: npx expo-cli login -u ${{ secrets.EXPO_USERNAME }} -p ${{ secrets.EXPO_PASSWORD }}
 
-    - name: Publish & build with Expo channel "default"
-      if: endsWith(github.ref, '/master')
-      run: | 
+    - name: Evaluate version
+      id: version
+      run: |
         /bin/bash --noprofile --norc ./.github/workflows/expo-build-number.sh
-        npx expo build:android -t app-bundle --non-interactive --release-channel default
-        npx expo build:ios -t archive --release-channel default
+
+    - name: Publish & build with Expo channel "default"
+      if: endsWith(github.ref, '/main')
+      env:
+        EXPO_BUILDNUMBER: ${{ steps.version.outputs.buildNumber }}
+        EXPO_VERSIONCODE: ${{ steps.version.outputs.versionCode }}
+      run: |
+        npx expo build:android -t app-bundle --non-interactive --release-channel default --config ./app.config.ts
+        npx expo build:ios -t archive --release-channel default --config ./app.config.ts
 
     - name: Publish & build with Expo channel "next"
       if: endsWith(github.ref, '/next')
+      env:
+        EXPO_BUILDNUMBER: ${{ steps.version.outputs.buildNumber }}
+        EXPO_VERSIONCODE: ${{ steps.version.outputs.versionCode }}
       run: |
-        /bin/bash --noprofile --norc ./.github/workflows/expo-build-number.sh d
-        npx expo build:android -t app-bundle --non-interactive --release-channel next
-        npx expo build:ios -t archive --release-channel next
+        npx expo build:android -t app-bundle --non-interactive --release-channel next --config ./app.config.ts
+        npx expo build:ios -t archive --release-channel next --config ./app.config.ts
 
     - name: Build 
       if: "!endsWith(github.ref, '/next') && !endsWith(github.ref, '/master')"
+      env:
+        EXPO_BUILDNUMBER: ${{ steps.version.outputs.buildNumber }}
+        EXPO_VERSIONCODE: ${{ steps.version.outputs.versionCode }}
       run: |
-        /bin/bash --noprofile --norc ./.github/workflows/expo-build-number.sh d
-        npx expo build:android -t app-bundle --non-interactive --release-channel pr
-        npx expo build:ios -t archive --release-channel pr
+        npx expo build:android -t app-bundle --non-interactive --release-channel pr --config ./app.config.ts
+        npx expo build:ios -t archive --release-channel pr --config ./app.config.ts

@@ -27,16 +27,16 @@ fi
 echo "> HEAD_REF=${HEAD_REF}"
 VERSION_CODE=`git rev-list --count ${HEAD_REF}`
 echo "> VERSION_CODE=${VERSION_CODE}"
-CURRENT=`npx json -f app.json expo.version`
+CURRENT=`npx json -f app.config.json expo.version`
 echo "> CURRENT=${CURRENT}"
 
-if [ -z $1 ]; then
+if [ "${GITHUB_HEAD_REF}" == "main" ]; then
   BUILD=0
 else
   BUILD=1
   while IFS= read -r COMMIT; do
     echo "> Getting version for commit: ${COMMIT}"
-    COMMIT_VERSION=`git show ${COMMIT}:app.json | npx json "expo.version"`
+    COMMIT_VERSION=`git show ${COMMIT}:app.config.json | npx json "expo.version"`
     echo "> COMMIT_VERSION=${COMMIT_VERSION}"
     if [ $COMMIT_VERSION != $CURRENT ]; then
       break
@@ -45,10 +45,5 @@ else
   done < <(git --no-pager log -999 --pretty=format:"%H" app.json)
 fi
 
-updateAppJson () {
-  echo "> Updating app.json: ${1}"
-  npx json -I -f app.json -e "this.$1" > /dev/null 2>&1
-}
-
-updateAppJson "expo.ios.buildNumber='${CURRENT}$(printf "%03d\n" $BUILD)'"
-updateAppJson "expo.android.versionCode=${VERSION_CODE}"
+echo "::set-output name=buildNumber::${CURRENT}$(printf "%03d\n" $BUILD)"
+echo "::set-output name=versionCode::${VERSION_CODE}"

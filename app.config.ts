@@ -15,7 +15,7 @@ export default {
     },
     android: {
       ...config.expo.android,
-      versionCode: parseInt(process.env.EXPO_VERSIONCODE ?? config.expo.android.versionCode, 10)
+      versionCode: parseInt(process.env.EXPO_VERSIONCODE ?? config.expo.android.versionCode ?? 0, 10)
     },
     extra: {
       ...config.extra,

@@ -10,7 +10,7 @@ An app to handle your confidential data through people you trust.
 
 - [📚 Read a user guide](https://docs.google.com/viewer?url=https://raw.githubusercontent.com/consento-org/mobile/master/docs/overview.pdf)
 - [🎥 See a video ](https://vimeo.com/387456151)
-- [📱 Install it now](https://expo.io/@consento/consento)
+- [📱 Install it now](https://expo.io/@grp/consento)
 
 ## Our Mission
 Our identities and confidential information turn digital. The challenge is to make sure that everyone remains in full control over their personally identifiable information.

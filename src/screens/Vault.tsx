@@ -67,7 +67,7 @@ export const Vault = observer(({ vaultId }: { vaultId: string }): JSX.Element =>
     return <ErrorScreen code={ErrorCode.noVault} />
   }
   const { config } = useConsento()
-  if (!vault.isOpen && !vault.isLoading && !vault.isPending) {
+  if (useIsFocused() && !vault.isOpen && !vault.isLoading && !vault.isPending) {
     setTimeout(() => vault.requestUnlock((config?.expire ?? 1) * 1000), 0)
     return <></>
   }

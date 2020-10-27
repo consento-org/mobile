@@ -94,7 +94,6 @@ export interface INavigate <TParams = any> {
  * @see https://reactnavigation.org/docs/nesting-navigators/#navigating-to-a-screen-in-a-nested-navigator
  */
 export const navigate: INavigate = <TParams = any> (route: string | string[] | IRoute<TParams>, params?: any): void => {
-  console.log({ navigate: { route, params } })
   if (Array.isArray(route)) {
     route = routeFromArray(route, params)
     return navigate(route.screen, route.params)

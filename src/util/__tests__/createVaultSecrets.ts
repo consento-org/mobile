@@ -1,9 +1,8 @@
 import { createVaultSecrets, IVaultSecrets, IVaultSecretsProps } from '../createVaultSecrets'
 import { cryptoCore } from '../../cryptoCore'
-import { exists } from '../exists'
 
 async function waitABit <T> (next: () => T): Promise<T> {
-  return new Promise <T>(resolve => {
+  return await new Promise <T>(resolve => {
     setTimeout(
       () => resolve(next()),
       (Math.random() * 20) | 0
@@ -15,29 +14,27 @@ function factory (store?: { [key: string]: string }, impl?: Partial<IVaultSecret
   store: { [key: string]: string }
   vaultSecrets: IVaultSecrets
 } {
-  if (!exists(store)) {
-    store = {}
-  }
+  const _store = store ?? {}
   const vaultSecrets = createVaultSecrets({
     cryptoCore,
     async setItemAsync (key: string, value: string): Promise<void> {
-      return waitABit(() => {
-        store[key] = value
+      return await waitABit(() => {
+        _store[key] = value
       })
     },
     async getItemAsync (key: string): Promise<string> {
-      return waitABit(() => store[key])
+      return await waitABit(() => _store[key])
     },
     async deleteItemAsync (key: string): Promise<void> {
-      return waitABit(() => {
+      return await waitABit(() => {
         // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-        delete store[key]
+        delete _store[key]
       })
     },
     ...impl
   })
   return {
-    store,
+    store: _store,
     vaultSecrets
   }
 }

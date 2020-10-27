@@ -14,15 +14,30 @@
 # It will also set the versionCode for Android to the number of commits in the branch.
 #
 
-VERSION_CODE=`git fetch && git rev-list --count origin/$(git rev-parse --abbrev-ref HEAD)`
-CURRENT=`npx json -f app.json expo.version`
+echo "> fetching"
+git fetch
 
-if [ -z $1 ]; then
+echo "---"
+HEAD_REF=`git rev-parse --abbrev-ref HEAD`
+if [[ "$HEAD_REF" == 'HEAD' ]]; then
+  HEAD_REF="origin/${GITHUB_HEAD_REF}"
+else
+  HEAD_REF="origin/${HEAD_REF}"
+fi
+echo "> HEAD_REF=${HEAD_REF}"
+VERSION_CODE=`git rev-list --count ${HEAD_REF}`
+echo "> VERSION_CODE=${VERSION_CODE}"
+CURRENT=`npx json -f app.config.json expo.version`
+echo "> CURRENT=${CURRENT}"
+
+if [ "${GITHUB_HEAD_REF}" == "main" ]; then
   BUILD=0
 else
   BUILD=1
   while IFS= read -r COMMIT; do
-    COMMIT_VERSION=`git show ${COMMIT}:app.json | npx json "expo.version"`
+    echo "> Getting version for commit: ${COMMIT}"
+    COMMIT_VERSION=`git show ${COMMIT}:app.config.json | npx json "expo.version"`
+    echo "> COMMIT_VERSION=${COMMIT_VERSION}"
     if [ $COMMIT_VERSION != $CURRENT ]; then
       break
     fi
@@ -30,10 +45,5 @@ else
   done < <(git --no-pager log -999 --pretty=format:"%H" app.json)
 fi
 
-updateAppJson () {
-  echo $1
-  npx json -I -f app.json -e "this.$1" > /dev/null 2>&1
-}
-
-updateAppJson "expo.ios.buildNumber='${CURRENT}$(printf "%03d\n" $BUILD)'"
-updateAppJson "expo.android.versionCode=${VERSION_CODE}"
+echo "::set-output name=buildNumber::${CURRENT}$(printf "%03d\n" $BUILD)"
+echo "::set-output name=versionCode::${VERSION_CODE}"

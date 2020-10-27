@@ -1,5 +1,9 @@
+
 module.exports = {
   resolver: {
-    blacklistRE: /screenshot\/recorded\//
+    blacklistRE: /screenshot\/recorded\//,
+    extraNodeModules: {
+      'sodium-universal': 'sodium-javascript'
+    }
   }
 }

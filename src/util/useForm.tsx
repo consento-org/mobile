@@ -1,9 +1,9 @@
 import React, { useState, useEffect, createContext } from 'react'
 import { BackHandler, Alert } from 'react-native'
-import { TNavigation } from '../screens/navigation'
 import { isPromiseLike } from '@consento/crypto/util/isPromiseLike'
 import { deepEqual } from 'fast-equals'
 import throttle from 'lodash.throttle'
+import { goBack } from './navigate'
 
 function alertInvalid (onDiscard: () => any): void {
   Alert.alert('Unsaved Changes', 'Leaving this page will discard any changes!', [
@@ -34,19 +34,19 @@ function alertSave (onOK: () => any, onDiscard: () => any): void {
 }
 
 export interface IFormField <T> {
-  value: T
-  valueString: string
-  readonly initial: T
+  value: T | undefined
+  valueString: string | undefined
+  readonly initial: T | undefined
   readonly invalid?: string
   readonly isInvalid: boolean
   readonly isDirty: boolean
   readonly loaded: boolean
-  setValue (newValue: T): void
-  setValueString (newValue: string): void
-  handleValue (newValue: T): void
-  handleString (newValue: string): void
-  setInitial (initial: TInitiator<T>): void
-  reset (): void
+  setValue: (newValue: T | undefined) => void
+  setValueString: (newValue: string | undefined) => void
+  handleValue: (newValue: T | undefined) => void
+  handleString: (newValue: string | undefined) => void
+  setInitial: (initial: TInitiator<T>) => void
+  reset: () => void
 }
 
 export type TOrPromise<T> = T | Promise<T>
@@ -54,63 +54,63 @@ export type TInitiatorFn<T> = () => TOrPromise<T>
 export type TInitiator<T> = TOrPromise<T> | TInitiatorFn<T>
 
 export interface IForm {
-  leave: (next: () => void) => void
+  leave: (next?: () => void) => void
   save?: () => Promise<boolean>
   error?: Error
   invalid?: {
     [key: string]: string
   }
+  dirty?: string[]
   isDirty: boolean
   isInvalid: boolean
   isSaving: boolean
-  useStringField (key: string, initial: TInitiator<string>, validate?: (value: string) => boolean | string, save?: (value: string) => void | Promise<void>): IFormField<string>
-  useField <T> (key: string, initial: TInitiator<T>, convert: IStringConvert<T>, validate?: (value: string) => boolean | string, save?: (value: T) => void | Promise<void>): IFormField<T>
+  useStringField: (key: string, initial: TInitiator<string | null>, validate?: (value: string | null) => boolean | string, save?: (value: string | null) => void | Promise<void>) => IFormField<string | null>
+  useField: <T>(key: string, initial: TInitiator<T>, convert: IStringConvert<T>, validate?: (value: string) => boolean | string, save?: (value: T) => void | Promise<void>) => IFormField<T>
 }
 
 export interface IMainForm extends IForm {
-  Form ({ children }: { children?: React.ReactChild | React.ReactChild[] }): JSX.Element
-}
-
-function isInitiatorFn <T> (input: TInitiator<T>): input is TInitiatorFn<T> {
-  return typeof input === 'function'
+  Form: ({ children }: { children?: React.ReactChild | React.ReactChild[] }) => JSX.Element
 }
 
 export interface IStringConvert<T> {
-  fromString (string: string): T
-  toString (value: T): string
+  fromString: (string: string) => T
+  toString: (value: T) => string
 }
 
-export const STRING_CONVERT: IStringConvert<string> = {
-  fromString: (string: string): string => string,
-  toString: (string: string): string => string
+export const STRING_CONVERT: IStringConvert<string | null> = {
+  fromString: (string: string): string | null => string === '' ? null : string,
+  toString: (string: string | null): string => string === null ? '' : string
 }
 
-export const FLOAT_CONVERT: IStringConvert<number> = {
-  fromString: (string: string): number => parseFloat(string),
-  toString: (value: number): string => value.toString(10)
+export const FLOAT_CONVERT: IStringConvert<number | null> = {
+  fromString: (string: string): number | null => string === '' ? null : parseFloat(string),
+  toString: (value: number | null): string => value === null ? '' : value.toString(10)
+}
+
+function isFnInitator <T> (input: TInitiator<T>): input is TInitiatorFn<T> {
+  return typeof input === 'function'
 }
 
 class FormField<T> implements IFormField<T> {
-  initial: T
+  initial: T | undefined
   invalid?: string
-  isInvalid: boolean
-  isDirty: boolean
-  loaded: boolean
+  isInvalid: boolean = false
+  isDirty: boolean = false
+  loaded: boolean = false
 
-  save: (newValue: T) => void | Promise<void>
-  _value: string
-  _validate: (value: string) => boolean | string
+  save?: (newValue: T) => void | Promise<void>
+  _value: string | undefined
+  _validate?: (value: string) => boolean | string
   _triggerUpdate: () => void
-  _initiator: TOrPromise<T>
+  _initiator: TInitiator<T> | undefined
   _initCount: number = 0
   _firstInitFinished: boolean = false
-  _initiatorPromise: PromiseLike<T>
+  _initiatorPromise: PromiseLike<T> | undefined
   _convert: IStringConvert<T>
 
-  constructor (validate: (value: string) => boolean | string, triggerUpdate: () => void, save: (newValue: T) => void | Promise<void>, convert?: IStringConvert<T>) {
+  constructor (convert: IStringConvert<T>, triggerUpdate: () => void, validate?: (value: string) => boolean | string, save?: (newValue: T) => void | Promise<void>) {
     this._triggerUpdate = triggerUpdate
     this._validate = validate
-    this._triggerUpdate = triggerUpdate
     this._convert = convert
     this.save = save
     this.validate = this.validate.bind(this)
@@ -121,87 +121,95 @@ class FormField<T> implements IFormField<T> {
     this.handleString = this.handleString.bind(this)
   }
 
-  setInitial (initiator: TOrPromise<T>, async: boolean = false): void {
+  setInitial (initiator: TInitiator<T>): void {
     if (this._initiator === initiator) {
       return
     }
     this._initiator = initiator
     const initCount = ++this._initCount
-    if (isPromiseLike(initiator)) {
-      if (initiator === this._initiatorPromise) {
+    const valOrPromise = isFnInitator(initiator) ? initiator() : initiator
+    if (isPromiseLike(valOrPromise)) {
+      if (valOrPromise === this._initiatorPromise) {
+        console.log('P: same promise...')
         return
       }
       this.loaded = false
-      this._initiatorPromise = initiator
-      initiator
-        .then(newInitial => {
+      this._initiatorPromise = valOrPromise
+      valOrPromise.then(
+        newInitial => {
           if (initCount !== this._initCount) {
             return // Another initial value was set meanwhile
           }
           this._finishInitial(newInitial, true)
-        })
-        .catch(error => console.error(error))
+        },
+        error => {
+          console.log('P: Error!')
+          console.error(error)
+        }
+      )
       if (this._firstInitFinished) {
         this._triggerUpdate()
       }
     } else {
       this._initiatorPromise = undefined
-      this._finishInitial(initiator)
+      this._finishInitial(valOrPromise)
     }
   }
 
   _finishInitial (initial: T, async: boolean = false): void {
     if (this.initial !== initial || !this._firstInitFinished) {
-      this.loaded = true
       this.initial = initial
+      const doUpdate = !this.loaded || this.updateState()
+      this.loaded = true
       if (!this._firstInitFinished) {
         this._firstInitFinished = true
         this._value = this._convert.toString(initial)
         if (!async) {
-          this.updateState()
           return
         }
       }
-      if (this.updateState()) {
+      if (doUpdate) {
         this._triggerUpdate()
       }
-    } else if (!this.loaded) {
+    } else {
+      const wasLoaded = this.loaded
       this.loaded = true
-      this._triggerUpdate()
+      if (this.updateState() || !wasLoaded) {
+        this._triggerUpdate()
+      }
     }
   }
 
-  get value (): T {
-    return this._convert.fromString(this._value)
+  get value (): T | undefined {
+    return this._value !== undefined ? this._convert.fromString(this._value) : undefined
   }
 
-  set value (newValue: T) {
+  set value (newValue: T | undefined) {
     this.setValue(newValue)
   }
 
-  get valueString (): string {
+  get valueString (): string | undefined {
     return this._value
   }
 
-  set valueString (newValue: string) {
+  set valueString (newValue: string | undefined) {
     this.setValueString(newValue)
   }
 
-  handleValue (newValue: T): void {
+  handleValue (newValue: T | undefined): void {
     this.setValue(newValue)
   }
 
-  handleString (newValue: string): void {
+  handleString (newValue: string | undefined): void {
     this.setValueString(newValue)
   }
 
-  setValue (newValue: T): void {
-    this.setValueString(this._convert.toString(newValue))
+  setValue (newValue: T | undefined): void {
+    this.setValueString(newValue !== undefined ? this._convert.toString(newValue) : undefined)
   }
 
-  setValueString (newValue: string): void {
-    // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
-    if (!deepEqual(this._value, newValue)) {
+  setValueString (newValue: string | undefined): void {
+    if (this._value !== newValue) {
       this._value = newValue
       this.updateState()
       this._triggerUpdate()
@@ -234,7 +242,8 @@ class FormField<T> implements IFormField<T> {
     if (this._validate === undefined) {
       return { isInvalid: false }
     }
-    const valid = this._validate(this._value)
+    const { valueString } = this
+    const valid = valueString === undefined ? false : this._validate(valueString)
     if (typeof valid === 'string') {
       return { isInvalid: true, invalid: valid }
     }
@@ -245,10 +254,9 @@ class FormField<T> implements IFormField<T> {
   }
 }
 
-export const FormContext = createContext<IForm>(null)
+export const FormContext = createContext<IForm | null>(null)
 
 export function useForm (
-  navigation: TNavigation,
   save?: (fields: { [key: string]: any }) => void | Promise<void>,
   leave?: () => void
 ): IMainForm {
@@ -263,7 +271,7 @@ export function useForm (
       form.isSaving = true
       setUpdate(Date.now())
       try {
-        const ops = []
+        const ops: Array<Promise<void>> = []
         const data = Object.keys(fields).reduce((data: { [key: string]: any }, key) => {
           const field = fields[key]
           if (typeof field.save === 'function') {
@@ -279,9 +287,11 @@ export function useForm (
           await save(data)
         }
         await Promise.all(ops)
-        form.isDirty = false
+        for (const field of Object.values(fields)) {
+          // If all the fields have a new initial, they should not be dirty anymore
+          field.setInitial(field.value)
+        }
         form.isSaving = false
-        setUpdate(Date.now())
         return true
       } catch (error) {
         form.error = error
@@ -291,19 +301,23 @@ export function useForm (
       }
     }
     const form: IMainForm = {
-      isDirty: false,
       isInvalid: false,
       isSaving: false,
       invalid: undefined,
+      dirty: undefined,
       error: undefined,
       save: undefined,
-      async leave (next: () => any): Promise<boolean> {
+      get isDirty (): boolean {
+        return this.dirty !== undefined && this.dirty.length > 0
+      },
+      async leave (next?: () => any): Promise<boolean> {
+        const handleNext = next ?? leave ?? goBack
         if (!form.isDirty) {
-          next()
+          handleNext()
           return true
         }
         if (form.isInvalid) {
-          alertInvalid(next)
+          alertInvalid(handleNext)
           return false
         }
         let _resolve: (successful: boolean) => void
@@ -312,43 +326,37 @@ export function useForm (
         })
         alertSave(
           async (): Promise<void> => {
-            const done = await form.save()
+            const done = form.save !== undefined ? await form.save() : true
             if (done) {
-              next()
+              handleNext()
             }
             _resolve(done)
           },
-          next
+          handleNext
         )
-        return result
+        return await result
       },
-      useStringField (key: string, initial: TInitiator<string>, validate?: (value: string) => boolean | string, save?: (value: string) => void | Promise<void>): IFormField<string> {
-        return this.useField(key, initial, STRING_CONVERT, validate, save)
+      useStringField (key: string, initial: TInitiator<string | null>, validate?: (value: string | null) => boolean | string, save?: (value: string | null) => void | Promise<void>): IFormField<string | null> {
+        return this.useField<string | null>(key, initial, STRING_CONVERT, validate, save)
       },
       useField <T> (key: string, initial: TInitiator<T>, convert: IStringConvert<T>, validate?: (value: string) => boolean | string, save?: (value: T) => void | Promise<void>): IFormField<T> {
-        const setUpdate = useState<number>(Date.now())[1]
-        const [field] = useState<FormField<T>>(() => {
-          const field = new FormField<T>(validate, () => {
+        const setLastChange = useState(Date.now())[1]
+        const field = useState<FormField<T>>(() => {
+          const field = new FormField<T>(convert, () => {
             triggerUpdate()
-            setUpdate(Date.now())
-          }, save, convert)
+            setLastChange(Date.now())
+          }, validate, save)
+          field.setInitial(initial)
           return field
-        })
+        })[0]
         useEffect(() => {
           if (fields[key] !== undefined) {
             throw new Error(`Form field [${key}] already exists.`)
           }
           fields[key] = field
           // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-          return () => delete fields[key]
+          return () => { delete fields[key] }
         }, [])
-        if (isInitiatorFn(initial)) {
-          useEffect(() => {
-            field.setInitial((initial as Function)())
-          }, [])
-        } else {
-          field.setInitial(initial)
-        }
         return field
       },
       Form ({ children }: { children?: React.ReactChild | React.ReactChild[] }) {
@@ -362,20 +370,26 @@ export function useForm (
     form.useStringField = form.useStringField.bind(form)
 
     const triggerUpdate = (): void => {
-      let isDirty = false
-      const invalid = Object.keys(fields).reduce((invalid: { [key: string]: string }, key) => {
-        const field = fields[key]
-        if (field.isInvalid) {
-          if (invalid === undefined) {
-            invalid = {}
+      const { invalid, dirty } = Object
+        .keys(fields)
+        .reduce<{ invalid?: { [key: string]: string }, dirty?: string[] }>(
+        (reduced, key) => {
+          const field = fields[key]
+          if (field.isInvalid) {
+            if (reduced.invalid === undefined) {
+              reduced.invalid = {}
+            }
+            reduced.invalid[key] = field.invalid as string /* invalid is certainly a string when the field is invalid */
           }
-          invalid[key] = field.invalid
-        }
-        if (field.isDirty) {
-          isDirty = true
-        }
-        return invalid
-      }, undefined)
+          if (field.isDirty) {
+            if (reduced.dirty === undefined) {
+              reduced.dirty = [key]
+            } else {
+              reduced.dirty.push(key)
+            }
+          }
+          return reduced
+        }, {})
       let hasChange = false
       // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
       if (!deepEqual(invalid, form.invalid)) {
@@ -383,11 +397,11 @@ export function useForm (
         form.isInvalid = invalid !== undefined
         hasChange = true
       }
-      if (isDirty !== form.isDirty) {
-        form.isDirty = isDirty
-        form.save = isDirty ? _save : undefined
+      if (!deepEqual(dirty, form.dirty)) {
+        form.dirty = dirty
         hasChange = true
       }
+      form.save = (form.isDirty && !form.isInvalid) ? _save : undefined
       if (hasChange) {
         setUpdate(Date.now())
       }
@@ -400,7 +414,7 @@ export function useForm (
       if (leave !== undefined) {
         leave()
       } else {
-        navigation.goBack()
+        goBack()
       }
       return true
     }
@@ -418,7 +432,7 @@ export function useForm (
       }
       alertSave(
         async (): Promise<void> => {
-          const done = await form.save()
+          const done = form.save !== undefined ? await form.save() : true
           if (done) {
             next()
           }

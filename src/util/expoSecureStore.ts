@@ -1,7 +1,6 @@
 import { createSecureStore, ISecureStore, IEncoding } from './createSecureStore'
 import { getItemAsync, setItemAsync } from 'expo-secure-store'
-import { exists } from './exists'
-import { Buffer, bufferToString } from '@consento/crypto/util/buffer'
+import { Buffer, bufferToString, exists } from '@consento/api/util'
 import { ICryptoCore } from '@consento/crypto/core/types'
 import { expoStore as store } from './expoStore'
 

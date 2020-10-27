@@ -6,9 +6,8 @@ import { requireAPI, IConfirmLockeeMessage, MessageType, hasAPI, IUnlockMessage,
 import { IHandshakeAcceptMessage, IHandshakeAcceptJSON, IHandshakeAccept, IAPI, IConnection } from '@consento/api'
 import { Alert } from 'react-native'
 import { Receiver, Sender } from './Connection'
-import { Buffer } from 'buffer'
+import { Buffer, exists } from '@consento/api/util'
 import { humanModelId } from '../util/humanModelId'
-import { exists } from '../util/exists'
 
 function confirmLockeeMessage (lockId: string, acceptMessage: IHandshakeAcceptMessage): IConfirmLockeeMessage {
   return {
@@ -40,7 +39,7 @@ export class ConsentoBecomeLockee extends Model({
   relation: tProp(types.ref<Relation>()),
   receiver: tProp(types.maybeNull(types.model<Receiver>(Receiver)), () => null),
   sender: tProp(types.maybeNull(types.model<Sender>(Sender)), () => null),
-  acceptHandshakeJSON: prop<IHandshakeAcceptJSON>(),
+  acceptHandshakeJSON: prop<IHandshakeAcceptJSON | undefined>(),
   lockId: tProp(types.maybeNull(types.string)),
   shareHex: tProp(types.maybeNull(types.string), () => null),
   creationTime: tProp(types.number, () => Date.now()),
@@ -51,20 +50,20 @@ export class ConsentoBecomeLockee extends Model({
   vaultName: tProp(types.string),
   hiddenTime: tProp(types.maybeNull(types.number), () => null)
 }) {
-  @computed get relationName (): string {
-    return this.relation.maybeCurrent?.name
+  @computed get relationName (): string | null {
+    return this.relation.maybeCurrent?.name ?? null
   }
 
-  @computed get relationAvatarId (): string {
-    return this.relation.maybeCurrent?.avatarId
+  @computed get relationAvatarId (): string | null {
+    return this.relation.maybeCurrent?.avatarId ?? null
   }
 
   @computed get relationHumanId (): string {
     return humanModelId(this.relation.id)
   }
 
-  @computed get acceptHandshake (): IHandshakeAccept {
-    if (this.acceptHandshakeJSON === null) {
+  @computed get acceptHandshake (): IHandshakeAccept | undefined {
+    if (!exists(this.acceptHandshakeJSON)) {
       return
     }
     if (hasAPI(this)) {
@@ -109,17 +108,18 @@ export class ConsentoBecomeLockee extends Model({
     this.cancelTime = Date.now()
     this.receiver = null
     this.sender = null
-    this.acceptHandshakeJSON = null
+    this.acceptHandshakeJSON = undefined
   }
 
-  @computed get handleAccept (): () => any {
-    if (this.state === TRequestState.active) {
+  @computed get handleAccept (): undefined | (() => any) {
+    const accept = this.acceptHandshake
+    const lockId = this.lockId
+    if (this.state === TRequestState.active && exists(accept) && exists(lockId)) {
       const api = requireAPI(this)
       return () => {
         ;(async () => {
-          const accept = this.acceptHandshake
           this._setAccept(true)
-          await api.notifications.send(accept.sender, confirmLockeeMessage(this.lockId, accept.acceptMessage))
+          console.log(`Sent confirm Lockee message: ${(await api.notifications.send(accept.sender, confirmLockeeMessage(lockId, accept.acceptMessage))).join(', ')}`)
         })().catch(acceptError => {
           this._setAccept(false)
           console.log({ acceptError })
@@ -137,12 +137,19 @@ export class ConsentoBecomeLockee extends Model({
 
   @computed get handleHide (): () => any {
     if (this.state === TRequestState.active) {
+      const accept = this.acceptHandshake
+      const { lockId } = this
+      if (!exists(accept)) {
+        throw new Error('No Accept token available')
+      }
+      if (!exists(lockId)) {
+        throw new Error('Missing the lock id')
+      }
       const api = requireAPI(this)
       return () => {
         ;(async () => {
-          const accept = this.acceptHandshake
           this._setDeny(true)
-          await api.notifications.send(accept.sender, denyLockeeMessage(this.lockId))
+          await api.notifications.send(accept.sender, denyLockeeMessage(lockId))
         })().catch(acceptError => {
           this._setDeny(false)
           console.log({ acceptError })
@@ -160,8 +167,12 @@ export class ConsentoBecomeLockee extends Model({
   }
 
   @modelAction _setAccept (ok: boolean): void {
+    const accept = this.acceptHandshakeJSON
+    if (!exists(accept)) {
+      throw new Error('No Accept token available' + String(this.acceptHandshakeJSON))
+    }
     this.acceptTime = ok ? Date.now() : null
-    this.receiver = ok ? new Receiver(toJS(this.acceptHandshakeJSON.receiver)) : null
+    this.receiver = ok ? new Receiver(toJS(accept.receiver)) : null
   }
 
   @modelAction _setDeny (ok: boolean): void {
@@ -169,11 +180,12 @@ export class ConsentoBecomeLockee extends Model({
   }
 
   finalize (api: IAPI, finalMessageBase64: string): void {
-    if (this.acceptHandshakeJSON === null) {
+    const accept = this.acceptHandshakeJSON
+    if (!exists(accept)) {
       console.log(`Warning: Already finalised Lockee ${this.$modelId}`)
       return
     }
-    const handshake = new api.crypto.HandshakeAccept(this.acceptHandshakeJSON)
+    const handshake = new api.crypto.HandshakeAccept(accept)
     ;(async () => {
       const final = await handshake.finalize(Buffer.from(finalMessageBase64, 'base64'))
       this._finalize(final)
@@ -181,7 +193,7 @@ export class ConsentoBecomeLockee extends Model({
   }
 
   @modelAction _finalize (connection: IConnection): void {
-    this.acceptHandshakeJSON = null
+    this.acceptHandshakeJSON = undefined
     this.confirmTime = Date.now()
     this.receiver = new Receiver(connection.receiver.toJSON())
     this.sender = new Sender(connection.sender.toJSON())
@@ -200,7 +212,7 @@ export class ConsentoUnlockVault extends ExtendedModel(RequestBase, {
   relation: tProp(types.ref<Relation>()),
   vaultName: tProp(types.string)
 }) {
-  get receiver (): Receiver {
+  get receiver (): null {
     return null
   }
 
@@ -214,32 +226,36 @@ export class ConsentoUnlockVault extends ExtendedModel(RequestBase, {
     return this._state
   }
 
-  @computed get relationName (): string {
-    return this.relation.maybeCurrent?.name
+  @computed get relationName (): string | null {
+    return this.relation.maybeCurrent?.name ?? null
   }
 
-  @computed get relationAvatarId (): string {
-    return this.relation.maybeCurrent?.avatarId
+  @computed get relationAvatarId (): string | null {
+    return this.relation.maybeCurrent?.avatarId ?? null
   }
 
   @computed get relationHumanId (): string {
     return humanModelId(this.relation.id)
   }
 
-  @computed get handleAccept (): () => any {
-    if (this.isActive) {
-      const api = requireAPI(this)
-      return () => {
-        const { shareHex, sender } = this.becomeUnlockee.maybeCurrent
-        ;(async (): Promise<void> => {
-          this.acceptAndConfirm()
-          await api.notifications.send(
-            new api.crypto.Sender(sender),
-            unlockMessage(shareHex)
-          )
-        })()
-          .catch(err => console.error(err))
-      }
+  @computed get handleAccept (): undefined | (() => any) {
+    if (!this.isActive) {
+      return
+    }
+    const { shareHex, sender } = this.becomeUnlockee.maybeCurrent ?? {}
+    if (!exists(shareHex) || !exists(sender)) {
+      return
+    }
+    const api = requireAPI(this)
+    return () => {
+      ;(async (): Promise<void> => {
+        this.acceptAndConfirm()
+        console.log(`Submitted unlock: ${(await api.notifications.send(
+          new api.crypto.Sender(sender),
+          unlockMessage(shareHex)
+        )).join(', ')}`)
+      })()
+        .catch(err => console.error(err))
     }
   }
 

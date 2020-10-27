@@ -1,31 +1,59 @@
-import React, { useContext } from 'react'
+import React from 'react'
 import { View, TouchableOpacity, StyleSheet } from 'react-native'
-import { elementTextEditor } from '../../styles/component/elementTextEditor'
-import { useVUnits } from '../../styles/Component'
 import { File, FileType } from '../../model/VaultData'
 import { useForm } from '../../util/useForm'
-import { observer } from 'mobx-react'
-import { TNavigation } from '../navigation'
 import { Vault } from '../../model/Vault'
-import { Color } from '../../styles/Color'
 import { DarkBar } from './DarkBar'
-import { ScreenshotContext } from '../../util/screenshots'
+import { screenshots } from '../../util/screenshots'
+import { elementTextEditor } from '../../styles/design/layer/elementTextEditor'
+import { navigate } from '../../util/navigate'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { SketchElement } from '../../styles/util/react/SketchElement'
+import { Color } from '../../styles/design/Color'
+import { SketchTextBoxInput } from '../../styles/util/react/SketchTextBox'
 
+const { saveSize, save, closeSize, title, size, close } = elementTextEditor.layers
+const styleTitle = {
+  marginTop: title.place.spaceY(closeSize.place),
+  marginLeft: title.place.left,
+  marginRight: title.place.right,
+  height: title.place.height
+}
 const styles = StyleSheet.create({
-  saveSize: {
-    position: 'absolute',
-    ...elementTextEditor.saveSize.place.style()
-  },
-  saveText: {
-    ...elementTextEditor.save.style,
-    top: elementTextEditor.save.place.top,
-    left: 0,
-    width: elementTextEditor.save.place.width
+  container: {
+    flex: 1,
+    justifyContent: 'flex-start',
+    alignContent: 'stretch'
   },
   closeSize: {
-    position: 'absolute',
-    ...elementTextEditor.closeSize.place.style()
-  }
+    width: closeSize.place.width,
+    height: closeSize.place.height
+  },
+  closeText: {
+    marginTop: close.place.top,
+    marginLeft: close.place.left
+  },
+  saveSize: {
+    width: saveSize.place.width,
+    height: saveSize.place.height
+  },
+  saveText: {
+    marginTop: save.place.top,
+    marginRight: save.place.right
+  },
+  topBar: {
+    height: size.place.top + size.place.height
+  },
+  mainButtons: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'space-between'
+  },
+  titleInvalid: {
+    ...styleTitle,
+    color: Color.red
+  },
+  titleValid: styleTitle
 })
 
 export interface IEditorProps {
@@ -33,18 +61,27 @@ export interface IEditorProps {
   vault: Vault
   save?: (fields: { [key: string]: any }) => void | Promise<void>
   children?: React.ReactChild | React.ReactChild[]
-  navigation: TNavigation
 }
 
-export const Editor = observer(({ navigation, file, vault, children }: IEditorProps): JSX.Element => {
-  const { vh, vw } = useVUnits()
-  const screenshots = useContext(ScreenshotContext)
-  const { Form, useStringField, save, leave, isDirty, error } = useForm(navigation, undefined, (): any => navigation.navigate('vault', { vault: vault.$modelId }))
+export const Editor = ({ file, vault, children }: IEditorProps): JSX.Element => {
+  const insets = useSafeAreaInsets()
+  const { Form, useStringField, save: handleSave, leave, isDirty, error } = useForm(
+    undefined,
+    (): void => navigate('vault', { vault: vault.$modelId })
+  )
+  if (error !== undefined) {
+    console.log({ error })
+  }
+  const handleClose = (): void => leave()
   const filename = useStringField(
     'filename',
     file.name,
-    (newName: string): boolean => newName === file.name || vault.data.isUnusedFilename(newName),
-    (newName: string): void => vault.data.setFilename(file, newName)
+    (newName: string | null): boolean => {
+      if (newName === null) return false
+      if (newName === file.name) return true
+      return vault.data?.isUnusedFilename(newName) ?? false
+    },
+    (newName: string | null): void => vault.data?.setFilename(file, newName ?? '' /* Note: it will never be '', as the validator makes sure that won't be the case */)
   )
   if (!isDirty) {
     if (!/^Untitled-/.test(file.name)) {
@@ -55,33 +92,29 @@ export const Editor = observer(({ navigation, file, vault, children }: IEditorPr
       }
     }
   }
-  console.log({ error })
   return <Form>
-    <View style={{ position: 'absolute', height: vh(100), width: '100%', top: 0, left: 0, display: 'flex', justifyContent: 'flex-start', alignContent: 'stretch' }}>
-      <DarkBar />
-      <View style={{ height: elementTextEditor.size.place.bottom }}>
-        <TouchableOpacity style={styles.closeSize} onPress={() => leave(() => navigation.navigate('vault', { vault: vault.$modelId }))}>
-          <elementTextEditor.close.Render />
-        </TouchableOpacity>
-        {
-          isDirty
-            ? <TouchableOpacity style={{ ...styles.saveSize, left: vw(100) - (elementTextEditor.width - elementTextEditor.save.place.left) }} onPress={save}>
-              {elementTextEditor.save.render({ style: styles.saveText })}
-            </TouchableOpacity>
-            : <></>
-        }
-        <elementTextEditor.title.Render
-          onInstantEdit={filename.handleValue}
-          style={filename.isInvalid ? { color: Color.red } : undefined}
-          value={filename.initial}
-        />
-        {/* TODO: <elementTextEditor.size.Render /> */}
+    <View style={styles.container}>
+      <DarkBar height={insets.top} />
+      <View style={styles.topBar}>
+        <View style={styles.mainButtons}>
+          <TouchableOpacity style={styles.closeSize} onPress={handleClose}>
+            <SketchElement src={close} style={styles.closeText} />
+          </TouchableOpacity>
+          {
+            isDirty
+              ? <TouchableOpacity style={styles.saveSize} onPress={handleSave}>
+                <SketchElement src={save} style={styles.saveText} />
+              </TouchableOpacity>
+              : <></>
+          }
+        </View>
+        <SketchTextBoxInput
+          src={title}
+          onChangeText={filename.handleValue}
+          style={filename.isInvalid ? styles.titleInvalid : styles.titleValid}>{filename.initial ?? undefined}</SketchTextBoxInput>
+        {/* TODO: <SketchElement src={size} /> */}
       </View>
-      <View
-        style={{
-          flexGrow: 1
-        }}
-      >{children}</View>
+      {children}
     </View>
   </Form>
-})
+}

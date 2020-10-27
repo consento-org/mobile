@@ -1,52 +1,100 @@
-import React, { useState, createContext, useEffect } from 'react'
-import { View, ViewStyle, Text, TextStyle, GestureResponderEvent, BackHandler } from 'react-native'
-import { elementPopUpMenu } from '../../styles/component/elementPopUpMenu'
-import { TouchableWithoutFeedback, TouchableOpacity } from 'react-native-gesture-handler'
+import React, { useState, createContext } from 'react'
+import { View, TextStyle, GestureResponderEvent, StyleSheet, Pressable } from 'react-native'
+import { TouchableOpacity } from 'react-native-gesture-handler'
+import { elementPopUpMenu } from '../../styles/design/layer/elementPopUpMenu'
+import { SketchElement } from '../../styles/util/react/SketchElement'
+import { useBackHandler } from '../../util/navigate'
+
+export type IPopupMenuEntry <TContext = any> = IPopupMenuItem<TContext> | Symbol
 
 export interface IPopupMenuItem<TContext = any> {
   name: string
   dangerous?: boolean
-  action (context: TContext, event: GestureResponderEvent): any
+  action: (context: TContext, event: GestureResponderEvent) => any
+}
+
+export interface IPopupMenu <TContext = any> {
+  context?: TContext
+  items: Array<IPopupMenuEntry<TContext>>
+}
+
+export interface IPopupContext {
+  open: <TContext = any>(menu: IPopupMenu<TContext>, event: GestureResponderEvent) => void
+  close: () => void
+}
+
+export interface IPopupMenuProps {
+  children?: React.ReactChild | React.ReactChild[]
 }
 
 export const DIVIDER = Symbol('consento/context/divider')
 
-export function isDivider <TContext = any> (input: TPopupMenuItem<TContext>): input is Symbol {
+export function isDivider <TContext = any> (input: IPopupMenuEntry<TContext>): input is Symbol {
   return input === DIVIDER
 }
 
-export type TPopupMenuItem <TContext = any> = IPopupMenuItem<TContext> | Symbol
-
-const style: ViewStyle = {
-  position: 'absolute',
-  left: 0,
-  top: 0,
-  zIndex: 1,
-  width: '100%',
-  height: '100%',
-  display: 'flex',
-  alignItems: 'flex-end',
-  flexDirection: 'column',
-  justifyContent: 'flex-end',
-  paddingBottom: elementPopUpMenu.height - elementPopUpMenu.buttonBg.place.bottom,
-  paddingLeft: elementPopUpMenu.buttonBg.place.left,
-  paddingRight: elementPopUpMenu.width - elementPopUpMenu.buttonBg.place.right
-}
-
 const itemStyle: TextStyle = {
-  width: '100%',
-  textAlignVertical: 'center',
-  backgroundColor: elementPopUpMenu.buttonBg.fill.color,
+  alignItems: 'center',
+  justifyContent: 'center',
+  backgroundColor: elementPopUpMenu.layers.buttonBg.fill.color,
   borderTopWidth: 1,
-  borderColor: elementPopUpMenu.separator.fill.color
+  borderColor: elementPopUpMenu.layers.separator.fill.color
 }
 
-const { borderRadius } = elementPopUpMenu.buttonBg
+const { borderRadius } = elementPopUpMenu.layers.topBg.borderStyle()
 
-export interface IPopupContext {
-  open <TContext = any> (actions: Array<TPopupMenuItem<TContext>>, context?: TContext, event?: GestureResponderEvent): void
-  close (): void
-}
+const styles = StyleSheet.create({
+  container: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    zIndex: 1
+  },
+  menu: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    zIndex: 1,
+    width: '100%',
+    height: '100%',
+    display: 'flex',
+    justifyContent: 'flex-end',
+    paddingBottom: elementPopUpMenu.layers.buttonBg.place.bottom,
+    paddingLeft: elementPopUpMenu.layers.buttonBg.place.left,
+    paddingRight: elementPopUpMenu.layers.buttonBg.place.right
+  },
+  bg: {
+    position: 'relative',
+    width: '100%',
+    height: '100%',
+    backgroundColor: elementPopUpMenu.layers.bg.fill.color
+  },
+  first: {
+    ...itemStyle,
+    alignSelf: 'stretch',
+    height: elementPopUpMenu.layers.description.place.height,
+    borderTopRightRadius: borderRadius,
+    borderTopLeftRadius: borderRadius,
+    borderTopWidth: 0
+  },
+  item: {
+    ...itemStyle,
+    height: elementPopUpMenu.layers.createText.place.height,
+    backgroundColor: elementPopUpMenu.layers.buttonBg.fill.color
+  },
+  last: {
+    ...itemStyle,
+    height: elementPopUpMenu.layers.disabled.place.height,
+    borderBottomRightRadius: borderRadius,
+    borderBottomLeftRadius: borderRadius
+  },
+  cancel: {
+    ...itemStyle,
+    height: elementPopUpMenu.layers.cancel.place.height,
+    borderRadius,
+    marginTop: elementPopUpMenu.layers.buttonBg.place.spaceY(elementPopUpMenu.layers.bottomBg.place)
+  }
+})
 
 const noContext = (): void => {
   throw new Error('Not in a PopupMenu Context!')
@@ -57,95 +105,59 @@ export const PopupContext = createContext<IPopupContext>({
   close: noContext
 })
 
-export interface IPopupMenuProps {
-  children?: React.ReactChild | React.ReactChild[]
-}
-
 export const PopupMenu = ({ children }: IPopupMenuProps): JSX.Element => {
-  const [active, setActive] = useState<{
-    context: any
-    items: IPopupMenuItem[]
-  }>(null)
-  const open = (items: IPopupMenuItem[], context: any): void => setActive({ context, items })
+  const [active, setActive] = useState<IPopupMenu | null>(() => null)
   const close = (): void => setActive(null)
 
-  useEffect(() => {
-    if (active === null) return
-    const lockBackHandler = (): boolean => {
-      close()
-      return true
-    }
-    BackHandler.addEventListener('hardwareBackPress', lockBackHandler)
-    return () => BackHandler.removeEventListener('hardwareBackPress', lockBackHandler)
-  }, [active !== null])
+  useBackHandler(close, { deps: [active !== null], active: active !== null })
 
-  return <PopupContext.Provider value={{ open, close }}>
+  const context: IPopupContext = {
+    open: (menu) => setActive(menu),
+    close
+  }
+
+  return <PopupContext.Provider value={context}>
     <View style={{ position: 'absolute', width: '100%', height: '100%' }}>
       {children}
       {active !== null ? <PopupMenuDisplay
         items={active.items}
+        onCancel={() => {
+          setActive(null)
+        }}
         onItemSelect={(item, event) => {
           setActive(null)
-          // eslint-disable-next-line no-unused-expressions
           item?.action(active.context, event)
         }} /> : <></>}
     </View>
   </PopupContext.Provider>
 }
 
-export const PopupMenuDisplay = ({ items, onItemSelect }: { items?: IPopupMenuItem[], onItemSelect: (item: IPopupMenuItem, event: GestureResponderEvent) => void }): JSX.Element => {
-  const cancel = (): void => onItemSelect(null, null)
-  return <View style={{
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
-    zIndex: 1
-  }}>
-    <TouchableWithoutFeedback style={{ position: 'relative', width: '100%', height: '100%', backgroundColor: elementPopUpMenu.bg.fill.color }} onPress={cancel}>
+interface IPopupMenuDisplayProps {
+  items: IPopupMenuEntry[]
+  onCancel: () => void
+  onItemSelect: (item: IPopupMenuItem, event: GestureResponderEvent) => void
+}
+
+export const PopupMenuDisplay = ({ items, onItemSelect, onCancel }: IPopupMenuDisplayProps): JSX.Element => {
+  return <View style={styles.container}>
+    <Pressable onPress={onCancel} style={styles.bg}>
       <View />
-    </TouchableWithoutFeedback>
-    <View style={style}>
-      <Text style={{
-        ...elementPopUpMenu.disabled.style,
-        ...itemStyle,
-        height: elementPopUpMenu.description.place.height,
-        borderColor: elementPopUpMenu.separator.fill.color,
-        borderTopRightRadius: borderRadius,
-        borderTopLeftRadius: borderRadius
-      }}>{elementPopUpMenu.description.text}</Text>
+    </Pressable>
+    <View style={styles.menu}>
+      <View style={styles.first}><SketchElement src={elementPopUpMenu.layers.description} /></View>
       {
-        items?.map((item, index) => {
+        items.map((item, index) => {
           if (item instanceof Symbol) {
             return null
           }
-          return <TouchableOpacity containerStyle={{ width: '100%' }} key={index} activeOpacity={0.8} onPress={event => onItemSelect(item, event)}>
-            <Text style={{
-              ...elementPopUpMenu.createText.style,
-              ...itemStyle,
-              height: elementPopUpMenu.createText.place.height,
-              textAlignVertical: 'center',
-              backgroundColor: elementPopUpMenu.buttonBg.fill.color
-            }}>{item.name}</Text>
+          return <TouchableOpacity containerStyle={styles.item} key={index} activeOpacity={0.8} onPress={event => onItemSelect(item, event)}>
+            <SketchElement src={elementPopUpMenu.layers.createText}>{item.name}</SketchElement>
           </TouchableOpacity>
         })
       }
-      <Text style={{
-        ...elementPopUpMenu.disabled.style,
-        ...itemStyle,
-        height: elementPopUpMenu.disabled.place.height,
-        borderBottomRightRadius: borderRadius,
-        borderBottomLeftRadius: borderRadius
-      }}>{elementPopUpMenu.disabled.text}</Text>
-      <TouchableOpacity containerStyle={{ width: '100%' }} activeOpacity={0.8} onPress={cancel}>
-        <Text style={{
-          ...elementPopUpMenu.cancel.style,
-          marginTop: elementPopUpMenu.buttonBg.place.top - elementPopUpMenu.bottomBg.place.bottom,
-          width: '100%',
-          height: elementPopUpMenu.buttonBg.place.height,
-          textAlignVertical: 'center',
-          backgroundColor: elementPopUpMenu.buttonBg.fill.color,
-          borderRadius
-        }}>{elementPopUpMenu.cancel.text}</Text>
+      <View style={styles.last}><SketchElement src={elementPopUpMenu.layers.disabled} /></View>
+      <TouchableOpacity containerStyle={styles.cancel} activeOpacity={0.8} onPress={onCancel}>
+        <SketchElement src={elementPopUpMenu.layers.cancel} />
       </TouchableOpacity>
     </View>
   </View>

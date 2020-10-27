@@ -3,7 +3,7 @@ import { getExpoSecureStore, expoSecureStore } from './expoSecureStore'
 import { ISecureStore, IIndexer } from './createSecureStore'
 import { jsonEncoding } from './jsonEncoding'
 import patcher, { deepClone } from 'fast-json-patch'
-import { sodium as cryptoCore } from '@consento/crypto/core/sodium'
+import { cryptoCore } from '../cryptoCore'
 
 type IJsonStore = ISecureStore<any>
 
@@ -20,7 +20,7 @@ interface ICreationBaseData { [key: string]: any }
 export function mobxPersist <
   TData extends IBaseData,
   TCreationData extends ICreationBaseData,
-  TItem extends BaseModel<TData, TCreationData> & { _markLoaded (): void }
+  TItem extends BaseModel<TData, TCreationData> & { _markLoaded: () => void }
 > ({ location, secretKey, item, init, filter, clearClone, prepareSnapshot }: {
   location?: string
   item: TItem

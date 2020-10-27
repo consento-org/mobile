@@ -1,107 +1,123 @@
-import React, { useContext, useEffect } from 'react'
-import { View, ViewStyle, Image } from 'react-native'
+import React, { useEffect } from 'react'
+import { StyleSheet, View } from 'react-native'
 import { TopNavigation } from './components/TopNavigation'
-import { createTabBar } from './components/createTabBar'
-import { TNavigation } from './navigation'
-import { elementSealVaultActive } from '../styles/component/elementSealVaultActive'
-import { elementSealVaultIdle } from '../styles/component/elementSealVaultIdle'
-import { elementVaultsLoading } from '../styles/component/elementVaultsLoading'
-import { ConsentoButton } from './components/ConsentoButton'
 import { Logs } from './Logs'
-import { Waiting } from './components/Waiting'
-import { withNavigation } from 'react-navigation'
 import { observer } from 'mobx-react'
-import { VaultContext } from '../model/VaultContext'
+import { Vault as VaultModel } from '../model/Vault'
 import { PopupMenu } from './components/PopupMenu'
 import { FileList } from './components/FileList'
 import { Locks } from './components/Locks'
-import { ConsentoContext } from '../model/Consento'
-import { ScreenshotContext } from '../util/screenshots'
+import { createMaterialTopTabNavigator, MaterialTopTabBarOptions, MaterialTopTabNavigationOptions } from '@react-navigation/material-top-tabs'
+import { SketchElement } from '../styles/util/react/SketchElement'
+import { LockButton } from './components/LockButton'
+import { ContextMenu } from './components/ContextMenu'
+import { elementTabBarTabActive } from '../styles/design/layer/elementTabBarTabActive'
+import { elementTabBarTabResting } from '../styles/design/layer/elementTabBarTabResting'
+import { useConsento, useUser } from '../model/Consento'
+import { isScreenshotEnabled, screenshots } from '../util/screenshots'
 import { deleteWarning } from './components/deleteWarning'
+import { navigate } from '../util/navigate'
+import { Waiting } from './components/Waiting'
+import { exists } from '../styles/util/lang'
+import { ErrorCode, ErrorScreen } from './ErrorScreen'
+import { User } from '../model/User'
+import { VaultContext } from '../model/VaultContext'
+import { useIsFocused } from '@react-navigation/native'
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const animation = require('../../assets/animation/consento_symbol_animation.gif')
+const Tab = createMaterialTopTabNavigator()
 
-const lockStyle: ViewStyle = {
-  height: elementSealVaultActive.height,
-  backgroundColor: elementSealVaultActive.backgroundColor,
-  borderBottomColor: elementSealVaultActive.borderBottom.border.fill.color,
-  borderBottomWidth: elementSealVaultActive.borderBottom.border.thickness,
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center'
+function labelOptions (label: string): MaterialTopTabNavigationOptions {
+  return {
+    tabBarLabel: ({ focused }: { focused: boolean }) =>
+      <SketchElement
+        src={focused ? elementTabBarTabActive.layers.label : elementTabBarTabResting.layers.label}
+        style={{ width: 120 /* TODO: constant is ugly hack needed to prevent wraping when text turns bold */ }}
+      >{label}</SketchElement>
+  }
 }
 
-const VaultNavigator = createTabBar({
-  vaultData: {
-    label: 'Files',
-    screen: () => <FileList />
+const tabBarOptions: MaterialTopTabBarOptions = {
+  indicatorStyle: {
+    backgroundColor: elementTabBarTabActive.layers.bottomLine.svg?.stroke,
+    height: elementTabBarTabActive.layers.bottomLine.svg?.strokeWidth ?? 1
   },
-  vaultLocks: {
-    label: 'Locks',
-    screen: () => <Locks />
-  },
-  vaultLog: {
-    label: 'Logs',
-    screen: () => <Logs />
+  pressColor: elementTabBarTabResting.layers.effect.fill.color,
+  style: {
+    backgroundColor: elementTabBarTabResting.backgroundColor,
+    height: elementTabBarTabResting.place.height,
+    shadowOpacity: 0,
+    elevation: 0
   }
+}
+
+const labels = {
+  files: labelOptions('Files'),
+  locks: labelOptions('Locks'),
+  logs: labelOptions('Logs')
+}
+
+const styles = StyleSheet.create({
+  container: { flexGrow: 1, display: 'flex' }
 })
 
-function LockButton (props: { onPress?: () => any }): JSX.Element {
-  return <View style={lockStyle}>
-    <ConsentoButton style={elementSealVaultActive.enabled.place.size()} styleDisabled={elementSealVaultIdle.disabled.place.size()} title='lock' onPress={props.onPress} />
-  </View>
-}
+export const Vault = observer(({ vaultId }: { vaultId: string }): JSX.Element => {
+  const user = useUser()
+  const vault = user.findVault(vaultId)
+  if (!exists(vault)) {
+    return <ErrorScreen code={ErrorCode.noVault} />
+  }
+  const { config } = useConsento()
+  if (useIsFocused() && !vault.isOpen && !vault.isLoading && !vault.isPending) {
+    setTimeout(() => vault.requestUnlock((config?.expire ?? 1) * 1000), 0)
+    return <></>
+  }
+  return <VaultAvailable vault={vault} user={user} />
+})
 
-export const VaultRouter = VaultNavigator.router
-export const Vault = withNavigation(observer(({ navigation }: { navigation: TNavigation }): JSX.Element => {
-  const { user, config } = useContext(ConsentoContext)
-  const { vault } = useContext(VaultContext)
-  const screenshots = useContext(ScreenshotContext)
-  useEffect(() => {
-    if (!vault.isOpen && !vault.isLoading) {
-      vault.requestUnlock(config.expire * 1000)
-    }
-  }, [vault.isLoading])
+const VaultAvailable = observer(({ user, vault }: { user: User, vault: VaultModel }): JSX.Element => {
   useEffect(() => {
     if (!vault.isOpen && !vault.isPending && !vault.isLoading) {
-      navigation.navigate('vaults')
+      handleBack()
     }
   }, [vault.isPending, vault.isLoading])
-  const handleNameEdit = vault.isOpen ? newName => vault.setName(newName) : undefined
+  if (isScreenshotEnabled && useIsFocused()) {
+    if (!vault.isOpen && !vault.isLoading) {
+      screenshots.vaultPending.takeSync(1000)
+    }
+  }
+  const handleNameEdit = vault.isOpen ? (newName: string) => vault.setName(newName) : undefined
   const handleDelete = (): void => {
     deleteWarning({
       onPress (): void {
+        handleBack()
         user.vaults.delete(vault)
-        navigation.navigate('vaults')
       },
       itemName: 'Vault'
     })
   }
   const handleLock = vault.isClosable ? () => {
-    navigation.navigate('vaults')
-    vault.lock()
-      .catch(lockError => console.error(lockError))
+    handleBack()
+    setImmediate(() => {
+      vault.lock()
+        .catch(lockError => console.error(lockError))
+    })
   } : undefined
-  if (!vault.isOpen && !vault.isLoading) {
-    screenshots.vaultPending.takeSync(1000)
-  }
-  return <PopupMenu>
-    <View style={{ position: 'absolute', width: '100%', height: '100%' }}>
-      <TopNavigation title={vault.name} titlePlaceholder={vault.humanId} back='vaults' onEdit={handleNameEdit} onDelete={handleDelete} />
+  const handleBack = (): void => navigate(['main', 'vaults'])
+  return <VaultContext.Provider value={{ vault }}><PopupMenu><ContextMenu>
+    <View style={styles.container}>
+      <TopNavigation title={vault.name} titlePlaceholder={vault.humanId} back={handleBack} onEdit={handleNameEdit} onDelete={handleDelete} />
       {
         vault.isOpen
-          ? [
-            <LockButton key='lock' onPress={handleLock} />,
-            <VaultNavigator key='vault' navigation={navigation} />
-          ]
-          : vault.isLoading
-            ? <View style={{ flexGrow: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-              <Image source={animation} style={elementVaultsLoading.placeholder.place.size({})} />
-              {elementVaultsLoading.loadingData.render({})}
-            </View>
-            : <Waiting vault={vault} />
+          ? <>
+            <LockButton onPress={handleLock} />
+            <Tab.Navigator tabBarOptions={tabBarOptions} lazy removeClippedSubviews>
+              <Tab.Screen name='files' component={FileList} options={labels.files} />
+              <Tab.Screen name='locks' component={Locks} options={labels.locks} />
+              <Tab.Screen name='logs' component={Logs} options={labels.logs} />
+            </Tab.Navigator>
+          </>
+          : <Waiting vault={vault} onClose={handleBack} />
       }
     </View>
-  </PopupMenu>
-}))
+  </ContextMenu></PopupMenu></VaultContext.Provider>
+})

@@ -1,7 +1,7 @@
 import { flatten } from '../flatten'
 
 it('simply flattens a tree', () => {
-  expect(flatten((b: boolean): b is boolean => typeof b === 'boolean', {
+  expect(flatten((b): b is boolean => typeof b === 'boolean', {
     x: true,
     y: {
       z: true,

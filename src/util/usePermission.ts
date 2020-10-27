@@ -27,7 +27,7 @@ export function usePermission (permission: PermissionType, processError: (error:
       })
       .catch(processError)
     return () => {
-      processError = null
+      processError = () => {}
     }
   }, [ask]) // Only if the ask timestamp changes we ask again - :)
 

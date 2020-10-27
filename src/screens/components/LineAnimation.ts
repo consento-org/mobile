@@ -7,8 +7,8 @@ export interface TPoint {
 
 export interface ILinePart {
   length: number
-  point (from: number, target: TPoint): void
-  target (to: number): string
+  point: (from: number, target: TPoint) => void
+  target: (to: number) => string
 }
 
 export function distance (start: TPoint, end: TPoint): number {
@@ -78,8 +78,11 @@ export class LineAnimation {
   first: IListNode<ILinePart>
 
   constructor (entries: ILinePart[]) {
+    if (entries.length === 0) {
+      throw new Error('To create a lineanimation we need at least one entry!')
+    }
     this.length = entries.reduce((length, entry) => length + entry.length, 0)
-    this.first = createCircularList(entries)
+    this.first = createCircularList(entries) as IListNode<ILinePart>
   }
 
   render (from: number, to: number): string {

@@ -1,5 +1,5 @@
-import { sodium } from '@consento/crypto/core/sodium'
-import { Buffer, bufferToString, IEncodable, toBuffer } from '@consento/crypto/util/buffer'
+import { cryptoCore } from '../cryptoCore'
+import { bufferToString, toBuffer } from '@consento/crypto/util/buffer'
 import { expoStore } from './expoStore'
 import { askAsync, CAMERA_ROLL } from 'expo-permissions'
 import * as Sharing from 'expo-sharing'
@@ -7,9 +7,10 @@ import { cache } from './expoFsUtils'
 import { readAsStringAsync, deleteAsync } from 'expo-file-system/build/FileSystem'
 import { Clipboard } from 'react-native'
 import { createAssetAsync, createAlbumAsync } from 'expo-media-library'
+import { IEncodable } from '@consento/api/util'
 
 export async function pathForSecretKey (secretKey: Uint8Array): Promise<string[]> {
-  const locationKey = await sodium.deriveKdfKey(secretKey)
+  const locationKey = await cryptoCore.deriveKdfKey(secretKey)
   return ['blob', ...bufferToString(locationKey, 'hex').substr(0, 16).split(/(.{4})/).filter(Boolean)]
 }
 
@@ -40,19 +41,19 @@ export function isEncryptedBlob (input: any): input is IEncryptedBlob {
 
 export async function importFile (fileUri: string, doDelete?: boolean): Promise<IEncryptedBlob> {
   const dataAsString = await readAsStringAsync(fileUri, { encoding: 'base64' })
-  if (doDelete) {
+  if (doDelete ?? false) {
     deleteAsync(fileUri)
       .catch(err => {
         console.log(`Warning: Import of ${fileUri} worked, but the original file was not deleted: ${String(err)}`)
       })
   }
-  return writeBlob(toBuffer(dataAsString))
+  return await writeBlob(toBuffer(dataAsString))
 }
 
 export async function share (data: string | Uint8Array, filename: string): Promise<void> {
   const permission = await askAsync(CAMERA_ROLL)
   if (!permission.granted) {
-    return null
+    return
   }
   const path = [...await cache.mkdirTmpAsync(), filename]
   await cache.write(path, data)
@@ -63,9 +64,9 @@ export async function share (data: string | Uint8Array, filename: string): Promi
 export async function shareBlob (input: string | Uint8Array | IEncryptedBlob, target: string): Promise<void> {
   const data = await readBlob(input)
   if (typeof data === 'string' || data instanceof Uint8Array) {
-    return share(data, target)
+    return await share(data, target)
   }
-  return share(JSON.stringify(data, null, 2), target)
+  return await share(JSON.stringify(data, null, 2), target)
 }
 
 export async function copyToClipboard (input: string | Uint8Array, title: string): Promise<boolean> {
@@ -86,7 +87,7 @@ export function safeFileName (fileName: string): string {
 export async function exportData (data: string | Uint8Array, albumName: string, fileName: string): Promise<void> {
   const permission = await askAsync(CAMERA_ROLL)
   if (!permission.granted) {
-    return null
+    return
   }
   const cacheDir = await cache.mkdirTmpAsync()
   const cacheFile = [...cacheDir, fileName]
@@ -99,9 +100,9 @@ export async function exportData (data: string | Uint8Array, albumName: string, 
 export async function exportBlob (input: string | Uint8Array | IEncryptedBlob, albumName: string, fileName: string): Promise<void> {
   const data = await readBlob(input)
   if (typeof data === 'string' || data instanceof Uint8Array) {
-    return exportData(data, albumName, fileName)
+    return await exportData(data, albumName, fileName)
   }
-  return exportData(JSON.stringify(data, null, 2), albumName, fileName)
+  return await exportData(JSON.stringify(data, null, 2), albumName, fileName)
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -109,11 +110,11 @@ const noop = (): void => {}
 const CACHE: { [path: string]: Promise<IEncodable> } = {}
 
 export async function writeBlob (encodable: IEncodable): Promise<IEncryptedBlob> {
-  const secretKey = await sodium.createSecretKey()
+  const secretKey = await cryptoCore.createSecretKey()
   const path = await pathForSecretKey(secretKey)
-  const promise = sodium
+  const promise = cryptoCore
     .encrypt(secretKey, encodable)
-    .then(async encrypted => expoStore.write(path, encrypted))
+    .then(async encrypted => await expoStore.write(path, encrypted))
     .then(() => {
       // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
       delete CACHE[path.join('/')]
@@ -144,9 +145,9 @@ async function _toBlob (input: Uint8Array | IEncryptedBlob): Promise<IEncryptedB
 
 async function toBlob (input: string | Uint8Array | IEncryptedBlob): Promise<IEncryptedBlob> {
   if (typeof input === 'string') {
-    return _toBlob(Buffer.from(input, 'hex'))
+    return await _toBlob(Buffer.from(input, 'hex'))
   }
-  return _toBlob(input)
+  return await _toBlob(input)
 }
 
 export async function deleteBlob (input: string | Uint8Array | IEncryptedBlob): Promise<boolean> {
@@ -163,27 +164,29 @@ export async function readBlob (input: string | Uint8Array | IEncryptedBlob): Pr
   const { path, secretKey } = await toBlob(input)
   const cached = CACHE[path.join('/')]
   if (cached !== undefined) {
-    return cached
+    return await cached
   }
   const info = await expoStore.info(path)
   if (!info.exists) {
     throw new Error(`File for key ${bufferToString(secretKey, 'hex')} does not exist!`)
   }
-  return sodium.decrypt(secretKey, await expoStore.read(path))
+  return await cryptoCore.decrypt(secretKey, await expoStore.read(path))
 }
 
-export async function readImageBlob (secretKey: Uint8Array | IEncryptedBlob): Promise<string> {
-  const data = await readBlob(secretKey)
-  let dataBase64: string
+function getDataAsBase64 (data: string | Uint8Array | IEncodable): string {
   if (typeof data === 'string') {
     if (/^data:/.test(data)) {
       return data
     }
-    dataBase64 = data
-  } else if (data instanceof Uint8Array) {
-    dataBase64 = bufferToString(data, 'base64')
-  } else if (typeof data === 'object') {
-    throw new Error(`Don't know how to read a JSON image as uri: ${JSON.stringify(data)}`)
+    return data
   }
-  return `data:;base64,${dataBase64}`
+  if (data instanceof Uint8Array) {
+    return bufferToString(data, 'base64')
+  }
+  throw new Error(`Don't know how to read a JSON image as uri: ${JSON.stringify(data)}`)
+}
+
+export async function readImageBlob (secretKey: Uint8Array | IEncryptedBlob): Promise<string> {
+  const data = await readBlob(secretKey)
+  return `data:;base64,${getDataAsBase64(data)}`
 }

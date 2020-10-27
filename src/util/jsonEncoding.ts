@@ -1,4 +1,4 @@
-import { Buffer, bufferToString } from '@consento/crypto/util/buffer'
+import { Buffer, bufferToString } from '@consento/api/util'
 
 const flag = new Uint8Array(1)
 export const jsonEncoding = {

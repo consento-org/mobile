@@ -1,26 +1,27 @@
-import randomBytes from '@consento/sync-randombytes'
-import { bufferToString, Buffer } from '@consento/crypto/util/buffer'
+import randomBytes from 'get-random-values-polypony'
+import { bufferToString } from '@consento/api/util'
 import { ICryptoCore } from '@consento/crypto/core/types'
+import { exists } from '../styles/util/lang'
 
 export interface IVaultSecretsProps {
   prefix?: string
   cryptoCore: ICryptoCore
-  setItemAsync (key: string, value: string): Promise<void>
-  getItemAsync (key: string): Promise<string>
-  deleteItemAsync (key: string): Promise<void>
+  setItemAsync: (key: string, value: string) => Promise<void>
+  getItemAsync: (key: string) => Promise<string | null>
+  deleteItemAsync: (key: string) => Promise<void>
 }
 
 export interface IVaultSecrets {
-  create (): { keyHex: string, secretKeyBase64: Promise<string> }
-  persistedKeys (): Promise<string[]>
-  clear (): Promise<void>
-  get (keyHex: string): Promise<string>
-  delete (keyHex: string): Promise<boolean>
-  set (keyHex: string, secretKeyBase64: string, persistOnDevice: boolean): Promise<string>
-  isPersistedOnDevice (keyHex: string): Promise<boolean>
-  toggleDevicePersistence (keyHex: string, persistOnDevice: boolean): Promise<string>
-  persistOnDevice (keyHex: string): Promise<string>
-  removeFromDevice (keyHex: string): Promise<string>
+  create: () => { keyHex: string, secretKeyBase64: Promise<string> }
+  persistedKeys: () => Promise<string[]>
+  clear: () => Promise<void>
+  get: (keyHex: string) => Promise<string | undefined>
+  delete: (keyHex: string) => Promise<boolean>
+  set: (keyHex: string, secretKeyBase64: string, persistOnDevice: boolean) => Promise<string>
+  isPersistedOnDevice: (keyHex: string) => Promise<boolean>
+  toggleDevicePersistence: (keyHex: string, persistOnDevice: boolean) => Promise<string>
+  persistOnDevice: (keyHex: string) => Promise<string>
+  removeFromDevice: (keyHex: string) => Promise<string>
 }
 
 interface IMemory {
@@ -43,41 +44,41 @@ enum EPersisted {
 
 function assertHexKey (keyHex: string): void {
   if (keyHex === null || keyHex === undefined) {
+    // eslint-disable-next-line @typescript-eslint/no-throw-literal
     throw Object.assign(new Error('The key needs to be defined!'), { code: 'key-missing' })
   }
   if (keyHex === '') {
+    // eslint-disable-next-line @typescript-eslint/no-throw-literal
     throw Object.assign(new Error('The key needs to be defined!'), { code: 'key-empty' })
   }
 }
 
 type ResolvePersisted = (persisted: EPersisted) => void
 
-export function createVaultSecrets ({ prefix, setItemAsync, getItemAsync, deleteItemAsync, cryptoCore }: IVaultSecretsProps): IVaultSecrets {
-  if (prefix === null || prefix === undefined) {
-    prefix = 'vault'
-  }
-  const inMemory: { [keyHex: string]: Promise<IMemory> } = {}
+export function createVaultSecrets ({ prefix: _prefix, setItemAsync, getItemAsync, deleteItemAsync, cryptoCore: { createSecretKey } }: IVaultSecretsProps): IVaultSecrets {
+  const prefix = _prefix ?? 'vault'
+  const inMemory: { [keyHex: string]: Promise<IMemory | undefined> } = {}
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   const preventDangling = (): void => {}
 
-  const _setMemory = async (key: string, op: (mem: IMemory) => Promise<IMemory>): Promise<IMemory> => {
+  const _setMemory = async <TOut extends IMemory | undefined>(key: string, op: (mem?: IMemory) => Promise<TOut>): Promise<TOut> => {
     const former = inMemory[key]
-    const p = (async () => op(await former))()
+    const p = (async () => await op(await former))()
     inMemory[key] = p
     p.catch(preventDangling)
-    return p
+    return await p
   }
-  const setMemory = async (key: string, op: (mem: IMemory) => Promise<IMemory>): Promise<IMemory> => {
+  const setMemory = async <TOut extends IMemory | undefined>(key: string, op: (mem?: IMemory) => Promise<TOut>): Promise<TOut> => {
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
     getMemory(key)
-    return _setMemory(key, op)
+    return await _setMemory(key, op)
   }
-  const getMemory = async (key: string): Promise<IMemory> => {
+  const getMemory = async (key: string): Promise<IMemory | undefined> => {
     const read = inMemory[key]
     if (read === undefined) {
-      return _setMemory(key, async () => {
+      return await _setMemory(key, async () => {
         const value = await getItemAsync(key)
-        if (value === undefined) {
+        if (!exists(value)) {
           return
         }
         return {
@@ -86,22 +87,22 @@ export function createVaultSecrets ({ prefix, setItemAsync, getItemAsync, delete
         }
       })
     }
-    return read
+    return await read
   }
-  const getEntry = async (key: string): Promise<string> => {
+  const getEntry = async (key: string): Promise<string | undefined> => {
     return (await getMemory(key))?.value
   }
   const isPersistedOnDevice = async (key: string): Promise<boolean> => {
-    return (await getMemory(key))?.persistedOnDevice || false
+    return (await getMemory(key))?.persistedOnDevice ?? false
   }
-  const _setInternal = async (mem: IMemory, key: string, value: string, persistOnDevice: boolean): Promise<IMemory> => {
+  const _setInternal = async (mem: IMemory | undefined, key: string, value: string, persistOnDevice: boolean): Promise<IMemory> => {
     if (mem?.persistedOnDevice === persistOnDevice && mem?.value === value) {
       return mem
     }
     if (persistOnDevice) {
       await setItemAsync(key, value)
     } else {
-      if (mem?.persistedOnDevice) {
+      if (mem?.persistedOnDevice === true) {
         await deleteItemAsync(key)
       }
     }
@@ -116,9 +117,9 @@ export function createVaultSecrets ({ prefix, setItemAsync, getItemAsync, delete
     const mem = (await setMemoryWithIndex(keyHex, async (mem, updateKeyIndex) => {
       const newMem = _setInternal(mem, key, secretKeyBase64, persistOnDevice)
       updateKeyIndex(persistOnDevice)
-      return newMem
+      return await newMem
     }))
-    return mem?.value
+    return mem.value
   }
   const _deleteInternal = async (mem: IMemory, key: string): Promise<boolean> => {
     let deleted = false
@@ -133,7 +134,7 @@ export function createVaultSecrets ({ prefix, setItemAsync, getItemAsync, delete
   const deleteKey = async (keyHex: string): Promise<boolean> => {
     assertHexKey(keyHex)
     let deleted: boolean = false
-    return setMemoryWithIndex(keyHex, async (mem, updateKeyIndex): Promise<IMemory> => {
+    return await setMemoryWithIndex(keyHex, async (mem, updateKeyIndex): Promise<IMemory | undefined> => {
       const key = `${prefix}-${keyHex}`
       if (mem !== undefined) {
         deleted = true
@@ -150,9 +151,9 @@ export function createVaultSecrets ({ prefix, setItemAsync, getItemAsync, delete
     if (read === undefined) {
       throw createPersistError(key, persistOnDevice)
     }
-    let finish: (error: Error, result?: string) => void
+    let finish: (error: Error | null, result?: string) => void
     const resultPromise = new Promise<string>((resolve, reject) => {
-      finish = (error: Error, result: string) => error !== null ? reject(error) : resolve(result)
+      finish = (error: Error | null, result?: string) => error !== null ? reject(error) : resolve(result)
     })
     await setMemoryWithIndex(keyHex, async (mem, updateKeyIndex) => {
       if (mem === undefined) {
@@ -168,10 +169,10 @@ export function createVaultSecrets ({ prefix, setItemAsync, getItemAsync, delete
       finish(null, newMem.value)
       return newMem
     })
-    return resultPromise
+    return await resultPromise
   }
   const indexKey = `${prefix}-`
-  const applyIndex = (indexMem: IMemory, keyHex: string, persisted: EPersisted): IMemory | Promise<IMemory> => {
+  const applyIndex = async (indexMem: IMemory | undefined, keyHex: string, persisted: EPersisted): Promise<IMemory | undefined> => {
     if (persisted === EPersisted.NO_CHANGE) {
       // No change in persistence
       return indexMem
@@ -190,57 +191,57 @@ export function createVaultSecrets ({ prefix, setItemAsync, getItemAsync, delete
       keysHex.splice(index, 1)
       if (keysHex.length > 0) {
         // Updating the index with a missing index entry
-        return _setInternal(indexMem, indexKey, keysHex.join(';'), true)
+        return await _setInternal(indexMem, indexKey, keysHex.join(';'), true)
       }
       // Deleting the index as it is empty
-      return _deleteInternal(indexMem, indexKey).then(() => undefined)
+      return await _deleteInternal(indexMem, indexKey).then(() => undefined)
     }
     if (indexMem === undefined) {
       // Storing the key as first entry
-      return _setInternal(indexMem, indexKey, keyHex, true)
+      return await _setInternal(indexMem, indexKey, keyHex, true)
     }
     const keysHex = indexMem.value?.split(';') ?? []
-    if (keysHex.indexOf(keyHex) === -1) {
+    if (!keysHex.includes(keyHex)) {
       // Removing the key from the index
-      return _setInternal(indexMem, indexKey, keysHex.concat(keyHex).join(';'), true)
+      return await _setInternal(indexMem, indexKey, keysHex.concat(keyHex).join(';'), true)
     }
     return indexMem
   }
-  const setMemoryWithIndex = async (keyHex: string, op: (mem: IMemory, updateKeyIndex: (persisted: boolean) => void) => Promise<IMemory>): Promise<IMemory> => {
+  const setMemoryWithIndex = async <TResult extends IMemory | undefined> (keyHex: string, op: (mem: IMemory | undefined, updateKeyIndex: (persisted: boolean) => void) => Promise<TResult>): Promise<TResult> => {
     const key = `${prefix}-${keyHex}`
-    let resolveFinish: (finish: ResolvePersisted) => void
-    const finishIndex = new Promise<ResolvePersisted>((resolve) => {
-      resolveFinish = resolve
+    let setFinishOp: (finish: ResolvePersisted) => void
+    const finishOp = new Promise<ResolvePersisted>((resolve) => {
+      setFinishOp = resolve
     })
     setMemory(indexKey, async (indexMem) => {
-      return new Promise(resolve => {
-        resolveFinish((persisted: EPersisted) => {
-          resolve(applyIndex(indexMem, keyHex, persisted))
+      return await new Promise<IMemory | undefined>((resolve, reject) => {
+        setFinishOp((persisted: EPersisted) => {
+          applyIndex(indexMem, keyHex, persisted).then(resolve, reject)
         })
       })
     }).catch(preventDangling)
     let persisted: EPersisted = EPersisted.NO_CHANGE
-    let newValue: IMemory
+    let newValue: TResult
     try {
       newValue = await setMemory(key, async (mem) =>
-        op(mem, (_persisted) => {
+        await op(mem, (_persisted) => {
           persisted = _persisted ? EPersisted.PERSISTED : EPersisted.NOT_PERSISTED
         })
       )
     } finally {
-      (await finishIndex)(persisted)
+      (await finishOp)(persisted)
     }
     return newValue
   }
-  const persistedKeys = async (): Promise<string[]> => getEntry(indexKey).then(data => data?.split(';') ?? [])
+  const persistedKeys = async (): Promise<string[]> => await getEntry(indexKey).then(data => data?.split(';') ?? [])
   return {
     create: (): { keyHex: string, secretKeyBase64: Promise<string> } => {
-      const keyHex = randomBytes(Buffer.alloc(6)).toString('hex')
+      const keyHex = bufferToString(randomBytes(new Uint8Array(6)), 'hex')
       const key = `${prefix}-${keyHex}`
       return {
         keyHex,
         secretKeyBase64: setMemoryWithIndex(keyHex, async (_, updateKeyIndex) => {
-          const secretKey = await cryptoCore.createSecretKey()
+          const secretKey = await createSecretKey()
           const result = await _setInternal(undefined, key, bufferToString(secretKey, 'base64'), true)
           updateKeyIndex(true)
           return result
@@ -264,14 +265,14 @@ export function createVaultSecrets ({ prefix, setItemAsync, getItemAsync, delete
     },
     set: setKey,
     persistedKeys,
-    get: async (keyHex: string): Promise<string> => {
+    get: async (keyHex: string): Promise<string | undefined> => {
       assertHexKey(keyHex)
-      return getEntry(`${prefix}-${keyHex}`)
+      return await getEntry(`${prefix}-${keyHex}`)
     },
     delete: deleteKey,
-    isPersistedOnDevice: async (keyHex: string): Promise<boolean> => isPersistedOnDevice(`${prefix}-${keyHex}`),
+    isPersistedOnDevice: async (keyHex: string): Promise<boolean> => await isPersistedOnDevice(`${prefix}-${keyHex}`),
     toggleDevicePersistence,
-    persistOnDevice: async (keyHex: string): Promise<string> => toggleDevicePersistence(keyHex, true),
-    removeFromDevice: async (keyHex: string): Promise<string> => toggleDevicePersistence(keyHex, false)
+    persistOnDevice: async (keyHex: string): Promise<string> => await toggleDevicePersistence(keyHex, true),
+    removeFromDevice: async (keyHex: string): Promise<string> => await toggleDevicePersistence(keyHex, false)
   }
 }

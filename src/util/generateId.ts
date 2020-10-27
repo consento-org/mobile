@@ -1,7 +1,6 @@
-import { Buffer } from '@consento/crypto/util/buffer'
-import randomBytes from '@consento/sync-randombytes'
+import randomBytes from 'get-random-values-polypony'
 import { bufferToBase32 } from './bufferToBase32'
 
 export function generateId (): string {
-  return bufferToBase32(randomBytes(Buffer.alloc(6)))
+  return bufferToBase32(randomBytes(new Uint8Array(6)))
 }

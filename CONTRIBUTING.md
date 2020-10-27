@@ -146,6 +146,38 @@ However, as for consento project, the consento team will remain in charge when i
 
 We are committed to do some good tech that can be of valuable use for users and coders.
 
+## Screenshots
+
+For publishing Consento on app stores, we have added a system to take screenshots of the app as its running. The system requires user interaction and
+because of that it is a manual task to update the screenshots. **Before a release it is a good idea to update the screenshots.**
+
+_Preparations:_
+
+- You need two devices. Preferably the main device being an android device with a 1080 × 2340 screen resolution, to maintain the size.
+- The main device needs to be reset _(you can do that in the config screen, pressing reset twice)_.
+- _(recommended)_ Setup the expire time on your second device to a quick 45seconds.
+- Stop any other expo processes that you may have started.
+- Print the `./screenshot/fake-top-secret-document.pdf` which will be needed to take screenshots for the image editor.
+
+Once you are ready, you need run following command in the CLI. `$ npm run screenshot -- --clear` and start the application on your main device.
+
+After the application has started, the command line will let you know what to do next. Something like:
+
+```
+[17:05:13] Screenshot vaultsFull taken. 34 Missing Screenshots. Next: → config
+[17:05:13]       Open the config screen with the top-left consento icon.
+```
+
+**NOTES**:
+
+- The first device that you start will be used as the main device to take screenshots.
+- During the process you should not interact with the app too quickly. Taking the screenshots during animations may result in mid-animation screenshots.
+- Occasionally screenshots may not be properly transfered to your computer. An error will be shown in the CLI like
+    `Error: Didnt receive whole file vaultsFull.png,  83782 !== 85210. You need to try again.`. You should be able to re-record the screenshot most
+    times again by re-navigating to that particular screen. (or reloading the app)
+- The `--clear` flag added in the startup will delete previous screenshots. If you want the previous screenshots to not be overwritten, start it
+    without that flag: `$ npm run screenshot`
+
 ### Social contact
 
 - Keybase chat: https://keybase.io/team/consento

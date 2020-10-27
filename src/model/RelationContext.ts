@@ -1,8 +1,6 @@
-import React, { Context } from 'react'
+import React from 'react'
 import { Relation } from './Relation'
 
-export const RelationContext: Context<{
-  relation: Relation
-}> = React.createContext({
+export const RelationContext = React.createContext<{ relation: Relation | null }>({
   relation: null
 })

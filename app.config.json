@@ -1,0 +1,52 @@
+{
+  "name": "consento",
+  "displayName": "Consento",
+  "expo": {
+    "name": "Consento",
+    "slug": "consento",
+    "owner": "grp",
+    "privacy": "public",
+    "version": "1.0.2",
+    "scheme": "consento",
+    "entryPoint": "./index.js",
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
+    "description": "The first (currently alpha) Consento mobile application.",
+    "icon": "./assets/icon/logo@16x.png",
+    "githubUrl": "https://github.com/consento-org/mobile",
+    "androidStatusBar": {
+      "barStyle": "light-content",
+      "backgroundColor": "#484848",
+      "translucent": true
+    },
+    "splash": {
+      "backgroundColor": "#FCFCFC",
+      "image": "./assets/splash/centered_logo@3x.png"
+    },
+    "android": {
+      "package": "org.consento.mobile",
+      "permissions": [
+        "CAMERA"
+      ],
+      "allowBackup": false,
+      "useNextNotificationsApi": true
+    },
+    "ios": {
+      "bundleIdentifier": "org.consento.mobile",
+      "infoPlist": {
+        "NSCameraUsageDescription": "This lets you take photos and scan QR codes."
+      },
+      "icon": "./assets/icon/logo-with-bg@16x.png"
+    },
+    "notification": {
+      "icon": "./assets/icon/logo@1.5x.png",
+      "color": "#FCFCFC",
+      "iosDisplayInForeground": false,
+      "androidMode": "collapse",
+      "androidCollapsedTitle": "Consento"
+    }
+  }
+}

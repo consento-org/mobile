@@ -1,49 +1,54 @@
 import React, { useContext } from 'react'
-import { TextInput, Text } from 'react-native'
-import { elementTextEditor } from '../styles/component/elementTextEditor'
+import { TextInput, Text, StyleSheet } from 'react-native'
 import { Editor } from './components/Editor'
 import { TextFile } from '../model/VaultData'
 import { Vault } from '../model/Vault'
-import { TNavigation } from './navigation'
 import { FormContext } from '../util/useForm'
+import { assertExists } from '../util/assertExists'
+import { elementTextEditor } from '../styles/design/layer/elementTextEditor'
+import { ScrollView } from 'react-native-gesture-handler'
 
 export interface ITextEditorProps {
   textFile: TextFile
   vault: Vault
-  navigation: TNavigation
 }
 
 interface IInputProps {
   file: TextFile
 }
 
-const inputStyle = {
-  width: '100%',
-  height: '100%',
-  paddingLeft: elementTextEditor.readable.place.left,
-  paddingRight: elementTextEditor.width - elementTextEditor.readable.place.right,
-  ...elementTextEditor.readable.style
-}
-
-const loadingStyle = {
-  left: elementTextEditor.readable.place.left,
-  ...elementTextEditor.readable.style
-}
+const styles = StyleSheet.create({
+  input: {
+    flexGrow: 1,
+    alignSelf: 'stretch',
+    textAlignVertical: 'top',
+    paddingLeft: elementTextEditor.layers.readable.place.left,
+    paddingRight: elementTextEditor.layers.readable.place.right,
+    paddingBottom: elementTextEditor.layers.readable.place.bottom
+  },
+  loading: {
+    marginLeft: elementTextEditor.layers.readable.place.left
+  }
+})
 
 const Input = ({ file }: IInputProps): JSX.Element => {
-  const { useStringField } = useContext(FormContext)
-  const fullText = useStringField(
+  const form = useContext(FormContext)
+  assertExists(form)
+  const { useStringField } = form
+  const { loaded, handleValue, initial } = useStringField(
     'fullText',
-    async () => file.loadText(),
+    async () => await file.loadText(),
     () => true,
-    async newText => file.saveText(newText)
+    async newText => await file.saveText(newText ?? '')
   )
-  if (!fullText.loaded) {
-    return <Text style={loadingStyle}>Loading...</Text>
+  if (!loaded) {
+    return <Text style={styles.loading}>Loading...</Text>
   }
-  return <TextInput ref={input => input?.focus()} style={inputStyle} onChangeText={fullText.handleValue} defaultValue={fullText.initial} editable multiline />
+  return <TextInput autoFocus style={styles.input} onChangeText={handleValue} editable multiline>{initial}</TextInput>
 }
 
-export const TextEditor = ({ textFile, vault, navigation }: ITextEditorProps): JSX.Element => {
-  return <Editor file={textFile} vault={vault} navigation={navigation}><Input file={textFile} /></Editor>
+export const TextEditor = ({ textFile, vault }: ITextEditorProps): JSX.Element => {
+  return <Editor file={textFile} vault={vault}>
+    <ScrollView><Input file={textFile} /></ScrollView>
+  </Editor>
 }
